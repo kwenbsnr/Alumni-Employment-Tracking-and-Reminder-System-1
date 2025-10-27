@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3307
--- Generation Time: Oct 27, 2025 at 06:59 AM
+-- Generation Time: Oct 27, 2025 at 08:46 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -51,7 +51,9 @@ INSERT INTO `address` (`address_id`, `barangay_id`, `street_details`, `zip_code`
 (48, '150711001', 'Purok II', '1234'),
 (49, '101301012', 'Poblacion I', '1234'),
 (54, '023137039', 'Purok I', '1234'),
-(55, '175910021', 'Purok I', '7841');
+(55, '175910021', 'Purok I', '7841'),
+(56, '153633031', 'Purok I', '6852'),
+(57, '104207007', 'Purok II', '4567');
 
 -- --------------------------------------------------------
 
@@ -77,7 +79,9 @@ INSERT INTO `alumni_documents` (`doc_id`, `user_id`, `document_type`, `file_path
 (1, 23, 'COE', 'Uploads/documents/_coe.pdf', 'Pending', 0, NULL),
 (2, 6, 'COE', 'Uploads/documents/_coe.pdf', 'Pending', 0, NULL),
 (3, 6, 'COR', 'Uploads/documents/_cor.pdf', 'Pending', 0, NULL),
-(4, 11, 'COE', 'Uploads/documents/_coe.pdf', 'Pending', 0, NULL);
+(4, 11, 'COE', 'Uploads/documents/_coe.pdf', 'Pending', 0, NULL),
+(5, 16, 'B_CERT', 'Uploads/documents/_business_cert.pdf', 'Pending', 0, NULL),
+(6, 17, 'COE', 'Uploads/documents/_coe.pdf', 'Pending', 0, NULL);
 
 -- --------------------------------------------------------
 
@@ -115,6 +119,8 @@ INSERT INTO `alumni_profile` (`user_id`, `address_id`, `first_name`, `middle_nam
 (13, 24, 'Maureen', '', 'Guadalquiver', '09987654321', '2022', 'Student', 'Uploads/photos/Guadalquiver_profile.jpg', '2025-10-17 23:15:45'),
 (14, NULL, 'Kia', 'Banac', 'Balucos', '09514715203', '2023', 'Employed', 'Uploads/photos/Balucos_profile.png', '2025-10-25 06:51:57'),
 (15, 48, 'Jessel', '', 'Tapdasan', '09987654321', '2024', 'Self-Employed', NULL, '2025-10-26 06:01:45'),
+(16, 56, 'Yolem Kieth', '', 'Salarda', '09987654321', '2023', 'Self-Employed', NULL, '2025-10-27 06:36:21'),
+(17, 57, 'Famme', '', 'Tabaranza', '09125124512', '2022', 'Employed', NULL, '2025-10-27 06:47:26'),
 (23, 46, 'Vince Cyrus', 'Rivera', 'Salvador', '09125124512', '2024', 'Employed', NULL, '2025-10-26 04:01:44');
 
 -- --------------------------------------------------------
@@ -149,7 +155,7 @@ INSERT INTO `education_info` (`education_id`, `user_id`, `school_name`, `degree_
 CREATE TABLE `employment_info` (
   `employment_id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
-  `job_title_id` int(11) NOT NULL,
+  `job_title_id` int(11) DEFAULT NULL,
   `company_name` varchar(150) DEFAULT NULL,
   `salary_range` enum('Below ₱10,000','₱10,000–₱20,000','₱20,000–₱30,000','₱30,000–₱40,000','₱40,000–₱50,000','Above ₱50,000') DEFAULT NULL,
   `business_type` varchar(255) DEFAULT NULL,
@@ -165,7 +171,9 @@ INSERT INTO `employment_info` (`employment_id`, `user_id`, `job_title_id`, `comp
 (2, 10, 2, 'Aztec Civilization', '₱20,000–₱30,000', 'Food Service / Catering', NULL),
 (3, 23, 11, 'TechCorp', '₱30,000–₱40,000', '', 'USA'),
 (4, 6, 16, 'ABCD', '₱10,000–₱20,000', '', 'Cebu'),
-(5, 11, 13, 'Jurassic Coders', '₱30,000–₱40,000', '', 'Zamboanga Del Sur, Philippines');
+(5, 11, 13, 'Jurassic Coders', '₱30,000–₱40,000', '', 'Zamboanga Del Sur, Philippines'),
+(6, 16, NULL, NULL, 'Above ₱50,000', 'Event Planning / Photography', NULL),
+(7, 17, 16, 'DMA Protocol', '₱40,000–₱50,000', '', 'Iligan City');
 
 -- --------------------------------------------------------
 
@@ -43375,13 +43383,13 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `address`
 --
 ALTER TABLE `address`
-  MODIFY `address_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=56;
+  MODIFY `address_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=58;
 
 --
 -- AUTO_INCREMENT for table `alumni_documents`
 --
 ALTER TABLE `alumni_documents`
-  MODIFY `doc_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `doc_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `education_info`
@@ -43393,7 +43401,7 @@ ALTER TABLE `education_info`
 -- AUTO_INCREMENT for table `employment_info`
 --
 ALTER TABLE `employment_info`
-  MODIFY `employment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `employment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `job_titles`
