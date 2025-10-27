@@ -1,0 +1,33 @@
+.admin-gradient-bg {
+    background: linear-gradient(180deg, #1e3a8a 0%, #172554 100%);
+}
+.sidebar-item {
+    transition: background-color 0.2s, color 0.2s;
+}
+.admin-sidebar-item:not(.active):hover {
+    background-color: rgba(255, 255, 255, 0.15);
+}
+.admin-sidebar-item.active {
+    background-color: rgba(255, 255, 255, 0.25);
+    font-weight: 600;
+}
+.stats-card {
+    background-color: white;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+.card-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+.admin-avatar {
+    background-color: #f97316;
+}
+#customToast {
+    transition: opacity 0.3s, transform 0.3s;
+    transform: translateY(100%);
+    opacity: 0;
+}
+#customToast.show {
+    transform: translateY(0);
+    opacity: 1;
+}

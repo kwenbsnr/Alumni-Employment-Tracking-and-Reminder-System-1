@@ -1,0 +1,255 @@
+body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Color Variables */
+        :root {
+            --primary-green: #006400; /* Dark Green */
+            --forest-green: #024e02;  /* Slightly Darker */
+            --lime-green: #0b870b;
+            --light-bg: #f3f4f6; /* Tailwind gray-100 */
+            --dark-text: #1C1C1C;
+        }
+
+        /* Top Green Bar */
+        .top-green-bar {
+            height: 10px;
+            width: 100%;
+            background-color: var(--primary-green);
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 50;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
+        /* Top Links Container */
+        .top-links {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background-color: white;
+            position: fixed;
+            top: 10px;
+            left: 0;
+            width: 100%;
+            z-index: 50;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            padding-left: 2rem;
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+        }
+
+        /* Link Hover Effects */
+        .top-links a {
+            color: var(--primary-green);
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+        .top-links a:hover {
+            color: var(--forest-green);
+            text-decoration: underline;
+        }
+
+        /* Login Container */
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            padding-top: 50px;
+        }
+
+        /* Left Side - Branding (Now with image and black overlay) */
+        .school-branding {
+            background-image: url('images/jh-building.png'); /* Use the building image */
+            background-size: cover;
+            background-position: center;
+            width: 70%; /* Keep the widened effect */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+            position: relative;
+            overflow: hidden; /* To contain the pseudo-element overlay */
+            color: white; /* Ensure text is white for contrast */
+        }
+        
+        /* Black Overlay for the image */
+        .school-branding::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(14, 70, 4, 0.821); /* Black overlay with 75% opacity */
+            z-index: 5; /* Below the text content (z-10) */
+        }
+        
+        .school-branding h1, .school-branding p, .school-branding .grid div, .school-branding .flex > div {
+            z-index: 10; /* Ensure content is above the overlay */
+            position: relative; /* Essential for z-index to work */
+        }
+
+        .school-branding h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            text-shadow: 1px 1px 4px rgba(0,0,0,0.8); /* Stronger shadow for text contrast */
+        }
+        .school-branding p {
+            font-size: 1.25rem;
+            opacity: 0.95;
+            text-shadow: 1px 1px 4px rgba(0,0,0,0.8);
+        }
+        /* Adjusted background for stats boxes for better visibility on black overlay */
+        .school-branding .grid div {
+            background: rgba(255, 255, 255, 0.15); /* Light translucent background */
+            border: 1px solid rgba(255, 255, 255, 0.2); /* Subtle white border */
+            backdrop-filter: blur(3px); /* Slightly stronger blur for depth */
+            padding: 1rem;
+            border-radius: 12px;
+            transition: transform 0.2s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3); /* Stronger shadow for boxes */
+        }
+        .school-branding .grid div:hover {
+             transform: translateY(-2px);
+        }
+
+        /* Right Side - Login Form */
+        .login-right {
+            background: var(--light-bg);
+            width: 40%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem;
+        }
+
+        /* Login Box */
+        .login-box {
+            background: white;
+            padding: 3rem 2.5rem;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 450px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .login-box:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+        .login-box h2 {
+            font-size: 2rem;
+            color: var(--dark-text);
+        }
+        .login-box p {
+            color: #555;
+        }
+
+        /* Role Selector */
+        .role-selector {
+            border: 3px solid transparent;
+            transition: all 0.3s ease;
+            padding: 1.5rem 1rem;
+            border-radius: 12px;
+            cursor: pointer;
+            background: #f1f5f9;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .role-selector:hover {
+            border-color: #d1d5db;
+            transform: translateY(-3px);
+            background: #e6f2e6;
+            box-shadow: 0 6px 10px rgba(0,0,0,0.1);
+        }
+        .role-selector.selected {
+            border-color: var(--forest-green);
+            background: #e6f7e6;
+            transform: scale(1.02);
+            box-shadow: 0 0 15px rgba(0, 100, 0, 0.2);
+        }
+        .role-selector i {
+            transition: color 0.3s;
+        }
+
+        /* Form Inputs */
+        input {
+            border: 1px solid #d1d5db;
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            width: 100%;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        input:focus {
+            border-color: var(--lime-green);
+            box-shadow: 0 0 10px rgba(11, 135, 11, 0.3);
+        }
+
+        /* Sign In Button */
+        #loginButton {
+            background: var(--primary-green);
+            color: white;
+            font-weight: 600;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 100, 0, 0.3);
+        }
+        #loginButton:hover {
+            background: var(--forest-green);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 100, 0, 0.4);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .login-container { 
+                flex-direction: column; 
+                padding-top: 50px; 
+            }
+            .school-branding, .login-right { 
+                width: 100%; 
+            }
+            .school-branding { 
+                padding: 3rem 2rem;
+                min-height: 40vh;
+            }
+            .login-right { 
+                padding: 3rem 2rem;
+                min-height: 60vh;
+            }
+            .top-links {
+                justify-content: space-around;
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+        }
+        @media (max-width: 640px) {
+            .school-branding h1 {
+                font-size: 2.25rem;
+            }
+            .school-branding p {
+                font-size: 1rem;
+            }
+            .school-branding .grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            .login-box {
+                padding: 2rem 1.5rem;
+            }
+            .top-links {
+                 flex-wrap: wrap;
+                 justify-content: center;
+                 gap: 10px;
+                 font-size: 0.875rem;
+            }
+            .top-links a {
+                 font-size: 0.8rem;
+            }
+        }
