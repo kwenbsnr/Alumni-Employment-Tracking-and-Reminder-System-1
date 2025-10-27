@@ -257,8 +257,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute();
             $stmt->close();
         } elseif ($employment_status === 'Self-Employed' && ($business_type || $salary)) {
-            $stmt = $conn->prepare("REPLACE INTO employment_info (user_id, job_title_id, company_name, company_address, salary_range, business_type) VALUES (?, NULL, NULL, NULL, ?, ?)");
-            $stmt->bind_param("iss", $user_id, $salary, $business_type);
+            // For Self-employed, we need to handle the job_title_id constraint
+            // First, try to find or create a dummy job title for self-employed
+            $stmt = $conn->prepare("SELECT job_title_id FROM job_titles WHERE title = 'Self-Employed'");
+            $stmt->execute();
+            $result = $stmt->get_result();
+            if ($row = $result->fetch_assoc()) {
+                $job_title_id = $row['job_title_id'];
+            } else {
+                $stmt = $conn->prepare("INSERT INTO job_titles (title) VALUES ('Self-Employed')");
+                $stmt->execute();
+                $job_title_id = $conn->insert_id;
+            }
+            $stmt->close();
+
+            error_log("Self-employed data for user_id $user_id: business_type='$business_type', salary='$salary', job_title_id=$job_title_id");
+            $stmt = $conn->prepare("REPLACE INTO employment_info (user_id, job_title_id, company_name, company_address, salary_range, business_type) VALUES (?, ?, NULL, NULL, ?, ?)");
+            $stmt->bind_param("iiss", $user_id, $job_title_id, $salary, $business_type);
             $stmt->execute();
             $stmt->close();
         } elseif ($employment_status === 'Unemployed' || $employment_status === 'Student') {

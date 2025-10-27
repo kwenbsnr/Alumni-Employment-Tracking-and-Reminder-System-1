@@ -41,6 +41,9 @@ $result = $stmt->get_result();
 $employment = $result->fetch_assoc() ?: [];
 $stmt->close();
 
+// Debug: Log employment data for troubleshooting
+error_log("Employment data for user_id $user_id: " . json_encode($employment));
+
 // Process business_type for display
 $business_type = $employment['business_type'] ?? '';
 $business_type_other = '';
@@ -180,7 +183,14 @@ ob_start();
                     <?php if ($profile['employment_status'] === 'Self-Employed'): ?>
                         <div class="flex justify-between">
                             <dt class="font-medium">Business Type</dt>
-                            <dd><?php echo htmlspecialchars($employment['business_type'] ?? 'N/A'); ?></dd>
+                            <dd><?php 
+                                $display_business_type = $employment['business_type'] ?? 'N/A';
+                                // Handle "Others: " prefix for display
+                                if (strpos($display_business_type, 'Others: ') === 0) {
+                                    $display_business_type = 'Others (Please specify)';
+                                }
+                                echo htmlspecialchars($display_business_type); 
+                            ?></dd>
                         </div>
                     <?php endif; ?>
                     <div class="flex justify-between">
