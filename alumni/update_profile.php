@@ -236,74 +236,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Process employment info
-    $employment_id = $existing_employment_id;
-    $job_title_id = $_POST['job_title_id'] ?? null;
-    $company_name = trim($_POST['company_name'] ?? '');
-    $company_region_id = trim($_POST['company_region_id'] ?? '');
-    $company_province_id = trim($_POST['company_province_id'] ?? '');
-    $company_municipality_id = trim($_POST['company_municipality_id'] ?? '');
-    $company_barangay_id = trim($_POST['company_barangay_id'] ?? '');
-    $business_type = trim($_POST['business_type'] ?? '');
-    $salary_range = trim($_POST['salary_range'] ?? '');
+    $employment_id = null;
+    if ($can_update && in_array($employment_status, ['Employed', 'Self-Employed', 'Employed & Student'])) {
+        // Fetch existing employment_id if any
+        $stmt = $conn->prepare("SELECT employment_id FROM employment_info WHERE user_id = ?");
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($row = $result->fetch_assoc()) {
+            $employment_id = $row['employment_id'];
+        }
+        $stmt->close();
 
-    if ($can_update && in_array($employment_status, ['Employed', 'Employed & Student', 'Self-Employed'])) {
-        error_log("Processing employment for user_id $user_id: job_title_id='$job_title_id', company_name='$company_name', company_barangay_id='$company_barangay_id', business_type='$business_type', salary_range='$salary_range', employment_status='$employment_status'");
-
-        // Set default job_title_id for Self-Employed if not provided
-        if ($employment_status === 'Self-Employed' && empty($job_title_id)) {
-            $job_title_id = 0; // Default ID for Other/Self-Employed
-            // Validate default job_title_id exists
-            $check_job_stmt = $conn->prepare("SELECT job_title_id FROM job_titles WHERE job_title_id = ?");
-            $check_job_stmt->bind_param("i", $job_title_id);
-            $check_job_stmt->execute();
-            $check_job_result = $check_job_stmt->get_result();
-            if ($check_job_result->num_rows === 0) {
-                throw new Exception("Default job_title_id '$job_title_id' for Self-Employed not found in job_titles");
+        // Get or create job_title_id based on job_title string (not direct ID from POST)
+        $job_title_id = null;
+        if (!empty($job_title) && in_array($employment_status, ['Employed', 'Employed & Student'])) {
+            $stmt = $conn->prepare("SELECT job_title_id FROM job_titles WHERE title = ?");
+            $stmt->bind_param("s", $job_title);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            if ($row = $result->fetch_assoc()) {
+                $job_title_id = $row['job_title_id'];
+            } else {
+                $insert_stmt = $conn->prepare("INSERT INTO job_titles (title) VALUES (?)");
+                $insert_stmt->bind_param("s", $job_title);
+                $insert_stmt->execute();
+                $job_title_id = $conn->insert_id;
+                $insert_stmt->close();
             }
-            $check_job_stmt->close();
-        } elseif (empty($job_title_id) && in_array($employment_status, ['Employed', 'Employed & Student'])) {
-            throw new Exception("Job Title ID is required for employment status '$employment_status'");
+            $stmt->close();
+        } elseif (empty($job_title) && in_array($employment_status, ['Employed', 'Employed & Student'])) {
+            throw new Exception("Job Title is required for employment status '$employment_status'");
         }
 
-        // Validate company_barangay_id exists if provided
-        if (!empty($company_barangay_id)) {
-            $check_stmt = $conn->prepare("SELECT barangay_id FROM table_barangay WHERE barangay_id = ?");
-            $check_stmt->bind_param("s", $company_barangay_id);
-            $check_stmt->execute();
-            $check_result = $check_stmt->get_result();
-            if ($check_result->num_rows === 0) {
-                $debug_stmt = $conn->prepare("SELECT barangay_id, barangay_name FROM table_barangay WHERE municipality_id = ? ORDER BY barangay_name");
-                $debug_stmt->bind_param("s", $company_municipality_id);
-                $debug_stmt->execute();
-                $debug_result = $debug_stmt->get_result();
-                $valid_barangays = [];
-                while ($row = $debug_result->fetch_assoc()) {
-                    $valid_barangays[] = ['id' => $row['barangay_id'], 'name' => $row['barangay_name']];
-                }
-                $debug_stmt->close();
-                error_log("Valid company barangays for municipality_id '$company_municipality_id': " . json_encode($valid_barangays));
-                throw new Exception("Invalid company_barangay_id: '$company_barangay_id' (hex: " . bin2hex($company_barangay_id) . ") not found in table_barangay");
-            }
-            $check_stmt->close();
-        }
-
-        // Proceed with insert or update
-        if ($employment_id) {
-            $stmt = $conn->prepare("UPDATE employment_info SET job_title_id = ?, company_name = ?, company_region_id = ?, company_province_id = ?, company_municipality_id = ?, company_barangay_id = ?, business_type = ?, salary_range = ? WHERE employment_id = ?");
-            $stmt->bind_param("isssssssi", $job_title_id, $company_name, $company_region_id, $company_province_id, $company_municipality_id, $company_barangay_id, $business_type, $salary_range, $employment_id);
+        // For Self-Employed, ensure job_title_id is null and clear company fields
+        if ($employment_status === 'Self-Employed') {
+            $job_title_id = null;
+            $company_name = '';
+            $company_address = '';
         } else {
-            $stmt = $conn->prepare("INSERT INTO employment_info (user_id, job_title_id, company_name, company_region_id, company_province_id, company_municipality_id, company_barangay_id, business_type, salary_range) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param("iisssssss", $user_id, $job_title_id, $company_name, $company_region_id, $company_province_id, $company_municipality_id, $company_barangay_id, $business_type, $salary_range);
+            $company_name = $company;
+           // $company_address = $company_address; // Already from POST
+        }
+
+        error_log("Processing employment for user_id $user_id: job_title_id='$job_title_id', company_name='$company_name', business_type='$business_type', salary_range='$salary', employment_status='$employment_status'");
+
+        // INSERT or UPDATE
+        if ($employment_id) {
+            $stmt = $conn->prepare("UPDATE employment_info SET job_title_id = ?, company_name = ?, company_address = ?, business_type = ?, salary_range = ? WHERE employment_id = ?");
+            $stmt->bind_param("issssi", $job_title_id, $company_name, $company_address, $business_type, $salary, $employment_id);
+        } else {
+            $stmt = $conn->prepare("INSERT INTO employment_info (user_id, job_title_id, company_name, company_address, business_type, salary_range) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param("iissss", $user_id, $job_title_id, $company_name, $company_address, $business_type, $salary);
         }
         if (!$stmt->execute()) {
             throw new Exception("Execute failed: " . $stmt->error);
         }
         $employment_id = $employment_id ?: $conn->insert_id;
         $stmt->close();
-    } elseif ($can_update && in_array($employment_status, ['Employed', 'Employed & Student', 'Self-Employed']) && ($job_title_id || $company_name || $company_barangay_id)) {
-        error_log("Incomplete employment fields for user_id $user_id: job_title_id='$job_title_id', company_name='$company_name', company_barangay_id='$company_barangay_id', employment_status='$employment_status'");
-        header("Location: alumni_profile.php?error=" . urlencode("All employment fields (Job Title, Company Name, Company Address) are required for status '$employment_status'."));
-        exit;
     }
 
     // Process education
