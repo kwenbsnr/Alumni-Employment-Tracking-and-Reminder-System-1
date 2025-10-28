@@ -146,12 +146,12 @@ ob_start();
                 <div class="flex justify-between">
                     <dt class="font-medium">Address</dt>
                     <dd><?php echo htmlspecialchars(
+                        ($profile['zip_code'] ?? '') . ', ' .
                         ($profile['street_details'] ?? '') . ', ' .
                         ($profile['barangay_name'] ?? '') . ', ' .
                         ($profile['municipality_name'] ?? '') . ', ' .
                         ($profile['province_name'] ?? '') . ', ' .
-                        ($profile['region_name'] ?? '') . ' ' .
-                        ($profile['zip_code'] ?? '')
+                        ($profile['region_name'] ?? '') . ' '   
                     ); ?></dd>
                 </div>
             </dl>
@@ -187,7 +187,7 @@ ob_start();
                                 $display_business_type = $employment['business_type'] ?? 'N/A';
                                 // Handle "Others: " prefix for display
                                 if (strpos($display_business_type, 'Others: ') === 0) {
-                                    $display_business_type = 'Others (Please specify)';
+                                    $display_business_type = $employment['business_type'];
                                 }
                                 echo htmlspecialchars($display_business_type); 
                             ?></dd>
@@ -218,7 +218,7 @@ ob_start();
         <div class="bg-white p-6 rounded-xl shadow-lg">
             <h3 class="text-lg font-semibold text-gray-600 mb-4">Documents</h3>
             <?php if (empty($docs)): ?>
-                <p class="text-sm text-gray-500">No documents uploaded.</p>
+                <p class="text-sm text-gray-500">Documents not required.</p>
             <?php else: ?>
                 <div class="space-y-4">
                     <?php foreach ($docs as $doc): ?>
@@ -910,6 +910,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!isValid) {
                 event.preventDefault();
             }
+            
+            /*if (isValid) {
+                alumniProfileForm.submit(); // Manually submit the form ONLY if all checks passed
+            }*/
         });
     }
 });

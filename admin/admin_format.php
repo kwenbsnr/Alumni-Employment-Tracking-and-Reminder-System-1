@@ -34,7 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
 <body class="bg-gray-50">
     <div class="flex min-h-screen">
         <!-- Sidebar -->
-        <nav class="w-64 admin-gradient-bg text-white flex-shrink-0">
+        <nav class="w-72 admin-gradient-bg text-white flex-shrink-0 flex flex-col h-screen justify-between">
             <div class="p-6 flex-grow flex flex-col">
                 <div class="flex items-center space-x-3 mb-8">
                     <div class="w-10 h-10 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
@@ -52,10 +52,13 @@ document.addEventListener("DOMContentLoaded", () => {
                         <span>Alumni Records</span>
                     </a></li>
                 </ul>
-                <div class="mt-auto pt-4 border-t border-white border-opacity-20">
-                    <a href="../login/logout.php" class="w-full text-left sidebar-item admin-sidebar-item flex items-center space-x-3 p-3 rounded-xl text-red-300 hover:text-white hover:bg-red-700 transition-colors">
-                        <i class="fas fa-sign-out-alt w-5"></i>
-                        <span class="font-medium">Logout</span>
+
+                <!-- Logout -->
+                <div class="p-6">
+                    <hr class="border-gray-400 my-6">
+                    <a href="../login/logout.php" class="flex items-center space-x-3 text-white-300 hover:text-red-500 p-3 rounded-lg">
+                        <i class="fas fa-sign-out-alt text-xl" aria-hidden="true"></i>
+                        <span>Logout</span>
                     </a>
                 </div>
             </div>
@@ -74,14 +77,34 @@ document.addEventListener("DOMContentLoaded", () => {
                             <i class="fas fa-bell text-xl"></i>
                             <span class="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full border-2 border-white"></span>
                         </button>
-                        <div class="flex items-center space-x-3">
-                            <div class="admin-avatar w-10 h-10 rounded-full flex items-center justify-center text-white font-bold">
-                                AD
+                            <div class="flex items-center space-x-3">
+                                <div class="admin-avatar w-10 h-10 rounded-full flex items-center justify-center text-white font-bold">
+                                    <?php 
+                                    // Fetch admin name from users table
+                                    $stmt = $conn->prepare("SELECT name FROM users WHERE user_id = ? AND role = 'admin'");
+                                    $stmt->bind_param("i", $_SESSION["user_id"]);
+                                    $stmt->execute();
+                                    $result = $stmt->get_result();
+                                    $admin_name = 'AD';
+                                    if ($row = $result->fetch_assoc()) {
+                                        $admin_name = strtoupper(substr($row['name'], 0, 2)); // First 2 letters
+                                    }
+                                    $stmt->close();
+                                    echo htmlspecialchars($admin_name);
+                                    ?>
+                                </div>
+                                <div class="hidden md:block">
+                                    <p class="font-medium text-gray-800">
+                                        <?php 
+                                        // Display full name + email
+                                        echo htmlspecialchars($row['name'] ?? $_SESSION["email"]); 
+                                        ?>
+                                    </p>
+                                    <p class="text-sm text-gray-500">
+                                        <?php echo htmlspecialchars($_SESSION["email"]); ?>
+                                    </p>
+                                </div>
                             </div>
-                            <div class="hidden md:block">
-                                <p class="font-medium text-gray-800"><?php echo htmlspecialchars($_SESSION["email"]); ?></p>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </header>

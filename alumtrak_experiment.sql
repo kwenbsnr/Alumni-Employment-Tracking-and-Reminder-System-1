@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3307
--- Generation Time: Oct 27, 2025 at 08:46 AM
+-- Generation Time: Oct 28, 2025 at 09:20 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -53,7 +53,28 @@ INSERT INTO `address` (`address_id`, `barangay_id`, `street_details`, `zip_code`
 (54, '023137039', 'Purok I', '1234'),
 (55, '175910021', 'Purok I', '7841'),
 (56, '153633031', 'Purok I', '6852'),
-(57, '104207007', 'Purok II', '4567');
+(57, '104207007', 'Purok II', '4567'),
+(58, '103504023', 'Purok II', '5897'),
+(63, '141110013', 'Purok II', '6852'),
+(64, '137401019', 'Purok II', '7841'),
+(65, '112303015', 'Purok III', '7029'),
+(66, '101316017', '7978, Purok II', '6852'),
+(67, '150708001', 'Purok I', '1234'),
+(68, '150708001', 'Purok I', '7894'),
+(69, '150708001', 'Poblacion', '7016'),
+(70, '150708001', 'Poblacion', '1234'),
+(71, '140101001', 'Purok I', '1234'),
+(72, '133902001', 'Poblacion', '7016'),
+(73, '012902002', 'Purok I', '1234'),
+(74, '030801001', '0087, Poblacion', '7894'),
+(75, '056208019', 'Poblacion', '5487'),
+(76, '128001006', 'Purok I', '7894'),
+(77, '101805003', 'Purok I', '7894'),
+(78, '141102123', 'Purok III', '7841'),
+(79, '043419006', '0087, Poblacion', '7894'),
+(80, '175316025', 'Purok II', '7029'),
+(81, '118201013', '7978, Purok II', '7841'),
+(82, '098313013', 'Purok II', '7841');
 
 -- --------------------------------------------------------
 
@@ -76,12 +97,13 @@ CREATE TABLE `alumni_documents` (
 --
 
 INSERT INTO `alumni_documents` (`doc_id`, `user_id`, `document_type`, `file_path`, `document_status`, `needs_reupload`, `rejection_reason`) VALUES
-(1, 23, 'COE', 'Uploads/documents/_coe.pdf', 'Pending', 0, NULL),
 (2, 6, 'COE', 'Uploads/documents/_coe.pdf', 'Pending', 0, NULL),
 (3, 6, 'COR', 'Uploads/documents/_cor.pdf', 'Pending', 0, NULL),
 (4, 11, 'COE', 'Uploads/documents/_coe.pdf', 'Pending', 0, NULL),
 (5, 16, 'B_CERT', 'Uploads/documents/_business_cert.pdf', 'Pending', 0, NULL),
-(6, 17, 'COE', 'Uploads/documents/_coe.pdf', 'Pending', 0, NULL);
+(6, 17, 'COE', 'Uploads/documents/_coe.pdf', 'Pending', 0, NULL),
+(11, 19, 'COE', 'Uploads/documents/_coe.pdf', 'Pending', 0, NULL),
+(22, 23, 'B_CERT', 'Uploads/documents/_business_cert.pdf', 'Pending', 0, NULL);
 
 -- --------------------------------------------------------
 
@@ -121,7 +143,9 @@ INSERT INTO `alumni_profile` (`user_id`, `address_id`, `first_name`, `middle_nam
 (15, 48, 'Jessel', '', 'Tapdasan', '09987654321', '2024', 'Self-Employed', NULL, '2025-10-26 06:01:45'),
 (16, 56, 'Yolem Kieth', '', 'Salarda', '09987654321', '2023', 'Self-Employed', NULL, '2025-10-27 06:36:21'),
 (17, 57, 'Famme', '', 'Tabaranza', '09125124512', '2022', 'Employed', NULL, '2025-10-27 06:47:26'),
-(23, 46, 'Vince Cyrus', 'Rivera', 'Salvador', '09125124512', '2024', 'Employed', NULL, '2025-10-26 04:01:44');
+(18, 58, 'Mariel', 'Manaba', 'Ticmon', '09968735402', '2023', 'Employed & Student', NULL, '2025-10-27 08:02:28'),
+(19, 71, 'Jenneth', 'Donoso', 'Corcelles', '09367891026', '2024', 'Employed', NULL, '2025-10-28 07:30:51'),
+(23, 82, 'Vince Cyrus', '', 'Salvador', '09514715203', '2021', 'Self-Employed', NULL, '2025-10-28 08:16:42');
 
 -- --------------------------------------------------------
 
@@ -169,11 +193,12 @@ CREATE TABLE `employment_info` (
 INSERT INTO `employment_info` (`employment_id`, `user_id`, `job_title_id`, `company_name`, `salary_range`, `business_type`, `company_address`) VALUES
 (1, 1, 1, 'INCA', 'Above ₱50,000', 'Food Service / Catering', NULL),
 (2, 10, 2, 'Aztec Civilization', '₱20,000–₱30,000', 'Food Service / Catering', NULL),
-(3, 23, 11, 'TechCorp', '₱30,000–₱40,000', '', 'USA'),
 (4, 6, 16, 'ABCD', '₱10,000–₱20,000', '', 'Cebu'),
 (5, 11, 13, 'Jurassic Coders', '₱30,000–₱40,000', '', 'Zamboanga Del Sur, Philippines'),
 (6, 16, NULL, NULL, 'Above ₱50,000', 'Event Planning / Photography', NULL),
-(7, 17, 16, 'DMA Protocol', '₱40,000–₱50,000', '', 'Iligan City');
+(7, 17, 16, 'DMA Protocol', '₱40,000–₱50,000', '', 'Iligan City'),
+(12, 19, 15, 'Facebook', 'Below ₱10,000', '', 'USA'),
+(21, 23, NULL, '', '₱40,000–₱50,000', 'Retail / Online Selling', '');
 
 -- --------------------------------------------------------
 
@@ -199,11 +224,13 @@ INSERT INTO `job_titles` (`job_title_id`, `title`) VALUES
 (5, 'Data Analyst'),
 (9, 'Database Administrator'),
 (13, 'DevOps Engineer'),
+(22, 'Freelancer'),
 (14, 'Front-End Developer'),
 (18, 'Full Stack Developer'),
 (17, 'Graphic Artist'),
 (16, 'IT Consultant'),
 (6, 'IT Support Specialist'),
+(23, 'Marketing'),
 (12, 'Mobile App Developer'),
 (7, 'Network Administrator'),
 (3, 'Software Engineer'),
@@ -43383,31 +43410,31 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `address`
 --
 ALTER TABLE `address`
-  MODIFY `address_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=58;
+  MODIFY `address_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=83;
 
 --
 -- AUTO_INCREMENT for table `alumni_documents`
 --
 ALTER TABLE `alumni_documents`
-  MODIFY `doc_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `doc_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT for table `education_info`
 --
 ALTER TABLE `education_info`
-  MODIFY `education_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `education_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `employment_info`
 --
 ALTER TABLE `employment_info`
-  MODIFY `employment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `employment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
 -- AUTO_INCREMENT for table `job_titles`
 --
 ALTER TABLE `job_titles`
-  MODIFY `job_title_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+  MODIFY `job_title_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
 -- AUTO_INCREMENT for table `update_log`

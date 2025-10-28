@@ -1,32 +1,53 @@
+/* admin_format.css - Consistent with alumni_format.css behavior */
+:root {
+    --primary-blue: #1e3a8a;
+    --dark-blue: #172554;
+    --hover-bg: rgba(255, 255, 255, 0.1);
+    --active-bg: rgba(255, 255, 255, 0.3);
+    --border-accent: #3b82f6; /* Tailwind blue-500 */
+}
+
 .admin-gradient-bg {
-    background: linear-gradient(180deg, #1e3a8a 0%, #172554 100%);
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--dark-blue) 100%);
 }
+
 .sidebar-item {
-    transition: background-color 0.2s, color 0.2s;
+    transition: all 0.3s ease;
+    color: #fff;
+    padding-left: 14px; /* Default padding */
 }
-.admin-sidebar-item:not(.active):hover {
-    background-color: rgba(255, 255, 255, 0.15);
+
+.sidebar-item:hover {
+    background: var(--hover-bg);
+    border-left: 4px solid var(--border-accent);
 }
-.admin-sidebar-item.active {
-    background-color: rgba(255, 255, 255, 0.25);
-    font-weight: 600;
+
+.sidebar-item.active {
+    background: var(--active-bg);
+    border-left: 4px solid var(--border-accent);
+    padding-left: 10px; /* 14px - 4px = 10px */
 }
+
 .stats-card {
     background-color: white;
     transition: transform 0.3s, box-shadow 0.3s;
 }
+
 .card-hover:hover {
     transform: translateY(-5px);
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
 }
+
 .admin-avatar {
-    background-color: #f97316;
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
 }
+
 #customToast {
     transition: opacity 0.3s, transform 0.3s;
     transform: translateY(100%);
     opacity: 0;
 }
+
 #customToast.show {
     transform: translateY(0);
     opacity: 1;

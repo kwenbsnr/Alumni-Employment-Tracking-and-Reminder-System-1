@@ -61,8 +61,8 @@ $page_title = $page_title ?? "Alumni Page";
             opacity: 1;
         }
     </style>
-
 </head>
+
 <body class="bg-gray-50 min-h-screen flex">
     <!-- Sidebar -->
     <div class="w-72 gradient-bg text-white flex-shrink-0 flex flex-col h-screen justify-between">
@@ -92,8 +92,7 @@ $page_title = $page_title ?? "Alumni Page";
                     <i class="fas fa-sign-out-alt text-xl" aria-hidden="true"></i>
                     <span>Logout</span>
                 </a>
-            </div>
-        
+            </div>  
     </div>
 
     <!-- Main Content -->
@@ -133,17 +132,35 @@ $page_title = $page_title ?? "Alumni Page";
                             </div>
                         </div>
                     </div>
+                    
                     <!-- Profile Info -->
                     <div class="flex items-center space-x-3">
                         <div class="profile-avatar w-10 h-10 rounded-full flex items-center justify-center text-white font-bold">
-                            <?php echo strtoupper(substr($full_name, 0, 2)); ?>
+                            <?php 
+                            // Fetch name and email from users table
+                            $stmt = $conn->prepare("SELECT name, email FROM users WHERE user_id = ?");
+                            $stmt->bind_param("i", $user_id);
+                            $stmt->execute();
+                            $result = $stmt->get_result();
+                            $initials = 'AL';
+                            $user_email = '';
+                            if ($row = $result->fetch_assoc()) {
+                                $initials = strtoupper(substr(trim($row['name'] ?: 'Alumni'), 0, 2));
+                                $user_email = $row['email'];
+                            }
+                            $stmt->close();
+                            echo htmlspecialchars($initials);
+                            ?>
                         </div>
                         <div class="hidden md:block">
-                            <p class="font-medium text-gray-800"><?php echo htmlspecialchars($full_name); ?></p>
-                            <p class="text-sm text-gray-600"><?php echo htmlspecialchars($profile['email'] ?? ''); ?></p>
+                            <p class="font-medium text-gray-800">
+                                <?php echo htmlspecialchars($full_name); ?>
+                            </p>
+                            <p class="font-medium text-gray-700 text-sm">
+                                <?php echo htmlspecialchars($user_email); ?>
+                            </p>
                         </div>
                     </div>
-                    
                 </div>
             </div>
         </header>
