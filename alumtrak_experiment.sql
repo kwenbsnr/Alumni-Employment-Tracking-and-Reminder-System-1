@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3307
--- Generation Time: Oct 28, 2025 at 09:20 AM
+-- Generation Time: Nov 03, 2025 at 06:20 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -74,7 +74,8 @@ INSERT INTO `address` (`address_id`, `barangay_id`, `street_details`, `zip_code`
 (79, '043419006', '0087, Poblacion', '7894'),
 (80, '175316025', 'Purok II', '7029'),
 (81, '118201013', '7978, Purok II', '7841'),
-(82, '098313013', 'Purok II', '7841');
+(82, '098313013', 'Purok II', '7841'),
+(83, '104306015', 'Purok III', '6852');
 
 -- --------------------------------------------------------
 
@@ -103,7 +104,9 @@ INSERT INTO `alumni_documents` (`doc_id`, `user_id`, `document_type`, `file_path
 (5, 16, 'B_CERT', 'Uploads/documents/_business_cert.pdf', 'Pending', 0, NULL),
 (6, 17, 'COE', 'Uploads/documents/_coe.pdf', 'Pending', 0, NULL),
 (11, 19, 'COE', 'Uploads/documents/_coe.pdf', 'Pending', 0, NULL),
-(22, 23, 'B_CERT', 'Uploads/documents/_business_cert.pdf', 'Pending', 0, NULL);
+(22, 23, 'B_CERT', 'Uploads/documents/_business_cert.pdf', 'Pending', 0, NULL),
+(23, 7, 'COE', 'Uploads/documents/_coe.pdf', 'Pending', 0, NULL),
+(24, 7, 'COR', 'Uploads/documents/_cor.pdf', 'Pending', 0, NULL);
 
 -- --------------------------------------------------------
 
@@ -130,10 +133,10 @@ CREATE TABLE `alumni_profile` (
 
 INSERT INTO `alumni_profile` (`user_id`, `address_id`, `first_name`, `middle_name`, `last_name`, `contact_number`, `year_graduated`, `employment_status`, `photo_path`, `last_profile_update`) VALUES
 (1, 13, 'Josie', 'Gumera', 'Oliveros', '09367891026', '2023', 'Employed', 'Uploads/photos/Oliveros_profile.jpg', '2025-10-17 14:15:29'),
-(2, 12, 'Quien', 'Bendula', 'Bisnar', '09514715203', '2025', 'Unemployed', NULL, '2025-10-17 14:13:12'),
+(2, 12, 'Quien', 'Bendula', 'Bisnar', '09514715203', '2024', 'Unemployed', NULL, '2025-10-28 08:26:56'),
 (5, 14, 'Ronaldo', '', 'Repe', '09125124512', '2022', 'Student', 'Uploads/photos/Repe_profile.png', '2025-10-17 23:22:03'),
 (6, 49, 'Dave', '', 'Labadan', '09514715204', '2023', 'Employed & Student', NULL, '2025-10-26 06:59:17'),
-(7, 40, 'Josie', 'Bendula', 'Marchan', '09125124512', '2021', 'Unemployed', 'Uploads/photos/Marchan_profile.png', '2025-10-18 02:08:11'),
+(7, 83, 'Joan Grace', '', 'Patalinghug', '09367891026', '2025', 'Employed & Student', NULL, '2025-10-28 09:25:52'),
 (8, 17, 'Marian', 'Getigan', 'Marchan', '09125124512', '2022', 'Self-Employed', 'Uploads/photos/Marchan_profile.jpg', '2025-10-17 15:53:24'),
 (10, 41, 'Reymark', '', 'Buhian', '09125124512', '2023', 'Employed', 'Uploads/photos/Buhian_profile.jpg', '2025-10-18 02:13:25'),
 (11, 54, 'Saira', '', 'Belarmino', '09987654321', '2024', 'Employed', NULL, '2025-10-27 05:42:58'),
@@ -168,7 +171,8 @@ CREATE TABLE `education_info` (
 
 INSERT INTO `education_info` (`education_id`, `user_id`, `school_name`, `degree_pursued`, `start_year`, `end_year`) VALUES
 (1, 13, 'Central Mindanao University', 'Doctor of Philosophy (PhD) in Information Technology', NULL, NULL),
-(2, 6, 'Central Mindanao University', 'Master of Science in Information Technology', NULL, NULL);
+(2, 6, 'Central Mindanao University', 'Master of Science in Information Technology', NULL, NULL),
+(10, 7, 'University of Sto. Tomas', 'Master of Science in Information Technology', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -198,7 +202,8 @@ INSERT INTO `employment_info` (`employment_id`, `user_id`, `job_title_id`, `comp
 (6, 16, NULL, NULL, 'Above ₱50,000', 'Event Planning / Photography', NULL),
 (7, 17, 16, 'DMA Protocol', '₱40,000–₱50,000', '', 'Iligan City'),
 (12, 19, 15, 'Facebook', 'Below ₱10,000', '', 'USA'),
-(21, 23, NULL, '', '₱40,000–₱50,000', 'Retail / Online Selling', '');
+(21, 23, NULL, '', '₱40,000–₱50,000', 'Retail / Online Selling', ''),
+(22, 7, 16, 'Facebook', '₱20,000–₱30,000', '', 'Manila, Philippines');
 
 -- --------------------------------------------------------
 
@@ -43269,7 +43274,8 @@ INSERT INTO `update_log` (`log_id`, `updated_by`, `updated_id`, `updated_table`,
 (11, 3, 5, 'alumni_profile', '', '2025-10-17 14:37:06'),
 (12, 3, 5, 'alumni_profile', '', '2025-10-17 15:02:26'),
 (13, 3, 5, 'alumni_profile', '', '2025-10-17 15:02:32'),
-(14, 3, 5, 'alumni_profile', '', '2025-10-17 23:22:03');
+(14, 3, 5, 'alumni_profile', '', '2025-10-17 23:22:03'),
+(15, 4, 2, 'alumni_profile', '', '2025-10-28 08:26:57');
 
 -- --------------------------------------------------------
 
@@ -43410,25 +43416,25 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `address`
 --
 ALTER TABLE `address`
-  MODIFY `address_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=83;
+  MODIFY `address_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=84;
 
 --
 -- AUTO_INCREMENT for table `alumni_documents`
 --
 ALTER TABLE `alumni_documents`
-  MODIFY `doc_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+  MODIFY `doc_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT for table `education_info`
 --
 ALTER TABLE `education_info`
-  MODIFY `education_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `education_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `employment_info`
 --
 ALTER TABLE `employment_info`
-  MODIFY `employment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+  MODIFY `employment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT for table `job_titles`
@@ -43440,7 +43446,7 @@ ALTER TABLE `job_titles`
 -- AUTO_INCREMENT for table `update_log`
 --
 ALTER TABLE `update_log`
-  MODIFY `log_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `log_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `users`
