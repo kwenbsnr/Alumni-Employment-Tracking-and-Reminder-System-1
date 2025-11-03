@@ -59,7 +59,7 @@ $contact = trim($_POST['contact_number']);
 $barangay = trim($_POST['barangay_id']);
 $year = trim($_POST['year_graduated']);
 $status = trim($_POST['employment_status']);
-$photo = upload_file('profile_photo', '../Uploads/photos/', $last, 'photo', ['image/jpeg', 'image/png']);
+$photo = upload_file('profile_photo', '../Uploads/photos/', $last, 'profile', ['image/jpeg', 'image/png']);
 
 
 // Safe POST access for address fields matching schema
@@ -155,17 +155,17 @@ if ($job_title || $school_name) {
 }
 
 // Handle documents
-$coe = upload_file('coe_file', '../Uploads/coe/', $last, 'COE', ['application/pdf']);
-$business = upload_file('business_file', '../Uploads/business/', $last, 'B_CERT', ['application/pdf']);
-$cor = upload_file('cor_file', '../Uploads/cor/', $last, 'COR', ['application/pdf']);
+$coe = upload_file('coe_file', '../Uploads/coe/', $last, 'coe', ['application/pdf']);
+$business = upload_file('business_file', '../Uploads/business/', $last, 'business', ['application/pdf']);
+$cor = upload_file('cor_file', '../Uploads/cor/', $last, 'cor', ['application/pdf']);
 
 function save_doc($conn, $alumni_id, $user_id, $type, $path) {
     if (!$path) return;
-    $sql = "INSERT INTO alumni_documents (user_id, user_id, document_type, file_path, document_status) 
-            VALUES (?, ?, ?, ?, 'Pending') 
+    $sql = "INSERT INTO alumni_documents (user_id, document_type, file_path, document_status) 
+            VALUES (?, ?, ?, 'Pending') 
             ON DUPLICATE KEY UPDATE file_path=VALUES(file_path), document_status='Pending', uploaded_at=NOW(), rejection_reason=NULL";
     $st = $conn->prepare($sql);
-    $st->bind_param("iiss", $alumni_id, $user_id, $type, $path);
+    $st->bind_param("iss", $alumni_id, $type, $path);
     if (!$st->execute()) {
         $_SESSION['error'] = $conn->error;
     }

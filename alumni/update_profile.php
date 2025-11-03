@@ -307,7 +307,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Process documents
     if ($can_update || in_array('COE', $rejected_docs)) {
-        $coe_path = upload_file('coe_file', '../Uploads/documents/', $last_name, 'coe');
+        $coe_path = upload_file('coe_file', '../Uploads/coe/', $last_name, 'coe', ['application/pdf']);
         if ($coe_path) {
             $stmt = $conn->prepare("INSERT INTO alumni_documents (user_id, document_type, file_path, document_status, needs_reupload) VALUES (?, 'COE', ?, 'Pending', 0)");
             $stmt->bind_param("is", $alumni_id, $coe_path);
@@ -324,7 +324,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     if ($can_update || in_array('B_CERT', $rejected_docs)) {
-        $business_path = upload_file('business_file', '../Uploads/documents/', $last_name, 'business_cert');
+        $business_path = upload_file('business_file', '../Uploads/business/', $last_name, 'business', ['application/pdf']);
         if ($business_path) {
             $stmt = $conn->prepare("INSERT INTO alumni_documents (user_id, document_type, file_path, document_status, needs_reupload) VALUES (?, 'B_CERT', ?, 'Pending', 0)");
             $stmt->bind_param("is", $alumni_id, $business_path);
@@ -341,7 +341,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     if ($can_update || in_array('COR', $rejected_docs)) {
-        $cor_path = upload_file('cor_file', '../Uploads/documents/', $last_name, 'cor');
+        $cor_path = upload_file('cor_file', '../Uploads/cor/', $last_name, 'cor', ['application/pdf']);
         if ($cor_path) {
             $stmt = $conn->prepare("INSERT INTO alumni_documents (user_id, document_type, file_path, document_status, needs_reupload) VALUES (?, 'COR', ?, 'Pending', 0)");
             $stmt->bind_param("is", $alumni_id, $cor_path);

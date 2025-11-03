@@ -144,7 +144,7 @@ ob_start();
             <label class="block text-sm font-medium text-gray-700">Profile Photo</label>
             <input type="file" name="photo" accept="image/*" class="w-full p-2 border rounded-lg">
             <?php if ($alumni['photo_path']): ?>
-                <p class="text-sm text-gray-500">Current: <a href="../Uploads/<?php echo htmlspecialchars($alumni['photo_path']); ?>" target="_blank">View Photo</a></p>
+                <p class="text-sm text-gray-500">Current: <a href="../<?php echo htmlspecialchars($alumni['photo_path']); ?>" target="_blank">View Photo</a></p>
             <?php endif; ?>
         </div>
         <!-- Address Fields (use code for barangay_id) -->
@@ -173,21 +173,21 @@ ob_start();
             <label class="block text-sm font-medium text-gray-700">Certificate of Employment</label>
             <input type="file" name="coe" accept=".pdf" class="w-full p-2 border rounded-lg">
             <?php if (isset($documents['COE'])): ?>
-                <p class="text-sm text-gray-500">Current: <a href="../Uploads/<?php echo htmlspecialchars($documents['COE']['file_path']); ?>" target="_blank">View COE</a> (Status: <?php echo $documents['COE']['document_status']; ?>)</p>
+                <p class="text-sm text-gray-500">Current: <a href="../<?php echo htmlspecialchars($documents['COE']['file_path']); ?>" target="_blank">View COE</a> (Status: <?php echo $documents['COE']['document_status']; ?>)</p>
             <?php endif; ?>
         </div>
         <div class="mt-4">
             <label class="block text-sm font-medium text-gray-700">Certificate of Registration</label>
             <input type="file" name="cor" accept=".pdf" class="w-full p-2 border rounded-lg">
             <?php if (isset($documents['COR'])): ?>
-                <p class="text-sm text-gray-500">Current: <a href="../Uploads/<?php echo htmlspecialchars($documents['COR']['file_path']); ?>" target="_blank">View COR</a> (Status: <?php echo $documents['COR']['document_status']; ?>)</p>
+                <p class="text-sm text-gray-500">Current: <a href="../<?php echo htmlspecialchars($documents['COR']['file_path']); ?>" target="_blank">View COR</a> (Status: <?php echo $documents['COR']['document_status']; ?>)</p>
             <?php endif; ?>
         </div>
         <div class="mt-4 <?php echo $alumni['employment_status'] == 'Self-Employed' ? '' : 'hidden'; ?>" id="businessCertField">
             <label class="block text-sm font-medium text-gray-700">Business Certificate</label>
             <input type="file" name="business_cert" accept=".pdf" class="w-full p-2 border rounded-lg">
             <?php if (isset($documents['B_CERT'])): ?>
-                <p class="text-sm text-gray-500">Current: <a href="../Uploads/<?php echo htmlspecialchars($documents['B_CERT']['file_path']); ?>" target="_blank">View Business Certificate</a> (Status: <?php echo $documents['B_CERT']['document_status']; ?>)</p>
+                <p class="text-sm text-gray-500">Current: <a href="../<?php echo htmlspecialchars($documents['B_CERT']['file_path']); ?>" target="_blank">View Business Certificate</a> (Status: <?php echo $documents['B_CERT']['document_status']; ?>)</p>
             <?php endif; ?>
         </div>
         <div class="mt-6 flex space-x-4">
