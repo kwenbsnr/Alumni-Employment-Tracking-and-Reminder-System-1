@@ -56,3 +56,26 @@
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1); 
 }
 
+/* Sidebar scroll handling */
+.sidebar-wrapper {
+    height: 100vh;               /* full viewport height */
+    overflow-y: auto;            /* scroll when content overflows */
+    position: sticky;            /* sticks while main scrolls */
+    top: 0;
+}
+.sidebar-wrapper::-webkit-scrollbar {
+    width: 6px;
+}
+.sidebar-wrapper::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.3);
+    border-radius: 3px;
+}
+
+/* Optional smooth fade-in/out for modal */
+.hidden { display: none; }
+#profileUpdateModal {
+    opacity: 0;
+    transition: opacity 0.5s;
+}
+#profileUpdateModal.show { opacity: 1; }
+

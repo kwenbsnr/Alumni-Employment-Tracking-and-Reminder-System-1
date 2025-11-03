@@ -42,73 +42,74 @@ $page_title = $page_title ?? "Alumni Page";
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($page_title); ?></title>
+
     <!-- Tailwind CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="alumni_format.css">
     <script src="../assets/js/phil-address/phil.min.js"></script>
 
-      <style>
-        /* Optional smooth fade-in/out for modal */
-        .hidden {
-        display: none;
-        }
-        #profileUpdateModal {
-            opacity: 0;
-            transition: opacity 0.5s;
-        }
-        #profileUpdateModal.show {
-            opacity: 1;
-        }
-    </style>
 </head>
 
 <body class="bg-gray-50 min-h-screen flex">
-    <!-- Sidebar -->
-    <div class="w-72 gradient-bg text-white flex-shrink-0 flex flex-col h-screen justify-between">
-        <div class="p-6">
-            <div class="flex items-center space-x-3 mb-8">
-                <div class="w-10 h-10 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
-                    <i class="fas fa-graduation-cap text-lg" aria-hidden="true"></i>
+    <!-- ==================== SIDEBAR ==================== -->
+    <aside class="w-72 gradient-bg text-white flex-shrink-0">
+        <div class="sidebar-wrapper flex flex-col justify-between">
+            <!-- Top Section -->
+            <div class="p-6">
+                <div class="flex items-center space-x-3 mb-8">
+                    <div class="w-10 h-10 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
+                        <i class="fas fa-graduation-cap text-lg" aria-hidden="true"></i>
+                    </div>
+                    <h2 class="font-bold text-lg">Alumni</h2>
                 </div>
-                <h2 class="font-bold text-lg">Alumni</h2>
-            </div>
-            <nav class="space-y-2">
-                <a href="alumni_dashboard.php" class="sidebar-item <?php echo ($active_page ?? '') === 'dashboard' ? 'active' : ''; ?> flex items-center space-x-3 p-3 rounded-lg">
-                    <i class="fas fa-tachometer-alt w-5" aria-hidden="true"></i>
-                    <span>Dashboard</span>
-                </a>
-                <a href="alumni_profile.php" class="sidebar-item <?php echo ($active_page ?? '') === 'profile' ? 'active' : ''; ?> flex items-center space-x-3 p-3 rounded-lg">
-                    <i class="fas fa-user w-5" aria-hidden="true"></i>
-                    <span>Profile Management</span>
-                </a>
-            </nav>
-        </div>
 
-            <!-- Push Logout to Bottom -->
+                <nav class="space-y-2">
+                    <a href="alumni_dashboard.php"
+                       class="sidebar-item <?php echo ($active_page ?? '') === 'dashboard' ? 'active' : ''; ?>
+                              flex items-center space-x-3 p-3 rounded-lg">
+                        <i class="fas fa-tachometer-alt w-5" aria-hidden="true"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="alumni_profile.php"
+                       class="sidebar-item <?php echo ($active_page ?? '') === 'profile' ? 'active' : ''; ?>
+                              flex items-center space-x-3 p-3 rounded-lg">
+                        <i class="fas fa-user w-5" aria-hidden="true"></i>
+                        <span>Profile Management</span>
+                    </a>
+                </nav>
+            </div>
+
+            <!-- Bottom Section (Logout) -->
             <div class="p-6">
                 <hr class="border-gray-400 my-6">
-                <a href="../login/logout.php" class="flex items-center space-x-3 text-white-300 hover:text-red-500 p-3 rounded-lg">
+                <a href="../login/logout.php"
+                   class="flex items-center space-x-3 text-white hover:text-red-500 p-3 rounded-lg">
                     <i class="fas fa-sign-out-alt text-xl" aria-hidden="true"></i>
                     <span>Logout</span>
                 </a>
-            </div>  
-    </div>
+            </div>
+        </div>
+    </aside>
 
-    <!-- Main Content -->
+    <!-- ==================== MAIN CONTENT ==================== -->
     <div class="flex-1 flex flex-col">
         <!-- Top Bar -->
         <header class="bg-white shadow-sm border-b p-4">
             <div class="flex items-center justify-between">
                 <h1 class="text-2xl font-bold text-gray-800"><?php echo htmlspecialchars($page_title); ?></h1>
+
                 <div class="flex items-center space-x-6">
-                    <!-- Notification Button and Popup -->
+                    <!-- Notification -->
                     <div class="relative">
-                        <button id="notificationBtn" class="relative text-gray-600 hover:text-blue-600 flex items-center">
+                        <button id="notificationBtn"
+                                class="relative text-gray-600 hover:text-blue-600 flex items-center">
                             <i class="fas fa-bell text-xl"></i>
                             <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
                         </button>
-                        <div id="notifPopup" class="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl hidden z-50 overflow-hidden">
+
+                        <div id="notifPopup"
+                             class="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl hidden z-50 overflow-hidden">
                             <div class="p-4 border-b font-bold text-gray-700 flex justify-between items-center sticky top-0 bg-white">
                                 Notifications
                                 <button id="markReadBtn" class="text-xs text-blue-600 hover:underline">Mark all as read</button>
@@ -132,12 +133,11 @@ $page_title = $page_title ?? "Alumni Page";
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- Profile Info -->
                     <div class="flex items-center space-x-3">
                         <div class="profile-avatar w-10 h-10 rounded-full flex items-center justify-center text-white font-bold">
                             <?php 
-                            // Fetch name and email from users table
                             $stmt = $conn->prepare("SELECT name, email FROM users WHERE user_id = ?");
                             $stmt->bind_param("i", $user_id);
                             $stmt->execute();
@@ -153,12 +153,8 @@ $page_title = $page_title ?? "Alumni Page";
                             ?>
                         </div>
                         <div class="hidden md:block">
-                            <p class="font-medium text-gray-800">
-                                <?php echo htmlspecialchars($full_name); ?>
-                            </p>
-                            <p class="font-medium text-gray-700 text-sm">
-                                <?php echo htmlspecialchars($user_email); ?>
-                            </p>
+                            <p class="font-medium text-gray-800"><?php echo htmlspecialchars($full_name); ?></p>
+                            <p class="font-medium text-gray-700 text-sm"><?php echo htmlspecialchars($user_email); ?></p>
                         </div>
                     </div>
                 </div>
@@ -171,26 +167,29 @@ $page_title = $page_title ?? "Alumni Page";
         </main>
     </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const notifButton = document.getElementById('notificationBtn');
-    const notifPopup = document.getElementById('notifPopup');
+    <!-- ==================== SCRIPTS ==================== -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const notifButton = document.getElementById('notificationBtn');
+            const notifPopup   = document.getElementById('notifPopup');
 
-    notifButton.addEventListener('click', (e) => {
-        e.stopPropagation();
-        notifPopup.classList.toggle('hidden');
-    });
+            notifButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                notifPopup.classList.toggle('hidden');
+            });
 
-    document.addEventListener('click', (e) => {
-        if (!notifPopup.classList.contains('hidden') && !notifPopup.contains(e.target) && e.target !== notifButton) {
-            notifPopup.classList.add('hidden');
-        }
-    });
+            document.addEventListener('click', (e) => {
+                if (!notifPopup.classList.contains('hidden') && 
+                    !notifPopup.contains(e.target) && 
+                    e.target !== notifButton) {
+                    notifPopup.classList.add('hidden');
+                }
+            });
 
-    document.getElementById('markReadBtn').addEventListener('click', () => {
-        notifButton.querySelector('span').classList.add('hidden');
-    });
-});
-</script>
+            document.getElementById('markReadBtn').addEventListener('click', () => {
+                notifButton.querySelector('span').classList.add('hidden');
+            });
+        });
+    </script>
 </body>
 </html>
