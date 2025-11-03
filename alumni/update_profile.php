@@ -70,7 +70,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $raw_barangay_id = $_POST['barangay_id'] ?? '';
     $barangay_id = trim($raw_barangay_id);
     $street_details = trim($_POST['street_details'] ?? '');
-    $zip_code = trim($_POST['zip_code'] ?? '');
     $job_title = trim($_POST['job_title'] ?? '');
     if ($job_title === 'Other') {
         $job_title = trim($_POST['other_job_title'] ?? '');
@@ -93,7 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if (in_array($employment_status, ['Employed', 'Self-Employed', 'Employed & Student'])) {
-            if (empty($barangay_id) || empty($street_details) || empty($zip_code)) {
+            if (empty($barangay_id) || empty($street_details)) {
                 header("Location: alumni_profile.php?error=" . urlencode("All address fields are required for this employment status."));
                 exit;
             }
@@ -125,26 +124,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $address_id = $existing_address_id;
     $barangay_id = trim($_POST['barangay_id'] ?? '');
     $street_details = trim($_POST['street_details'] ?? '');
-    $zip_code = trim($_POST['zip_code'] ?? '');
     $municipality_id = trim($_POST['municipality_id'] ?? '');
 
     error_log("Raw POST data for address: " . json_encode([
         'barangay_id' => $barangay_id,
         'municipality_id' => $municipality_id,
         'street_details' => $street_details,
-        'zip_code' => $zip_code,
         'employment_status' => $employment_status
     ]));
 
-    if ($can_update && ($barangay_id || $street_details || $zip_code || $municipality_id)) {
+    if ($can_update && ($barangay_id || $street_details || $municipality_id)) {
         // Require all address fields
-        if (empty($barangay_id) || empty($street_details) || empty($zip_code) || empty($municipality_id)) {
-            error_log("Incomplete address fields for user_id $user_id: barangay_id='$barangay_id', municipality_id='$municipality_id', street_details='$street_details', zip_code='$zip_code', employment_status='$employment_status'");
-            header("Location: alumni_profile.php?error=" . urlencode("All address fields (Region, Province, Municipality, Barangay, Street Details, Zip Code) are required."));
+        if (empty($barangay_id) || empty($street_details) || empty($municipality_id)) {
+            error_log("Incomplete address fields for user_id $user_id: barangay_id='$barangay_id', municipality_id='$municipality_id', street_details='$street_details', employment_status='$employment_status'");
+            header("Location: alumni_profile.php?error=" . urlencode("All address fields (Region, Province, Municipality, Barangay, Street Details) are required."));
             exit;
         }
 
-        error_log("Processing address for user_id $user_id: barangay_id='$barangay_id' (hex: " . bin2hex($barangay_id) . "), municipality_id='$municipality_id', street_details='$street_details', zip_code='$zip_code', employment_status='$employment_status'");
+        error_log("Processing address for user_id $user_id: barangay_id='$barangay_id' (hex: " . bin2hex($barangay_id) . "), municipality_id='$municipality_id', street_details='$street_details', employment_status='$employment_status'");
 
         // Start transaction
         $conn->begin_transaction();
@@ -183,11 +180,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Proceed with insert or update
             if ($address_id) {
-                $stmt = $conn->prepare("UPDATE address SET barangay_id = ?, street_details = ?, zip_code = ? WHERE address_id = ?");
-                $stmt->bind_param("sssi", $barangay_id, $street_details, $zip_code, $address_id);
+                $stmt = $conn->prepare("UPDATE address SET barangay_id = ?, street_details = ? WHERE address_id = ?");
+                $stmt->bind_param("ssi", $barangay_id, $street_details, $address_id);
             } else {
-                $stmt = $conn->prepare("INSERT INTO address (barangay_id, street_details, zip_code) VALUES (?, ?, ?)");
-                $stmt->bind_param("sss", $barangay_id, $street_details, $zip_code);
+                $stmt = $conn->prepare("INSERT INTO address (barangay_id, street_details) VALUES (?, ?)");
+                $stmt->bind_param("ss", $barangay_id, $street_details);
             }
             if (!$stmt->execute()) {
                 throw new Exception("Execute failed: " . $stmt->error);
@@ -213,8 +210,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     } elseif ($can_update) {
         // Require address fields for all statuses
-        error_log("Missing address fields for user_id $user_id: barangay_id='$barangay_id', municipality_id='$municipality_id', street_details='$street_details', zip_code='$zip_code', employment_status='$employment_status'");
-        header("Location: alumni_profile.php?error=" . urlencode("All address fields (Region, Province, Municipality, Barangay, Street Details, Zip Code) are required."));
+        error_log("Missing address fields for user_id $user_id: barangay_id='$barangay_id', municipality_id='$municipality_id', street_details='$street_details', employment_status='$employment_status'");
+        header("Location: alumni_profile.php?error=" . urlencode("All address fields (Region, Province, Municipality, Barangay, Street Details) are required."));
         exit;
     }
 

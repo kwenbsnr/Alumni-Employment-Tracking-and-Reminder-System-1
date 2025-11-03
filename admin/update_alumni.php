@@ -57,7 +57,6 @@ $last = trim($_POST['last_name']);
 $email = trim($_POST['email']);
 $contact = trim($_POST['contact_number']);
 $barangay = trim($_POST['barangay_id']);
-$zip = trim($_POST['zip_code']);
 $year = trim($_POST['year_graduated']);
 $status = trim($_POST['employment_status']);
 $photo = upload_file('profile_photo', '../Uploads/photos/', $last, 'photo', ['image/jpeg', 'image/png']);
@@ -66,7 +65,6 @@ $photo = upload_file('profile_photo', '../Uploads/photos/', $last, 'photo', ['im
 // Safe POST access for address fields matching schema
 $barangay_id = trim($_POST['barangay_id'] ?? '');  // Use barangay_id code from form
 $street_details = trim($_POST['street_details'] ?? '');
-$zip_code = trim($_POST['zip_code'] ?? '');
 
 // Update alumni_profile with correct column name
 $sql = "UPDATE alumni_profile SET first_name=?, middle_name=?, last_name=?, contact_number=?, year_graduated=?, employment_status=?, photo_path=COALESCE(?, photo_path), last_profile_update=NOW() WHERE user_id=?";
@@ -79,8 +77,8 @@ if (!$q->execute()) {
 }
 
 // Handle address update (if any field provided)
-if ($barangay_id || $street_details || $zip_code) {
-    if (!$barangay_id || !$street_details || !$zip_code) {
+if ($barangay_id || $street_details) {
+    if (!$barangay_id || !$street_details) {
         $_SESSION['error'] = "All address fields required if any provided.";
         header("Location: edit_alumni.php?id=$alumni_id&error=1");
         exit;
@@ -93,25 +91,28 @@ if ($barangay_id || $street_details || $zip_code) {
     $existing_address_id = $addr_result->fetch_assoc()['address_id'] ?? null;
 
     if ($existing_address_id) {
-        $addr_sql = "UPDATE address SET barangay_id = ?, street_details = ?, zip_code = ? WHERE address_id = ?";
+        $addr_sql = "UPDATE address SET barangay_id = ?, street_details = ? WHERE address_id = ?";
         $addr_q = $conn->prepare($addr_sql);
-        $addr_q->bind_param("sssi", $barangay_id, $street_details, $zip_code, $existing_address_id);
-    } else {
-        $addr_sql = "INSERT INTO address (barangay_id, street_details, zip_code) VALUES (?, ?, ?)";
-        $addr_q = $conn->prepare($addr_sql);
-        $addr_q->bind_param("sss", $barangay_id, $street_details, $zip_code);
-        if ($addr_q->execute()) {
-            $new_address_id = $conn->insert_id;
-            $link_sql = "UPDATE alumni_profile SET address_id = ? WHERE user_id = ?";
-            $link_q = $conn->prepare($link_sql);
-            $link_q->bind_param("ii", $new_address_id, $alumni_id);
-            $link_q->execute();
+        $addr_q->bind_param("ssi", $barangay_id, $street_details, $existing_address_id);
+        if (!$addr_q->execute()) {
+            $_SESSION['error'] = $conn->error;
+            header("Location: edit_alumni.php?id=$alumni_id&error=1");
+            exit;
         }
-    }
-    if (!$addr_q->execute()) {
-        $_SESSION['error'] = $conn->error;
-        header("Location: edit_alumni.php?id=$alumni_id&error=1");
-        exit;
+    } else {
+        $addr_sql = "INSERT INTO address (barangay_id, street_details) VALUES (?, ?)";
+        $addr_q = $conn->prepare($addr_sql);
+        $addr_q->bind_param("ss", $barangay_id, $street_details);
+        if (!$addr_q->execute()) {
+            $_SESSION['error'] = $conn->error;
+            header("Location: edit_alumni.php?id=$alumni_id&error=1");
+            exit;
+        }
+        $new_address_id = $conn->insert_id;
+        $link_sql = "UPDATE alumni_profile SET address_id = ? WHERE user_id = ?";
+        $link_q = $conn->prepare($link_sql);
+        $link_q->bind_param("ii", $new_address_id, $alumni_id);
+        $link_q->execute();
     }
 }
 
