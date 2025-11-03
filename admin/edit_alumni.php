@@ -26,7 +26,7 @@ if ($user_id === null) {
 
 // Fetch alumni data with integrated validation
 $query = "SELECT ap.*, u.email, ei.job_title_id, ei.company_name, ei.salary_range, jt.title, 
-          a.barangay_id, a.street_details
+          a.barangay_id
           FROM alumni_profile ap 
           LEFT JOIN users u ON ap.user_id = u.user_id 
           LEFT JOIN employment_info ei ON ap.user_id = ei.user_id 
@@ -166,10 +166,6 @@ ob_start();
                         }
                         ?>
                     </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Street Details</label>
-                    <input type="text" name="street_details" value="<?php echo htmlspecialchars($alumni['street_details'] ?? ''); ?>" class="w-full p-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500">
                 </div>
             </div>
         </div>

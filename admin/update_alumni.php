@@ -64,7 +64,6 @@ $photo = upload_file('profile_photo', '../Uploads/photos/', $last, 'photo', ['im
 
 // Safe POST access for address fields matching schema
 $barangay_id = trim($_POST['barangay_id'] ?? '');  // Use barangay_id code from form
-$street_details = trim($_POST['street_details'] ?? '');
 
 // Update alumni_profile with correct column name
 $sql = "UPDATE alumni_profile SET first_name=?, middle_name=?, last_name=?, contact_number=?, year_graduated=?, employment_status=?, photo_path=COALESCE(?, photo_path), last_profile_update=NOW() WHERE user_id=?";
@@ -76,10 +75,10 @@ if (!$q->execute()) {
     exit;
 }
 
-// Handle address update (if any field provided)
-if ($barangay_id || $street_details) {
-    if (!$barangay_id || !$street_details) {
-        $_SESSION['error'] = "All address fields required if any provided.";
+// Handle address update (if field provided)
+if ($barangay_id) {
+    if (!$barangay_id) {
+        $_SESSION['error'] = "Barangay is required.";
         header("Location: edit_alumni.php?id=$alumni_id&error=1");
         exit;
     }
@@ -91,18 +90,18 @@ if ($barangay_id || $street_details) {
     $existing_address_id = $addr_result->fetch_assoc()['address_id'] ?? null;
 
     if ($existing_address_id) {
-        $addr_sql = "UPDATE address SET barangay_id = ?, street_details = ? WHERE address_id = ?";
+        $addr_sql = "UPDATE address SET barangay_id = ? WHERE address_id = ?";
         $addr_q = $conn->prepare($addr_sql);
-        $addr_q->bind_param("ssi", $barangay_id, $street_details, $existing_address_id);
+        $addr_q->bind_param("si", $barangay_id, $existing_address_id);
         if (!$addr_q->execute()) {
             $_SESSION['error'] = $conn->error;
             header("Location: edit_alumni.php?id=$alumni_id&error=1");
             exit;
         }
     } else {
-        $addr_sql = "INSERT INTO address (barangay_id, street_details) VALUES (?, ?)";
+        $addr_sql = "INSERT INTO address (barangay_id) VALUES (?)";
         $addr_q = $conn->prepare($addr_sql);
-        $addr_q->bind_param("ss", $barangay_id, $street_details);
+        $addr_q->bind_param("s", $barangay_id);
         if (!$addr_q->execute()) {
             $_SESSION['error'] = $conn->error;
             header("Location: edit_alumni.php?id=$alumni_id&error=1");

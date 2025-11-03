@@ -15,7 +15,7 @@ $active_page = "profile";
 
 // Fetch profile data
 $stmt = $conn->prepare("
-    SELECT ap.*, u.email, a.street_details, 
+    SELECT ap.*, u.email, 
            tb.barangay_name, tm.municipality_name, tp.province_name, tr.region_name,
            tr.region_id, tp.province_id, tm.municipality_id, tb.barangay_id
     FROM alumni_profile ap
@@ -146,7 +146,6 @@ ob_start();
                 <div class="flex justify-between">
                     <dt class="font-medium">Address</dt>
                     <dd><?php echo htmlspecialchars(
-                        ($profile['street_details'] ?? '') . ', ' .
                         ($profile['barangay_name'] ?? '') . ', ' .
                         ($profile['municipality_name'] ?? '') . ', ' .
                         ($profile['province_name'] ?? '') . ', ' .
@@ -344,11 +343,6 @@ ob_start();
                                     <option value="">Select Barangay</option>
                                 </select>
 
-                            </label>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Street Details
-                                <input type="text" name="street_details" autocomplete="street-address" value="<?php echo htmlspecialchars($profile['street_details'] ?? ''); ?>" class="w-full border rounded-lg p-2" <?php if (!$can_update) echo 'disabled'; ?>>
                             </label>
                         </div>
                     </div>
@@ -779,7 +773,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const status = employmentStatusSelect ? employmentStatusSelect.value : '';
             const barangayId = barangaySelect ? barangaySelect.value.trim() : '';
             const municipalityId = municipalitySelect ? municipalitySelect.value.trim() : '';
-            const streetDetails = document.querySelector('[name="street_details"]') ? document.querySelector('[name="street_details"]').value.trim() : '';
 
             // Validate personal fields
             if (!document.querySelector('[name="first_name"]') || !document.querySelector('[name="first_name"]').value.trim()) {
@@ -818,10 +811,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (!barangayId) {
                 alert('Barangay is required.');
-                isValid = false;
-            }
-            if (!streetDetails) {
-                alert('Street Details are required.');
                 isValid = false;
             }
             if (barangayId && municipalityId) {
