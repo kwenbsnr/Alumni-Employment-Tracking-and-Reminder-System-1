@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3307
--- Generation Time: Nov 03, 2025 at 06:20 AM
+-- Generation Time: Nov 03, 2025 at 07:47 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -29,53 +29,53 @@ SET time_zone = "+00:00";
 
 CREATE TABLE `address` (
   `address_id` int(11) NOT NULL,
-  `barangay_id` varchar(9) DEFAULT NULL,
-  `street_details` varchar(255) DEFAULT NULL,
-  `zip_code` varchar(10) DEFAULT NULL
+  `barangay_id` varchar(9) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `address`
 --
 
-INSERT INTO `address` (`address_id`, `barangay_id`, `street_details`, `zip_code`) VALUES
-(12, '133901001', 'Purok I', '7841'),
-(13, '112406016', 'Poblacion', '7894'),
-(14, '137502017', '0087, Poblacion', '7894'),
-(17, '153639001', '7978, Purok II', '5241'),
-(24, '101318019', 'Poblacion', '5648'),
-(33, '012801001', 'Test', '1234'),
-(40, '150711011', 'Poblacion', '7894'),
-(41, '150711011', 'Poblacion', '7849'),
-(46, '133901001', 'Poblacion', '1234'),
-(48, '150711001', 'Purok II', '1234'),
-(49, '101301012', 'Poblacion I', '1234'),
-(54, '023137039', 'Purok I', '1234'),
-(55, '175910021', 'Purok I', '7841'),
-(56, '153633031', 'Purok I', '6852'),
-(57, '104207007', 'Purok II', '4567'),
-(58, '103504023', 'Purok II', '5897'),
-(63, '141110013', 'Purok II', '6852'),
-(64, '137401019', 'Purok II', '7841'),
-(65, '112303015', 'Purok III', '7029'),
-(66, '101316017', '7978, Purok II', '6852'),
-(67, '150708001', 'Purok I', '1234'),
-(68, '150708001', 'Purok I', '7894'),
-(69, '150708001', 'Poblacion', '7016'),
-(70, '150708001', 'Poblacion', '1234'),
-(71, '140101001', 'Purok I', '1234'),
-(72, '133902001', 'Poblacion', '7016'),
-(73, '012902002', 'Purok I', '1234'),
-(74, '030801001', '0087, Poblacion', '7894'),
-(75, '056208019', 'Poblacion', '5487'),
-(76, '128001006', 'Purok I', '7894'),
-(77, '101805003', 'Purok I', '7894'),
-(78, '141102123', 'Purok III', '7841'),
-(79, '043419006', '0087, Poblacion', '7894'),
-(80, '175316025', 'Purok II', '7029'),
-(81, '118201013', '7978, Purok II', '7841'),
-(82, '098313013', 'Purok II', '7841'),
-(83, '104306015', 'Purok III', '6852');
+INSERT INTO `address` (`address_id`, `barangay_id`) VALUES
+(33, '012801001'),
+(73, '012902002'),
+(54, '023137039'),
+(74, '030801001'),
+(79, '043419006'),
+(75, '056208019'),
+(84, '097330006'),
+(82, '098313013'),
+(49, '101301012'),
+(66, '101316017'),
+(24, '101318019'),
+(77, '101805003'),
+(58, '103504023'),
+(57, '104207007'),
+(83, '104306015'),
+(65, '112303015'),
+(13, '112406016'),
+(81, '118201013'),
+(76, '128001006'),
+(12, '133901001'),
+(46, '133901001'),
+(72, '133902001'),
+(64, '137401019'),
+(14, '137502017'),
+(71, '140101001'),
+(78, '141102123'),
+(63, '141110013'),
+(67, '150708001'),
+(68, '150708001'),
+(69, '150708001'),
+(70, '150708001'),
+(48, '150711001'),
+(40, '150711011'),
+(41, '150711011'),
+(56, '153633031'),
+(17, '153639001'),
+(85, '160212004'),
+(80, '175316025'),
+(55, '175910021');
 
 -- --------------------------------------------------------
 
@@ -106,7 +106,10 @@ INSERT INTO `alumni_documents` (`doc_id`, `user_id`, `document_type`, `file_path
 (11, 19, 'COE', 'Uploads/documents/_coe.pdf', 'Pending', 0, NULL),
 (22, 23, 'B_CERT', 'Uploads/documents/_business_cert.pdf', 'Pending', 0, NULL),
 (23, 7, 'COE', 'Uploads/documents/_coe.pdf', 'Pending', 0, NULL),
-(24, 7, 'COR', 'Uploads/documents/_cor.pdf', 'Pending', 0, NULL);
+(24, 7, 'COR', 'Uploads/documents/_cor.pdf', 'Pending', 0, NULL),
+(25, 20, 'COE', 'Uploads/documents/_coe.pdf', 'Pending', 0, NULL),
+(26, 20, 'COR', 'Uploads/documents/_cor.pdf', 'Pending', 0, NULL),
+(27, 21, 'COE', 'Uploads/documents/_coe.pdf', 'Pending', 0, NULL);
 
 -- --------------------------------------------------------
 
@@ -148,6 +151,8 @@ INSERT INTO `alumni_profile` (`user_id`, `address_id`, `first_name`, `middle_nam
 (17, 57, 'Famme', '', 'Tabaranza', '09125124512', '2022', 'Employed', NULL, '2025-10-27 06:47:26'),
 (18, 58, 'Mariel', 'Manaba', 'Ticmon', '09968735402', '2023', 'Employed & Student', NULL, '2025-10-27 08:02:28'),
 (19, 71, 'Jenneth', 'Donoso', 'Corcelles', '09367891026', '2024', 'Employed', NULL, '2025-10-28 07:30:51'),
+(20, 84, 'Drexzel', 'Corcelles', 'Escoreal', '09367891026', '2024', 'Employed & Student', NULL, '2025-11-03 05:53:32'),
+(21, 85, 'Danryl', 'Boncales', 'Usa', '09514715203', '2023', 'Employed', NULL, '2025-11-03 06:29:32'),
 (23, 82, 'Vince Cyrus', '', 'Salvador', '09514715203', '2021', 'Self-Employed', NULL, '2025-10-28 08:16:42');
 
 -- --------------------------------------------------------
@@ -172,7 +177,8 @@ CREATE TABLE `education_info` (
 INSERT INTO `education_info` (`education_id`, `user_id`, `school_name`, `degree_pursued`, `start_year`, `end_year`) VALUES
 (1, 13, 'Central Mindanao University', 'Doctor of Philosophy (PhD) in Information Technology', NULL, NULL),
 (2, 6, 'Central Mindanao University', 'Master of Science in Information Technology', NULL, NULL),
-(10, 7, 'University of Sto. Tomas', 'Master of Science in Information Technology', NULL, NULL);
+(10, 7, 'University of Sto. Tomas', 'Master of Science in Information Technology', NULL, NULL),
+(11, 20, 'Zamboanga del Sur State University', 'Master\'s in IT', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -203,7 +209,9 @@ INSERT INTO `employment_info` (`employment_id`, `user_id`, `job_title_id`, `comp
 (7, 17, 16, 'DMA Protocol', '₱40,000–₱50,000', '', 'Iligan City'),
 (12, 19, 15, 'Facebook', 'Below ₱10,000', '', 'USA'),
 (21, 23, NULL, '', '₱40,000–₱50,000', 'Retail / Online Selling', ''),
-(22, 7, 16, 'Facebook', '₱20,000–₱30,000', '', 'Manila, Philippines');
+(22, 7, 16, 'Facebook', '₱20,000–₱30,000', '', 'Manila, Philippines'),
+(23, 20, 24, 'Aztec Civilization', '₱10,000–₱20,000', '', 'Manila, Philippines'),
+(24, 21, 14, 'INCA', 'Above ₱50,000', '', 'USA');
 
 -- --------------------------------------------------------
 
@@ -238,6 +246,7 @@ INSERT INTO `job_titles` (`job_title_id`, `title`) VALUES
 (23, 'Marketing'),
 (12, 'Mobile App Developer'),
 (7, 'Network Administrator'),
+(24, 'Online Teaching'),
 (3, 'Software Engineer'),
 (8, 'Systems Analyst'),
 (4, 'Web Developer');
@@ -43416,31 +43425,31 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `address`
 --
 ALTER TABLE `address`
-  MODIFY `address_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=84;
+  MODIFY `address_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=86;
 
 --
 -- AUTO_INCREMENT for table `alumni_documents`
 --
 ALTER TABLE `alumni_documents`
-  MODIFY `doc_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `doc_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- AUTO_INCREMENT for table `education_info`
 --
 ALTER TABLE `education_info`
-  MODIFY `education_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `education_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `employment_info`
 --
 ALTER TABLE `employment_info`
-  MODIFY `employment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+  MODIFY `employment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT for table `job_titles`
 --
 ALTER TABLE `job_titles`
-  MODIFY `job_title_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
+  MODIFY `job_title_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT for table `update_log`
