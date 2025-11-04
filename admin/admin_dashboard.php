@@ -6,6 +6,13 @@ if (!isset($_SESSION["user_id"]) || $_SESSION["role"] !== "admin") {
 }
 include("../connect.php");
 
+
+
+
+
+
+
+
 $page_title = "Dashboard";
 $active_page = "dashboard";
 
