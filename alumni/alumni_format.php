@@ -8,12 +8,12 @@ include("../connect.php");
 
 $user_id = $_SESSION["user_id"];
 
-// Fetch alumni info
+// First try to fetch name from alumni_profile
 $stmt = $conn->prepare("
-    SELECT ap.first_name, ap.middle_name, ap.last_name, u.email
-    FROM alumni_profile AS ap
-    LEFT JOIN users AS u ON ap.user_id = u.user_id
-    WHERE ap.user_id = ?
+    SELECT ap.first_name, ap.last_name, u.email, u.name as user_name
+    FROM users u
+    LEFT JOIN alumni_profile ap ON u.user_id = ap.user_id
+    WHERE u.user_id = ?
 ");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
@@ -21,16 +21,19 @@ $result = $stmt->get_result();
 $profile = $result->fetch_assoc() ?: [];
 
 // Construct full name with proper checks
-$full_name = 'Alumni'; // Default
+$full_name = 'Alumni'; // Default fallback
 if (!empty($profile)) {
-    $full_name = trim(
-        ($profile['first_name'] ?? '') . ' ' .
-        ($profile['middle_name'] ?? '') . ' ' .
-        ($profile['last_name'] ?? '')
-    );
-    if (empty($full_name)) {
-        $full_name = 'Alumni';
+    if (!empty($profile['first_name']) || !empty($profile['last_name'])) {
+        // Use first and last name from alumni_profile if available
+        $full_name = trim(
+            ($profile['first_name'] ?? '') . ' ' .
+            ($profile['last_name'] ?? '')
+        );
+    } elseif (!empty($profile['user_name'])) {
+        // Fall back to name from users table if alumni_profile is empty
+        $full_name = $profile['user_name'];
     }
+    // Keep default 'Alumni' if both are empty
 }
 
 // Set default page title
@@ -136,20 +139,28 @@ $page_title = $page_title ?? "Alumni Page";
 
                     <!-- Profile Info -->
                     <div class="flex items-center space-x-3">
-                        <div class="profile-avatar w-10 h-10 rounded-full flex items-center justify-center text-white font-bold">
+                        <div class="profile-avatar w-10 h-10 rounded-full flex items-center justify-center text-white font-bold overflow-hidden">
                             <?php 
-                            $stmt = $conn->prepare("SELECT name, email FROM users WHERE user_id = ?");
+                            // Check for photo in alumni_profile
+                            $stmt = $conn->prepare("SELECT ap.photo_path, u.name, u.email FROM users u LEFT JOIN alumni_profile ap ON u.user_id = ap.user_id WHERE u.user_id = ?");
                             $stmt->bind_param("i", $user_id);
                             $stmt->execute();
                             $result = $stmt->get_result();
                             $initials = 'AL';
                             $user_email = '';
+                            $photo_path = null;
                             if ($row = $result->fetch_assoc()) {
                                 $initials = strtoupper(substr(trim($row['name'] ?: 'Alumni'), 0, 2));
                                 $user_email = $row['email'];
+                                $photo_path = $row['photo_path'];
                             }
                             $stmt->close();
-                            echo htmlspecialchars($initials);
+                            
+                            if ($photo_path && file_exists("../" . $photo_path)) {
+                                echo '<img src="../' . htmlspecialchars($photo_path) . '" alt="Profile" class="w-full h-full object-cover">';
+                            } else {
+                                echo htmlspecialchars($initials);
+                            }
                             ?>
                         </div>
                         <div class="hidden md:block">
