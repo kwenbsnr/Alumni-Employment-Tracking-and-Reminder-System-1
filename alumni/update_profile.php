@@ -4,9 +4,9 @@ include("../connect.php");
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 define('DEBUG_MODE', false); // change to true when debugging
-if (DEBUG_MODE) {
+/*if (DEBUG_MODE) {
     error_log("Raw POST data: " . json_encode($_POST));
-}
+}*/
 
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../login/login.php");

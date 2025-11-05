@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3307
--- Generation Time: Nov 03, 2025 at 07:47 AM
+-- Generation Time: Nov 05, 2025 at 02:22 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -43,6 +43,7 @@ INSERT INTO `address` (`address_id`, `barangay_id`) VALUES
 (74, '030801001'),
 (79, '043419006'),
 (75, '056208019'),
+(88, '072217029'),
 (84, '097330006'),
 (82, '098313013'),
 (49, '101301012'),
@@ -62,8 +63,10 @@ INSERT INTO `address` (`address_id`, `barangay_id`) VALUES
 (64, '137401019'),
 (14, '137502017'),
 (71, '140101001'),
+(86, '141102038'),
 (78, '141102123'),
 (63, '141110013'),
+(87, '148102002'),
 (67, '150708001'),
 (68, '150708001'),
 (69, '150708001'),
@@ -98,18 +101,11 @@ CREATE TABLE `alumni_documents` (
 --
 
 INSERT INTO `alumni_documents` (`doc_id`, `user_id`, `document_type`, `file_path`, `document_status`, `needs_reupload`, `rejection_reason`) VALUES
-(2, 6, 'COE', 'Uploads/documents/_coe.pdf', 'Pending', 0, NULL),
-(3, 6, 'COR', 'Uploads/documents/_cor.pdf', 'Pending', 0, NULL),
-(4, 11, 'COE', 'Uploads/documents/_coe.pdf', 'Pending', 0, NULL),
-(5, 16, 'B_CERT', 'Uploads/documents/_business_cert.pdf', 'Pending', 0, NULL),
-(6, 17, 'COE', 'Uploads/documents/_coe.pdf', 'Pending', 0, NULL),
-(11, 19, 'COE', 'Uploads/documents/_coe.pdf', 'Pending', 0, NULL),
 (22, 23, 'B_CERT', 'Uploads/documents/_business_cert.pdf', 'Pending', 0, NULL),
 (23, 7, 'COE', 'Uploads/documents/_coe.pdf', 'Pending', 0, NULL),
 (24, 7, 'COR', 'Uploads/documents/_cor.pdf', 'Pending', 0, NULL),
-(25, 20, 'COE', 'Uploads/documents/_coe.pdf', 'Pending', 0, NULL),
-(26, 20, 'COR', 'Uploads/documents/_cor.pdf', 'Pending', 0, NULL),
-(27, 21, 'COE', 'Uploads/documents/_coe.pdf', 'Pending', 0, NULL);
+(29, 22, 'B_CERT', 'Uploads/documents/_business_cert.pdf', 'Pending', 0, NULL),
+(30, 2, 'COE', 'Uploads/coe/_coe.pdf', 'Pending', 0, NULL);
 
 -- --------------------------------------------------------
 
@@ -136,23 +132,14 @@ CREATE TABLE `alumni_profile` (
 
 INSERT INTO `alumni_profile` (`user_id`, `address_id`, `first_name`, `middle_name`, `last_name`, `contact_number`, `year_graduated`, `employment_status`, `photo_path`, `last_profile_update`) VALUES
 (1, 13, 'Josie', 'Gumera', 'Oliveros', '09367891026', '2023', 'Employed', 'Uploads/photos/Oliveros_profile.jpg', '2025-10-17 14:15:29'),
-(2, 12, 'Quien', 'Bendula', 'Bisnar', '09514715203', '2024', 'Unemployed', NULL, '2025-10-28 08:26:56'),
+(2, 88, 'Quien', 'Bendula', 'Bisnar', '09231654897', '2024', 'Employed', 'Uploads/photos/Bisnar_profile.png', '2025-11-05 11:32:55'),
 (5, 14, 'Ronaldo', '', 'Repe', '09125124512', '2022', 'Student', 'Uploads/photos/Repe_profile.png', '2025-10-17 23:22:03'),
-(6, 49, 'Dave', '', 'Labadan', '09514715204', '2023', 'Employed & Student', NULL, '2025-10-26 06:59:17'),
 (7, 83, 'Joan Grace', '', 'Patalinghug', '09367891026', '2025', 'Employed & Student', NULL, '2025-10-28 09:25:52'),
 (8, 17, 'Marian', 'Getigan', 'Marchan', '09125124512', '2022', 'Self-Employed', 'Uploads/photos/Marchan_profile.jpg', '2025-10-17 15:53:24'),
 (10, 41, 'Reymark', '', 'Buhian', '09125124512', '2023', 'Employed', 'Uploads/photos/Buhian_profile.jpg', '2025-10-18 02:13:25'),
-(11, 54, 'Saira', '', 'Belarmino', '09987654321', '2024', 'Employed', NULL, '2025-10-27 05:42:58'),
-(12, 55, 'John Marnel', 'Lamban', 'Asutilla', '09987654321', '2023', 'Self-Employed', NULL, '2025-10-27 05:52:38'),
 (13, 24, 'Maureen', '', 'Guadalquiver', '09987654321', '2022', 'Student', 'Uploads/photos/Guadalquiver_profile.jpg', '2025-10-17 23:15:45'),
 (14, NULL, 'Kia', 'Banac', 'Balucos', '09514715203', '2023', 'Employed', 'Uploads/photos/Balucos_profile.png', '2025-10-25 06:51:57'),
-(15, 48, 'Jessel', '', 'Tapdasan', '09987654321', '2024', 'Self-Employed', NULL, '2025-10-26 06:01:45'),
-(16, 56, 'Yolem Kieth', '', 'Salarda', '09987654321', '2023', 'Self-Employed', NULL, '2025-10-27 06:36:21'),
-(17, 57, 'Famme', '', 'Tabaranza', '09125124512', '2022', 'Employed', NULL, '2025-10-27 06:47:26'),
-(18, 58, 'Mariel', 'Manaba', 'Ticmon', '09968735402', '2023', 'Employed & Student', NULL, '2025-10-27 08:02:28'),
-(19, 71, 'Jenneth', 'Donoso', 'Corcelles', '09367891026', '2024', 'Employed', NULL, '2025-10-28 07:30:51'),
-(20, 84, 'Drexzel', 'Corcelles', 'Escoreal', '09367891026', '2024', 'Employed & Student', NULL, '2025-11-03 05:53:32'),
-(21, 85, 'Danryl', 'Boncales', 'Usa', '09514715203', '2023', 'Employed', NULL, '2025-11-03 06:29:32'),
+(22, 87, 'Dave Jay', 'Quimada', 'Madrazo', '09514715203', '2023', 'Self-Employed', NULL, '2025-11-03 06:55:34'),
 (23, 82, 'Vince Cyrus', '', 'Salvador', '09514715203', '2021', 'Self-Employed', NULL, '2025-10-28 08:16:42');
 
 -- --------------------------------------------------------
@@ -176,9 +163,7 @@ CREATE TABLE `education_info` (
 
 INSERT INTO `education_info` (`education_id`, `user_id`, `school_name`, `degree_pursued`, `start_year`, `end_year`) VALUES
 (1, 13, 'Central Mindanao University', 'Doctor of Philosophy (PhD) in Information Technology', NULL, NULL),
-(2, 6, 'Central Mindanao University', 'Master of Science in Information Technology', NULL, NULL),
-(10, 7, 'University of Sto. Tomas', 'Master of Science in Information Technology', NULL, NULL),
-(11, 20, 'Zamboanga del Sur State University', 'Master\'s in IT', NULL, NULL);
+(10, 7, 'University of Sto. Tomas', 'Master of Science in Information Technology', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -203,15 +188,10 @@ CREATE TABLE `employment_info` (
 INSERT INTO `employment_info` (`employment_id`, `user_id`, `job_title_id`, `company_name`, `salary_range`, `business_type`, `company_address`) VALUES
 (1, 1, 1, 'INCA', 'Above ₱50,000', 'Food Service / Catering', NULL),
 (2, 10, 2, 'Aztec Civilization', '₱20,000–₱30,000', 'Food Service / Catering', NULL),
-(4, 6, 16, 'ABCD', '₱10,000–₱20,000', '', 'Cebu'),
-(5, 11, 13, 'Jurassic Coders', '₱30,000–₱40,000', '', 'Zamboanga Del Sur, Philippines'),
-(6, 16, NULL, NULL, 'Above ₱50,000', 'Event Planning / Photography', NULL),
-(7, 17, 16, 'DMA Protocol', '₱40,000–₱50,000', '', 'Iligan City'),
-(12, 19, 15, 'Facebook', 'Below ₱10,000', '', 'USA'),
 (21, 23, NULL, '', '₱40,000–₱50,000', 'Retail / Online Selling', ''),
 (22, 7, 16, 'Facebook', '₱20,000–₱30,000', '', 'Manila, Philippines'),
-(23, 20, 24, 'Aztec Civilization', '₱10,000–₱20,000', '', 'Manila, Philippines'),
-(24, 21, 14, 'INCA', 'Above ₱50,000', '', 'USA');
+(26, 22, NULL, '', '₱10,000–₱20,000', 'Retail / Online Selling', ''),
+(27, 2, 12, 'Meta', 'Above ₱50,000', '', 'USA');
 
 -- --------------------------------------------------------
 
@@ -237,6 +217,7 @@ INSERT INTO `job_titles` (`job_title_id`, `title`) VALUES
 (5, 'Data Analyst'),
 (9, 'Database Administrator'),
 (13, 'DevOps Engineer'),
+(25, 'Digital marketing'),
 (22, 'Freelancer'),
 (14, 'Front-End Developer'),
 (18, 'Full Stack Developer'),
@@ -43314,6 +43295,7 @@ INSERT INTO `users` (`user_id`, `email`, `password`, `role`, `name`, `created_at
 (6, 'davelabadan1@gmail.com', '$2y$10$h6Xx10eFsuv0vhUk9ApM/OmLJ1YHyYRGx.lAb.0iSmuHFZ8NpwjO2', 'alumni', 'Dave Labadan', '2025-10-17 08:59:39'),
 (7, 'joangracep@gmail.com', '$2y$10$M1kkyVDtSJHEBwXmuEwNmO.IHkK/S5jmHU7Xtx9lTJthD3qOuPZmG', 'alumni', 'Joan Grace Patalinghug', '2025-10-17 08:59:39'),
 (8, 'marchanmayang687@gmail.com', '$2y$10$PvYQQ4DZnVHa8Z5zqYxEEOGq7.5yI2TkUPbIoTVlPzcjCXzwX8OMG', 'alumni', 'Marian Marchan', '2025-10-17 08:59:39'),
+(9, 'jaafarj.omar@gmail.com', '$2y$10$aBrYT3wN51F1yKGoV/2age.qI5Mz3JXzD0j//TazqSLjsmsfBouMe', 'alumni', 'Jaafar Omar', '2025-11-05 13:21:52'),
 (10, 'buhianreymark@gmail.com', '$2y$10$rkACLYX4XRZkULTFpJefx..w..Cc0rre7xgsv0FpGc4Y070R6Aaiu', 'alumni', 'Reymark Buhian', '2025-10-17 09:01:25'),
 (11, 'sairabelarmino1@gmail.com', '$2y$10$pnjkHN4SA.MxIkO2YV3xFeHK7vTemeFy/FnswuVfDp4n/J8jDjG12', 'alumni', 'Saira Belarmino', '2025-10-17 09:05:44'),
 (12, 'asutillajohn445@gmail.com', '$2y$10$D9Y6u6QAcQfq6ZhPHOGwyOpeuQSBg.qXkzqdsrqZPtZR9ZtvSXVhS', 'alumni', 'John Marnel Asutilla', '2025-10-17 09:05:44'),
@@ -43425,13 +43407,13 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `address`
 --
 ALTER TABLE `address`
-  MODIFY `address_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=86;
+  MODIFY `address_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=89;
 
 --
 -- AUTO_INCREMENT for table `alumni_documents`
 --
 ALTER TABLE `alumni_documents`
-  MODIFY `doc_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
+  MODIFY `doc_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- AUTO_INCREMENT for table `education_info`
@@ -43443,13 +43425,13 @@ ALTER TABLE `education_info`
 -- AUTO_INCREMENT for table `employment_info`
 --
 ALTER TABLE `employment_info`
-  MODIFY `employment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `employment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- AUTO_INCREMENT for table `job_titles`
 --
 ALTER TABLE `job_titles`
-  MODIFY `job_title_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `job_title_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
 
 --
 -- AUTO_INCREMENT for table `update_log`
