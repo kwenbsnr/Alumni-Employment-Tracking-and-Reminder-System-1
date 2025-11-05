@@ -3,7 +3,10 @@ session_start();
 include("../connect.php");
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-error_log("Raw POST data: " . json_encode($_POST));
+define('DEBUG_MODE', false); // change to true when debugging
+if (DEBUG_MODE) {
+    error_log("Raw POST data: " . json_encode($_POST));
+}
 
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../login/login.php");
@@ -44,19 +47,38 @@ if (!$can_update && !$can_reupload) {
 
 function upload_file($field, $dir, $surname, $type, $allowed_types = ['application/pdf']) {
     if (!isset($_FILES[$field]) || $_FILES[$field]['error'] !== UPLOAD_ERR_OK) return null;
-    if (!in_array($_FILES[$field]['type'], $allowed_types)) return null;
-    if ($_FILES[$field]['size'] > 2097152) return null; // 2MB limit
+
+    // MIME and extension checks
+    $fileType = $_FILES[$field]['type'];
+    $fileName = $_FILES[$field]['name'];
+    $fileSize = $_FILES[$field]['size'];
+    $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+
+    // Allowed extensions based on MIME types
+    $allowed_extensions = [];
+    foreach ($allowed_types as $t) {
+        if ($t === 'image/jpeg') $allowed_extensions[] = 'jpg';
+        elseif ($t === 'image/png') $allowed_extensions[] = 'png';
+        elseif ($t === 'application/pdf') $allowed_extensions[] = 'pdf';
+    }
+
+    // Validate type and extension
+    if (!in_array($fileType, $allowed_types) || !in_array($ext, $allowed_extensions)) return null;
+    if ($fileSize > 2 * 1024 * 1024) return null; // 2MB limit
+
     if (!is_dir($dir)) mkdir($dir, 0777, true);
 
-    $ext = '.pdf';
-    if (in_array($_FILES[$field]['type'], ['image/jpeg', 'image/png'])) {
-        $ext = $_FILES[$field]['type'] === 'image/jpeg' ? '.jpg' : '.png';
+    // Create sanitized, unique filename
+    $file_name = preg_replace('/[^a-zA-Z0-9_\-]/', '', $surname) . '_' . $type . '.' . $ext;
+    $target = rtrim($dir, '/') . '/' . $file_name;
+
+    // Move uploaded file
+    if (move_uploaded_file($_FILES[$field]['tmp_name'], $target)) {
+        return str_replace('../', '', $target); // Relative path for DB
     }
-    $file_name = $surname . '_' . $type . $ext;
-    $target = $dir . $file_name;
-    if (move_uploaded_file($_FILES[$field]['tmp_name'], $target)) return str_replace('../', '', $target);
     return null;
 }
+
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -212,22 +234,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // Process profile
-    $photo_path = $profile['photo_path'] ?? null;
-    if ($can_update) {
-        $photo_path = upload_file('profile_photo', '../Uploads/photos/', $last, 'profile', ['image/jpeg', 'image/png']) ?? $photo_path;
+   // Process profile (require photo upload)
+$photo_path = $profile['photo_path'] ?? null;
 
-        if ($profile) {
-            $stmt = $conn->prepare("UPDATE alumni_profile SET first_name = ?, middle_name = ?, last_name = ?, contact_number = ?, year_graduated = ?, employment_status = ?, photo_path = ?, last_profile_update = NOW(), address_id = ? WHERE user_id = ?");
-            $stmt->bind_param("ssssssssi", $first, $middle, $last, $contact, $year_graduated, $employment_status, $photo_path, $address_id, $user_id);
-        } else {
-            $stmt = $conn->prepare("INSERT INTO alumni_profile (user_id, first_name, middle_name, last_name, contact_number, year_graduated, employment_status, photo_path, last_profile_update, address_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)");
-            $stmt->bind_param("isssssssi", $user_id, $first, $middle, $last, $contact, $year_graduated, $employment_status, $photo_path, $address_id);
-        }
-        $stmt->execute();
-        $stmt->close();
-        $alumni_id = $profile ? $profile['user_id'] : $user_id;
+if ($can_update) {
+    // Require photo upload for all alumni
+    if (empty($_FILES['profile_photo']['name']) && empty($photo_path)) {
+        header("Location: alumni_profile.php?error=" . urlencode("Profile photo is required. Please upload a valid JPG or PNG file."));
+        exit;
     }
+
+    // Proceed with upload (2MB max enforced inside upload_file)
+    $new_photo_path = upload_file('profile_photo', '../Uploads/photos/', $last, 'profile', ['image/jpeg', 'image/png']);
+
+    // 🧹 Delete old file only after successful new upload
+    if ($new_photo_path && $photo_path && file_exists('../' . $photo_path)) {
+        unlink('../' . $photo_path);
+    }
+
+    // If a new file was uploaded successfully, use it; otherwise keep old
+    $photo_path = $new_photo_path ?? $photo_path;
+
+    // If still no valid photo path, block submission
+    if (empty($photo_path)) {
+        header("Location: alumni_profile.php?error=" . urlencode("Profile photo upload failed or missing. Please try again."));
+        exit;
+    }
+
+    // Continue with profile update logic
+    if ($profile) {
+        $stmt = $conn->prepare("UPDATE alumni_profile 
+            SET first_name = ?, middle_name = ?, last_name = ?, contact_number = ?, year_graduated = ?, 
+                employment_status = ?, photo_path = ?, last_profile_update = NOW(), address_id = ? 
+            WHERE user_id = ?");
+        $stmt->bind_param("ssssssssi", $first, $middle, $last, $contact, $year_graduated, $employment_status, $photo_path, $address_id, $user_id);
+    } else {
+        $stmt = $conn->prepare("INSERT INTO alumni_profile 
+            (user_id, first_name, middle_name, last_name, contact_number, year_graduated, employment_status, photo_path, last_profile_update, address_id) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)");
+        $stmt->bind_param("isssssssi", $user_id, $first, $middle, $last, $contact, $year_graduated, $employment_status, $photo_path, $address_id);
+    }
+    $stmt->execute();
+    $stmt->close();
+    $alumni_id = $profile ? $profile['user_id'] : $user_id;
+}
+
 
     // Process employment info
     $employment_id = null;
@@ -306,68 +357,109 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Process documents
-    if ($can_update || in_array('COE', $rejected_docs)) {
-        $coe_path = upload_file('coe_file', '../Uploads/coe/', $last_name, 'coe', ['application/pdf']);
-        if ($coe_path) {
-            $stmt = $conn->prepare("INSERT INTO alumni_documents (user_id, document_type, file_path, document_status, needs_reupload) VALUES (?, 'COE', ?, 'Pending', 0)");
-            $stmt->bind_param("is", $alumni_id, $coe_path);
-            if (!$stmt->execute()) {
-                error_log("COE insert failed for user_id $alumni_id: " . $stmt->error);
-                header("Location: alumni_profile.php?error=" . urlencode("COE document insert failed: " . $stmt->error));
-                exit;
-            }
-            $stmt->close();
-        } else if (!empty($_FILES['coe_file']['name'])) {
-            error_log("COE file upload failed for user_id $alumni_id: " . ($_FILES['coe_file']['error'] ?? 'No file or invalid type/size'));
-            header("Location: alumni_profile.php?error=" . urlencode("COE file upload failed: Invalid file type or size exceeded"));
-            exit;
-        }
-    }
-    if ($can_update || in_array('B_CERT', $rejected_docs)) {
-        $business_path = upload_file('business_file', '../Uploads/business/', $last_name, 'business', ['application/pdf']);
-        if ($business_path) {
-            $stmt = $conn->prepare("INSERT INTO alumni_documents (user_id, document_type, file_path, document_status, needs_reupload) VALUES (?, 'B_CERT', ?, 'Pending', 0)");
-            $stmt->bind_param("is", $alumni_id, $business_path);
-            if (!$stmt->execute()) {
-                error_log("B_CERT insert failed for user_id $alumni_id: " . $stmt->error);
-                header("Location: alumni_profile.php?error=" . urlencode("Business certificate insert failed: " . $stmt->error));
-                exit;
-            }
-            $stmt->close();
-        } else if (!empty($_FILES['business_file']['name'])) {
-            error_log("B_CERT file upload failed for user_id $alumni_id: " . ($_FILES['business_file']['error'] ?? 'No file or invalid type/size'));
-            header("Location: alumni_profile.php?error=" . urlencode("Business certificate file upload failed: Invalid file type or size exceeded"));
-            exit;
-        }
-    }
-    if ($can_update || in_array('COR', $rejected_docs)) {
-        $cor_path = upload_file('cor_file', '../Uploads/cor/', $last_name, 'cor', ['application/pdf']);
-        if ($cor_path) {
-            $stmt = $conn->prepare("INSERT INTO alumni_documents (user_id, document_type, file_path, document_status, needs_reupload) VALUES (?, 'COR', ?, 'Pending', 0)");
-            $stmt->bind_param("is", $alumni_id, $cor_path);
-            if (!$stmt->execute()) {
-                error_log("COR insert failed for user_id $alumni_id: " . $stmt->error);
-                header("Location: alumni_profile.php?error=" . urlencode("COR document insert failed: " . $stmt->error));
-                exit;
-            }
-            $stmt->close();
-        } else if (!empty($_FILES['cor_file']['name'])) {
-            error_log("COR file upload failed for user_id $alumni_id: " . ($_FILES['cor_file']['error'] ?? 'No file or invalid type/size'));
-            header("Location: alumni_profile.php?error=" . urlencode("COR file upload failed: Invalid file type or size exceeded"));
-            exit;
-        }
-    }
+if ($can_update || in_array('COE', $rejected_docs)) {
 
-    if ($can_update) {
-        $update_stmt = $conn->prepare("UPDATE alumni_profile SET last_profile_update = NOW() WHERE user_id = ?");
-        $update_stmt->bind_param("i", $user_id);
-        $update_stmt->execute();
-        $update_stmt->close();
+    // 🧹 OLD FILE CLEANUP — COE
+    $oldFileStmt = $conn->prepare("SELECT file_path FROM alumni_documents WHERE user_id = ? AND document_type = 'COE'");
+    $oldFileStmt->bind_param("i", $alumni_id);
+    $oldFileStmt->execute();
+    $oldResult = $oldFileStmt->get_result();
+    if ($old = $oldResult->fetch_assoc()) {
+        $oldPath = '../' . $old['file_path'];
+        if (file_exists($oldPath)) unlink($oldPath);
     }
+    $oldFileStmt->close();
 
-    header("Location: alumni_profile.php?success=Profile updated successfully!");
-    exit;
+    // File upload handling
+    $coe_path = upload_file('coe_file', '../Uploads/coe/', $last_name, 'coe', ['application/pdf']);
+    if ($coe_path) {
+        $stmt = $conn->prepare("INSERT INTO alumni_documents (user_id, document_type, file_path, document_status, needs_reupload) VALUES (?, 'COE', ?, 'Pending', 0)");
+        $stmt->bind_param("is", $alumni_id, $coe_path);
+        if (!$stmt->execute()) {
+            error_log("COE insert failed for user_id $alumni_id: " . $stmt->error);
+            header("Location: alumni_profile.php?error=" . urlencode("COE document insert failed: " . $stmt->error));
+            exit;
+        }
+        $stmt->close();
+    } else if (!empty($_FILES['coe_file']['name'])) {
+        error_log("COE file upload failed for user_id $alumni_id: " . ($_FILES['coe_file']['error'] ?? 'No file or invalid type/size'));
+        header("Location: alumni_profile.php?error=" . urlencode("COE file upload failed: Invalid file type or size exceeded"));
+        exit;
+    }
 }
 
+if ($can_update || in_array('B_CERT', $rejected_docs)) {
+
+    // 🧹 OLD FILE CLEANUP — BUSINESS CERTIFICATE
+    $oldFileStmt = $conn->prepare("SELECT file_path FROM alumni_documents WHERE user_id = ? AND document_type = 'B_CERT'");
+    $oldFileStmt->bind_param("i", $alumni_id);
+    $oldFileStmt->execute();
+    $oldResult = $oldFileStmt->get_result();
+    if ($old = $oldResult->fetch_assoc()) {
+        $oldPath = '../' . $old['file_path'];
+        if (file_exists($oldPath)) unlink($oldPath);
+    }
+    $oldFileStmt->close();
+
+    // File upload handling
+    $business_path = upload_file('business_file', '../Uploads/business/', $last_name, 'business', ['application/pdf']);
+    if ($business_path) {
+        $stmt = $conn->prepare("INSERT INTO alumni_documents (user_id, document_type, file_path, document_status, needs_reupload) VALUES (?, 'B_CERT', ?, 'Pending', 0)");
+        $stmt->bind_param("is", $alumni_id, $business_path);
+        if (!$stmt->execute()) {
+            error_log("B_CERT insert failed for user_id $alumni_id: " . $stmt->error);
+            header("Location: alumni_profile.php?error=" . urlencode("Business certificate insert failed: " . $stmt->error));
+            exit;
+        }
+        $stmt->close();
+    } else if (!empty($_FILES['business_file']['name'])) {
+        error_log("B_CERT file upload failed for user_id $alumni_id: " . ($_FILES['business_file']['error'] ?? 'No file or invalid type/size'));
+        header("Location: alumni_profile.php?error=" . urlencode("Business certificate file upload failed: Invalid file type or size exceeded"));
+        exit;
+    }
+}
+
+if ($can_update || in_array('COR', $rejected_docs)) {
+
+    // OLD FILE CLEANUP — COR (Certificate of Registration)
+    $oldFileStmt = $conn->prepare("SELECT file_path FROM alumni_documents WHERE user_id = ? AND document_type = 'COR'");
+    $oldFileStmt->bind_param("i", $alumni_id);
+    $oldFileStmt->execute();
+    $oldResult = $oldFileStmt->get_result();
+    if ($old = $oldResult->fetch_assoc()) {
+        $oldPath = '../' . $old['file_path'];
+        if (file_exists($oldPath)) unlink($oldPath);
+    }
+    $oldFileStmt->close();
+
+    // File upload handling
+    $cor_path = upload_file('cor_file', '../Uploads/cor/', $last_name, 'cor', ['application/pdf']);
+    if ($cor_path) {
+        $stmt = $conn->prepare("INSERT INTO alumni_documents (user_id, document_type, file_path, document_status, needs_reupload) VALUES (?, 'COR', ?, 'Pending', 0)");
+        $stmt->bind_param("is", $alumni_id, $cor_path);
+        if (!$stmt->execute()) {
+            error_log("COR insert failed for user_id $alumni_id: " . $stmt->error);
+            header("Location: alumni_profile.php?error=" . urlencode("COR document insert failed: " . $stmt->error));
+            exit;
+        }
+        $stmt->close();
+    } else if (!empty($_FILES['cor_file']['name'])) {
+        error_log("COR file upload failed for user_id $alumni_id: " . ($_FILES['cor_file']['error'] ?? 'No file or invalid type/size'));
+        header("Location: alumni_profile.php?error=" . urlencode("COR file upload failed: Invalid file type or size exceeded"));
+        exit;
+    }
+}
+
+if ($can_update) {
+    $update_stmt = $conn->prepare("UPDATE alumni_profile SET last_profile_update = NOW() WHERE user_id = ?");
+    $update_stmt->bind_param("i", $user_id);
+    $update_stmt->execute();
+    $update_stmt->close();
+}
+
+header("Location: alumni_profile.php?success=Profile updated successfully!");
+exit;
+}
+
+// close DB connection
 $conn->close();
-?>
