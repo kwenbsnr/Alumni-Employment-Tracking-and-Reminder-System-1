@@ -9,9 +9,6 @@ if (!isset($_SESSION["user_id"]) || $_SESSION["role"] !== "alumni") {
     exit();
 }
 
-// COMMITTFNJDFNKJNFK
-// TRIAL DSFKJDFJDSKFN
-
 include("../connect.php");
 $page_title = "Dashboard";
 $active_page = "dashboard";
@@ -53,7 +50,6 @@ if (!empty($profile_info)) {
 }
 
 ob_start();
-
 ?>
 
 <!-- Dashboard Section -->

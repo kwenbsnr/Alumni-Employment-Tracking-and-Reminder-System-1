@@ -244,6 +244,7 @@ ob_start();
                 <i class="fas fa-times text-xl"></i>
             </button>
         </div>
+        
         <!-- Profile Form -->
         <form id="alumniProfileForm" class="space-y-6" action="update_profile.php" method="post" enctype="multipart/form-data">
             <!-- Profile Picture + Personal Details -->
@@ -542,6 +543,55 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Profile picture upload and preview
+    const uploadBtn = document.getElementById("uploadPictureBtn");
+    const fileInput = document.getElementById("profilePictureInput");
+    const previewImg = document.getElementById("profilePreview");
+    const form = document.getElementById("alumniProfileForm");
+
+    // Click event: open file picker
+    uploadBtn.addEventListener("click", () => {
+        fileInput.click();
+    });
+
+    // File selection event
+    fileInput.addEventListener("change", function () {
+        const file = this.files[0];
+        if (!file) return;
+
+        // Validate type
+        const validTypes = ["image/jpeg", "image/png"];
+        if (!validTypes.includes(file.type)) {
+            alert("Only JPG and PNG files are allowed.");
+            this.value = "";
+            return;
+        }
+
+        // Validate size (≤ 2MB)
+        if (file.size > 2 * 1024 * 1024) {
+            alert("File size exceeds 2MB.");
+            this.value = "";
+            return;
+        }
+
+        // Live preview
+        const reader = new FileReader();
+        reader.onload = e => {
+            previewImg.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+
+    // Prevent submission if no file is uploaded
+    form.addEventListener("submit", function (e) {
+        if (!fileInput.files.length) {
+            e.preventDefault(); // block submission
+            alert("Please upload your profile picture before submitting.");
+            return false;
+        }
+    });
+
+
     // Job title toggle for "Other"
     if (jobTitleSelect) {
         jobTitleSelect.addEventListener('change', () => {
@@ -614,7 +664,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Address dropdown population (DB-driven)
+    // Address dropdown population 
     let regionsData;
     async function loadAddressData() {
         if (isAddressLoading) return;
