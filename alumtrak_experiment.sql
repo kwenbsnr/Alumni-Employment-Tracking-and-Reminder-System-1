@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3307
--- Generation Time: Nov 05, 2025 at 02:22 PM
+-- Generation Time: Nov 09, 2025 at 06:21 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -43,16 +43,23 @@ INSERT INTO `address` (`address_id`, `barangay_id`) VALUES
 (74, '030801001'),
 (79, '043419006'),
 (75, '056208019'),
+(92, '060610017'),
+(94, '063034033'),
 (88, '072217029'),
+(89, '074610011'),
+(90, '082618019'),
 (84, '097330006'),
 (82, '098313013'),
+(96, '099701040'),
 (49, '101301012'),
 (66, '101316017'),
 (24, '101318019'),
 (77, '101805003'),
+(91, '103504008'),
 (58, '103504023'),
 (57, '104207007'),
 (83, '104306015'),
+(97, '112301001'),
 (65, '112303015'),
 (13, '112406016'),
 (81, '118201013'),
@@ -66,11 +73,13 @@ INSERT INTO `address` (`address_id`, `barangay_id`) VALUES
 (86, '141102038'),
 (78, '141102123'),
 (63, '141110013'),
+(95, '148102001'),
 (87, '148102002'),
 (67, '150708001'),
 (68, '150708001'),
 (69, '150708001'),
 (70, '150708001'),
+(93, '150708001'),
 (48, '150711001'),
 (40, '150711011'),
 (41, '150711011'),
@@ -90,22 +99,19 @@ CREATE TABLE `alumni_documents` (
   `doc_id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
   `document_type` enum('COR','COE','B_CERT') NOT NULL,
-  `file_path` varchar(255) NOT NULL,
-  `document_status` enum('Pending','Approved','Rejected') DEFAULT 'Pending',
-  `needs_reupload` tinyint(1) DEFAULT 0,
-  `rejection_reason` text DEFAULT NULL
+  `file_path` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `alumni_documents`
 --
 
-INSERT INTO `alumni_documents` (`doc_id`, `user_id`, `document_type`, `file_path`, `document_status`, `needs_reupload`, `rejection_reason`) VALUES
-(22, 23, 'B_CERT', 'Uploads/documents/_business_cert.pdf', 'Pending', 0, NULL),
-(23, 7, 'COE', 'Uploads/documents/_coe.pdf', 'Pending', 0, NULL),
-(24, 7, 'COR', 'Uploads/documents/_cor.pdf', 'Pending', 0, NULL),
-(29, 22, 'B_CERT', 'Uploads/documents/_business_cert.pdf', 'Pending', 0, NULL),
-(30, 2, 'COE', 'Uploads/coe/_coe.pdf', 'Pending', 0, NULL);
+INSERT INTO `alumni_documents` (`doc_id`, `user_id`, `document_type`, `file_path`) VALUES
+(30, 2, 'COE', 'Uploads/coe/_coe.pdf'),
+(31, 9, 'B_CERT', 'Uploads/business/_business.pdf'),
+(32, 6, 'COE', 'Uploads/coe/_coe.pdf'),
+(33, 6, 'COR', 'Uploads/cor/_cor.pdf'),
+(34, 14, 'COE', 'uploads/coe/_coe.pdf');
 
 -- --------------------------------------------------------
 
@@ -123,24 +129,27 @@ CREATE TABLE `alumni_profile` (
   `year_graduated` year(4) DEFAULT NULL,
   `employment_status` enum('Employed','Self-Employed','Unemployed','Student','Employed & Student') DEFAULT NULL,
   `photo_path` varchar(255) DEFAULT NULL,
-  `last_profile_update` timestamp NULL DEFAULT NULL
+  `last_profile_update` timestamp NULL DEFAULT NULL,
+  `submission_status` enum('Pending','Approved','Rejected') DEFAULT 'Pending',
+  `rejection_reason` text DEFAULT NULL,
+  `rejected_at` timestamp NULL DEFAULT NULL,
+  `submitted_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `alumni_profile`
 --
 
-INSERT INTO `alumni_profile` (`user_id`, `address_id`, `first_name`, `middle_name`, `last_name`, `contact_number`, `year_graduated`, `employment_status`, `photo_path`, `last_profile_update`) VALUES
-(1, 13, 'Josie', 'Gumera', 'Oliveros', '09367891026', '2023', 'Employed', 'Uploads/photos/Oliveros_profile.jpg', '2025-10-17 14:15:29'),
-(2, 88, 'Quien', 'Bendula', 'Bisnar', '09231654897', '2024', 'Employed', 'Uploads/photos/Bisnar_profile.png', '2025-11-05 11:32:55'),
-(5, 14, 'Ronaldo', '', 'Repe', '09125124512', '2022', 'Student', 'Uploads/photos/Repe_profile.png', '2025-10-17 23:22:03'),
-(7, 83, 'Joan Grace', '', 'Patalinghug', '09367891026', '2025', 'Employed & Student', NULL, '2025-10-28 09:25:52'),
-(8, 17, 'Marian', 'Getigan', 'Marchan', '09125124512', '2022', 'Self-Employed', 'Uploads/photos/Marchan_profile.jpg', '2025-10-17 15:53:24'),
-(10, 41, 'Reymark', '', 'Buhian', '09125124512', '2023', 'Employed', 'Uploads/photos/Buhian_profile.jpg', '2025-10-18 02:13:25'),
-(13, 24, 'Maureen', '', 'Guadalquiver', '09987654321', '2022', 'Student', 'Uploads/photos/Guadalquiver_profile.jpg', '2025-10-17 23:15:45'),
-(14, NULL, 'Kia', 'Banac', 'Balucos', '09514715203', '2023', 'Employed', 'Uploads/photos/Balucos_profile.png', '2025-10-25 06:51:57'),
-(22, 87, 'Dave Jay', 'Quimada', 'Madrazo', '09514715203', '2023', 'Self-Employed', NULL, '2025-11-03 06:55:34'),
-(23, 82, 'Vince Cyrus', '', 'Salvador', '09514715203', '2021', 'Self-Employed', NULL, '2025-10-28 08:16:42');
+INSERT INTO `alumni_profile` (`user_id`, `address_id`, `first_name`, `middle_name`, `last_name`, `contact_number`, `year_graduated`, `employment_status`, `photo_path`, `last_profile_update`, `submission_status`, `rejection_reason`, `rejected_at`, `submitted_at`) VALUES
+(1, 13, 'Josie', 'Gumera', 'Oliveros', '09367891026', '2023', 'Employed', 'Uploads/photos/Oliveros_profile.jpg', '2025-10-17 14:15:29', 'Pending', NULL, NULL, '2025-11-08 04:28:16'),
+(2, 88, 'Quien', 'Bendula', 'Bisnar', '09231654897', '2024', 'Employed', 'Uploads/photos/Bisnar_profile.png', '2025-11-05 11:32:55', 'Rejected', NULL, NULL, '2025-11-08 04:28:16'),
+(5, 14, 'Ronaldo', '', 'Repe', '09125124512', '2022', 'Student', 'Uploads/photos/Repe_profile.png', '2025-10-17 23:22:03', 'Pending', NULL, NULL, '2025-11-08 04:28:16'),
+(6, 91, 'China Dave', '', 'Labadan', '09121111210', '2019', 'Employed & Student', 'Uploads/photos/Labadan_profile.jpg', '2025-11-06 08:24:42', 'Pending', NULL, NULL, '2025-11-08 04:28:16'),
+(7, 97, 'Marian', 'Getigan', 'Bisnar', '09987654321', '2011', '', 'uploads/photos/Bisnar_profile.png', '2025-11-08 07:21:30', 'Pending', NULL, NULL, '2025-11-08 07:21:30'),
+(9, 90, 'Jaafar', '', 'Omar', '09121112121', '2023', 'Self-Employed', 'Uploads/photos/Omar_profile.png', '2025-11-06 08:12:11', 'Pending', NULL, NULL, '2025-11-08 04:28:16'),
+(10, 41, 'Reymark', '', 'Buhian', '09125124512', '2023', 'Employed', 'Uploads/photos/Buhian_profile.jpg', '2025-10-18 02:13:25', 'Pending', NULL, NULL, '2025-11-08 04:28:16'),
+(13, 24, 'Maureen', '', 'Guadalquiver', '09987654321', '2022', 'Student', 'Uploads/photos/Guadalquiver_profile.jpg', '2025-10-17 23:15:45', 'Pending', NULL, NULL, '2025-11-08 04:28:16'),
+(14, 94, 'Kia', 'Banac', 'Balucos', '09121112123', '2024', 'Employed', 'uploads/photos/Balucos_profile.png', '2025-11-07 06:48:38', 'Pending', NULL, NULL, '2025-11-08 04:28:16');
 
 -- --------------------------------------------------------
 
@@ -163,7 +172,7 @@ CREATE TABLE `education_info` (
 
 INSERT INTO `education_info` (`education_id`, `user_id`, `school_name`, `degree_pursued`, `start_year`, `end_year`) VALUES
 (1, 13, 'Central Mindanao University', 'Doctor of Philosophy (PhD) in Information Technology', NULL, NULL),
-(10, 7, 'University of Sto. Tomas', 'Master of Science in Information Technology', NULL, NULL);
+(12, 6, 'Ateneo de Manila University', 'Doctor of Information Technology', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -188,10 +197,10 @@ CREATE TABLE `employment_info` (
 INSERT INTO `employment_info` (`employment_id`, `user_id`, `job_title_id`, `company_name`, `salary_range`, `business_type`, `company_address`) VALUES
 (1, 1, 1, 'INCA', 'Above ₱50,000', 'Food Service / Catering', NULL),
 (2, 10, 2, 'Aztec Civilization', '₱20,000–₱30,000', 'Food Service / Catering', NULL),
-(21, 23, NULL, '', '₱40,000–₱50,000', 'Retail / Online Selling', ''),
-(22, 7, 16, 'Facebook', '₱20,000–₱30,000', '', 'Manila, Philippines'),
-(26, 22, NULL, '', '₱10,000–₱20,000', 'Retail / Online Selling', ''),
-(27, 2, 12, 'Meta', 'Above ₱50,000', '', 'USA');
+(27, 2, 12, 'Meta', 'Above ₱50,000', '', 'USA'),
+(28, 9, NULL, '', '₱30,000–₱40,000', 'Real Estate / Property Leasing', ''),
+(29, 6, 1, 'Openai', '₱30,000–₱40,000', '', 'USA'),
+(30, 14, 9, 'Meta', 'Above ₱50,000', '', 'USA');
 
 -- --------------------------------------------------------
 
@@ -43292,7 +43301,7 @@ INSERT INTO `users` (`user_id`, `email`, `password`, `role`, `name`, `created_at
 (3, 'aseneroglaiza@gmail.com', '$2y$10$UHN1b.vJAkh26l4TdpkxT.Zfsvi3DgvgH5m41PRIGAnMefSpfufhO', 'admin', 'Glaiza Aseñero', '2025-10-13 14:01:10'),
 (4, 'glowentanamanmil08@gmail.com', '$2y$10$.X6JG2ZcAC.Oi3RLDciATehWeH1FxfvrB4NBhnT8Eqwy9dkcT1TL.', 'admin', 'Glowen Tanaman', '2025-10-17 08:59:39'),
 (5, 'repe.ronaldojr@gmail.com', '$2y$10$AV5HSa53xpJRPykHLCQhuei9q5Rtk7SMFfs.yS9riewWH/d0hylKC', 'alumni', 'Ronaldo Repe', '2025-10-17 08:59:39'),
-(6, 'davelabadan1@gmail.com', '$2y$10$h6Xx10eFsuv0vhUk9ApM/OmLJ1YHyYRGx.lAb.0iSmuHFZ8NpwjO2', 'alumni', 'Dave Labadan', '2025-10-17 08:59:39'),
+(6, 'davelabadan1@gmail.com', '$2y$10$h6Xx10eFsuv0vhUk9ApM/OmLJ1YHyYRGx.lAb.0iSmuHFZ8NpwjO2', 'alumni', 'China Dave Labadan', '2025-10-17 08:59:39'),
 (7, 'joangracep@gmail.com', '$2y$10$M1kkyVDtSJHEBwXmuEwNmO.IHkK/S5jmHU7Xtx9lTJthD3qOuPZmG', 'alumni', 'Joan Grace Patalinghug', '2025-10-17 08:59:39'),
 (8, 'marchanmayang687@gmail.com', '$2y$10$PvYQQ4DZnVHa8Z5zqYxEEOGq7.5yI2TkUPbIoTVlPzcjCXzwX8OMG', 'alumni', 'Marian Marchan', '2025-10-17 08:59:39'),
 (9, 'jaafarj.omar@gmail.com', '$2y$10$aBrYT3wN51F1yKGoV/2age.qI5Mz3JXzD0j//TazqSLjsmsfBouMe', 'alumni', 'Jaafar Omar', '2025-11-05 13:21:52'),
@@ -43407,25 +43416,25 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `address`
 --
 ALTER TABLE `address`
-  MODIFY `address_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=89;
+  MODIFY `address_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=98;
 
 --
 -- AUTO_INCREMENT for table `alumni_documents`
 --
 ALTER TABLE `alumni_documents`
-  MODIFY `doc_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
+  MODIFY `doc_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
 
 --
 -- AUTO_INCREMENT for table `education_info`
 --
 ALTER TABLE `education_info`
-  MODIFY `education_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `education_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `employment_info`
 --
 ALTER TABLE `employment_info`
-  MODIFY `employment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
+  MODIFY `employment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- AUTO_INCREMENT for table `job_titles`
