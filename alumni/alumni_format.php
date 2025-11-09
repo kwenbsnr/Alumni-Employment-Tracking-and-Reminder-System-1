@@ -50,7 +50,6 @@ $page_title = $page_title ?? "Alumni Page";
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="alumni_format.css">
-    <script src="../assets/js/phil-address/phil.min.js"></script>
 
 </head>
 

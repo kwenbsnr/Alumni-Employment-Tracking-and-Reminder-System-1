@@ -41,9 +41,6 @@ $result = $stmt->get_result();
 $employment = $result->fetch_assoc() ?: [];
 $stmt->close();
 
-// Debug: Log employment data for troubleshooting
-error_log("Employment data for user_id $user_id: " . json_encode($employment));
-
 // Process business_type for display
 $business_type = $employment['business_type'] ?? '';
 $business_type_other = '';
@@ -61,27 +58,37 @@ $education = $result->fetch_assoc() ?: [];
 $stmt->close();
 
 // Fetch documents
-$docs = [];
-$rejected_docs = [];
-$can_reupload = false;
-if (!empty($profile['user_id'])) {
-    $stmt = $conn->prepare("SELECT document_type, file_path, document_status, rejection_reason, needs_reupload FROM alumni_documents WHERE user_id = ?");
-    $stmt->bind_param("i", $profile['user_id']);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    while ($doc = $result->fetch_assoc()) {
-        $docs[] = $doc;
-        if ($doc['document_status'] === 'Rejected' && $doc['needs_reupload']) {
-            $rejected_docs[] = $doc['document_type'];
-            $can_reupload = true;
-        }
-    }
-    $stmt->close();
-}
+$stmt = $conn->prepare("SELECT document_type, file_path FROM alumni_documents WHERE user_id = ?");
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+$docs = $result->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
 
-// Check yearly update restriction
-$can_update = empty($profile) || ($profile && ($profile['last_profile_update'] === null || strtotime($profile['last_profile_update'] . ' +1 year') <= time()));
-$can_update = $can_update || $can_reupload;
+// Update permissions logic
+$is_profile_rejected = !empty($profile) && ($profile['submission_status'] ?? '') === 'Rejected';
+$can_update_yearly = empty($profile) || 
+                     ($profile && ($profile['last_profile_update'] === null || 
+                      strtotime($profile['last_profile_update'] . ' +1 year') <= time()));
+$can_reupload = $is_profile_rejected;
+$can_update = empty($profile) || $can_update_yearly || $can_reupload;
+
+// Debug permission logic
+error_log("=== PROFILE PERMISSIONS DEBUG ===");
+error_log("User ID: " . $user_id);
+error_log("Profile exists: " . (!empty($profile) ? 'YES' : 'NO'));
+error_log("Submission Status: " . ($profile['submission_status'] ?? 'NONE'));
+error_log("Last Profile Update: " . ($profile['last_profile_update'] ?? 'NEVER'));
+error_log("Is Profile Rejected: " . ($is_profile_rejected ? 'YES' : 'NO'));
+error_log("Can Update Yearly: " . ($can_update_yearly ? 'YES' : 'NO'));
+error_log("Can Reupload: " . ($can_reupload ? 'YES' : 'NO'));
+error_log("Can Update: " . ($can_update ? 'YES' : 'NO'));
+
+// Auto-modal opening only when coming from rejection
+$auto_open_modal = isset($_SESSION['profile_rejected']) && $_SESSION['profile_rejected'];
+if ($auto_open_modal) {
+    unset($_SESSION['profile_rejected']); // Clear the flag after use
+}
 
 $full_name = 'Alumni';
 if (!empty($profile)) {
@@ -107,15 +114,30 @@ ob_start();
 
 <div class="space-y-6">
     <!-- Update Profile Box -->
-    <div id="updateProfileBtn" class="bg-white p-6 rounded-xl shadow-lg flex flex-col justify-between hover:shadow-xl transition duration-200 border-t-4 border-green-500 cursor-pointer">
+    <div id="updateProfileBtn" class="bg-white p-6 rounded-xl shadow-lg flex flex-col justify-between hover:shadow-xl transition duration-200 border-t-4 <?php echo $can_update ? 'border-green-500 cursor-pointer' : 'border-gray-300 cursor-not-allowed'; ?>">
         <div class="flex items-center justify-between mb-3">
-            <h3 class="text-lg font-semibold text-gray-600">Update Profile</h3>
-            <i class="fas fa-user-edit text-xl text-green-500"></i>
+            <h3 class="text-lg font-semibold <?php echo $can_update ? 'text-gray-600' : 'text-gray-400'; ?>">
+                <?php echo $can_update ? 'Update Profile' : 'Profile Update Not Available'; ?>
+            </h3>
+            <i class="fas fa-user-edit text-xl <?php echo $can_update ? 'text-green-500' : 'text-gray-400'; ?>"></i>
         </div>
-        <p class="text-sm text-gray-500">Click to edit your personal, employment, and educational details.</p>
+        <p class="text-sm <?php echo $can_update ? 'text-gray-500' : 'text-gray-400'; ?>">
+            <?php 
+            if ($can_update) {
+                echo 'Click to edit your personal, employment, and educational details.';
+            } else {
+                if (!empty($profile) && ($profile['submission_status'] ?? '') === 'Approved') {
+                    echo 'Your profile has been approved. You can update again after one year.';
+                } else {
+                    echo 'Profile update is not available at this time.';
+                }
+            }
+            ?>
+        </p>
     </div>
 
-    <?php if (!empty($profile)): ?>
+    <?php if (!empty($profile) && ($profile['submission_status'] ?? '') !== 'Rejected'): ?>
+        <!-- Only show profile cards if not rejected -->
         <!-- Personal Information Card -->
         <div class="bg-white p-6 rounded-xl shadow-lg">
             <h3 class="text-lg font-semibold text-gray-600 mb-4">Personal Information</h3>
@@ -164,7 +186,7 @@ ob_start();
                     <dd><?php echo htmlspecialchars($profile['employment_status'] ?? 'Not Set'); ?></dd>
                 </div>
                 <?php if (in_array($profile['employment_status'] ?? '', ['Employed', 'Self-Employed', 'Employed & Student'])): ?>
-                    <?php if ($profile['employment_status'] !== 'Self-Employed'): ?>
+                    <?php if (($profile['employment_status'] ?? '') !== 'Self-Employed'): ?>
                         <div class="flex justify-between">
                             <dt class="font-medium">Job Title</dt>
                             <dd><?php echo htmlspecialchars($employment['job_title'] ?? 'N/A'); ?></dd>
@@ -178,21 +200,21 @@ ob_start();
                             <dd><?php echo htmlspecialchars($employment['company_address'] ?? 'N/A'); ?></dd>
                         </div>
                     <?php endif; ?>
-                    <?php if ($profile['employment_status'] === 'Self-Employed'): ?>
+                    <?php if (($profile['employment_status'] ?? '') === 'Self-Employed'): ?>
                         <div class="flex justify-between">
                             <dt class="font-medium">Business Type</dt>
                             <dd><?php 
                                 $display_business_type = $employment['business_type'] ?? 'N/A';
-                                // Handle "Others: " prefix for display
+                                // Properly handle "Others: " prefix for display
                                 if (strpos($display_business_type, 'Others: ') === 0) {
-                                    $display_business_type = $employment['business_type'];
+                                    $display_business_type = 'Others: ' . substr($display_business_type, 8);
                                 }
                                 echo htmlspecialchars($display_business_type); 
                             ?></dd>
                         </div>
                     <?php endif; ?>
                     <div class="flex justify-between">
-                        <dt class="font-medium"><?php echo ($profile['employment_status'] === 'Self-Employed') ? 'Monthly Income Range' : 'Salary Range'; ?></dt>
+                        <dt class="font-medium"><?php echo (($profile['employment_status'] ?? '') === 'Self-Employed') ? 'Monthly Income Range' : 'Salary Range'; ?></dt>
                         <dd><?php echo htmlspecialchars($employment['salary_range'] ?? 'N/A'); ?></dd>
                     </div>
                 <?php endif; ?>
@@ -216,21 +238,38 @@ ob_start();
         <div class="bg-white p-6 rounded-xl shadow-lg">
             <h3 class="text-lg font-semibold text-gray-600 mb-4">Documents</h3>
             <?php if (empty($docs)): ?>
-                <p class="text-sm text-gray-500">Documents not required.</p>
+                <p class="text-sm text-gray-500">No documents uploaded.</p>
             <?php else: ?>
                 <div class="space-y-4">
-                    <?php foreach ($docs as $doc): ?>
+                    <?php 
+                    // Debug: Log documents for troubleshooting
+                    error_log("Documents found: " . print_r($docs, true));
+                    foreach ($docs as $doc): 
+                        $doc_type_name = $doc['document_type'] === 'COE' ? 'Certificate of Employment' : 
+                                    ($doc['document_type'] === 'B_CERT' ? 'Business Certificate' : 
+                                    ($doc['document_type'] === 'COR' ? 'Certificate of Registration' : $doc['document_type']));
+                    ?>
                         <div class="flex justify-between items-center border-b pb-2">
-                            <span class="font-medium"><?php echo htmlspecialchars($doc['document_type']); ?></span>
-                            <span class="text-sm <?php echo $doc['document_status'] === 'Approved' ? 'text-green-600' : ($doc['document_status'] === 'Rejected' ? 'text-red-600' : 'text-yellow-600'); ?>"><?php echo htmlspecialchars($doc['document_status']); ?></span>
+                            <span class="font-medium"><?php echo htmlspecialchars($doc_type_name); ?></span>
                             <a href="../<?php echo htmlspecialchars($doc['file_path']); ?>" target="_blank" class="text-blue-600 hover:underline">View</a>
                         </div>
-                        <?php if ($doc['document_status'] === 'Rejected' && $doc['rejection_reason']): ?>
-                            <p class="text-sm text-red-600">Rejection Reason: <?php echo htmlspecialchars($doc['rejection_reason']); ?></p>
-                        <?php endif; ?>
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>
+        </div>
+    <?php endif; ?>
+    <?php if (!empty($profile) && ($profile['submission_status'] ?? '') === 'Rejected'): ?>
+        <div class="bg-yellow-100 p-6 rounded-xl shadow-lg border-l-4 border-yellow-600">
+            <div class="flex items-center space-x-3">
+                <i class="fas fa-exclamation-triangle text-yellow-600 text-xl"></i>
+                <div>
+                    <h3 class="text-lg font-semibold text-yellow-800">Profile Submission Rejected</h3>
+                    <p class="text-yellow-700">Your previous submission was rejected. Please update your profile and resubmit using the "Update Profile" button above.</p>
+                    <?php if (!empty($profile['rejection_reason'])): ?>
+                        <p class="text-yellow-700 mt-2"><strong>Reason:</strong> <?php echo htmlspecialchars($profile['rejection_reason']); ?></p>
+                    <?php endif; ?>
+                </div>
+            </div>
         </div>
     <?php endif; ?>
 </div>
@@ -245,7 +284,7 @@ ob_start();
             </button>
         </div>
         
-        <!-- Profile Form -->
+ <!-- Profile Form -->
         <form id="alumniProfileForm" class="space-y-6" action="update_profile.php" method="post" enctype="multipart/form-data">
             <!-- Profile Picture + Personal Details -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -265,27 +304,27 @@ ob_start();
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700">First Name
-                                <input type="text" name="first_name" autocomplete="given-name" value="<?php echo htmlspecialchars($profile['first_name'] ?? ''); ?>" class="w-full border rounded-lg p-2" required <?php if (!$can_update) echo 'disabled'; ?>>
+                                <input type="text" name="first_name" autocomplete="given-name" value="<?php echo htmlspecialchars($profile['first_name'] ?? ''); ?>" class="w-full border rounded-lg p-2" required <?php echo $can_update ? '' : 'disabled'; ?>>
                             </label>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Middle Name
-                                <input type="text" name="middle_name" autocomplete="additional-name" value="<?php echo htmlspecialchars($profile['middle_name'] ?? ''); ?>" class="w-full border rounded-lg p-2" <?php if (!$can_update) echo 'disabled'; ?>>
+                                <input type="text" name="middle_name" autocomplete="additional-name" value="<?php echo htmlspecialchars($profile['middle_name'] ?? ''); ?>" class="w-full border rounded-lg p-2" <?php echo $can_update ? '' : 'disabled'; ?>>
                             </label>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Last Name
-                                <input type="text" name="last_name" autocomplete="family-name" value="<?php echo htmlspecialchars($profile['last_name'] ?? ''); ?>" class="w-full border rounded-lg p-2" required <?php if (!$can_update) echo 'disabled'; ?>>
+                                <input type="text" name="last_name" autocomplete="family-name" value="<?php echo htmlspecialchars($profile['last_name'] ?? ''); ?>" class="w-full border rounded-lg p-2" required <?php echo $can_update ? '' : 'disabled'; ?>>
                             </label>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Contact Number
-                                <input type="tel" name="contact_number" autocomplete="tel" value="<?php echo htmlspecialchars($profile['contact_number'] ?? ''); ?>" class="w-full border rounded-lg p-2" required pattern="[0-9]{10,11}" title="Contact number must be 10 or 11 digits" <?php if (!$can_update) echo 'disabled'; ?>>
+                                <input type="tel" name="contact_number" autocomplete="tel" value="<?php echo htmlspecialchars($profile['contact_number'] ?? ''); ?>" class="w-full border rounded-lg p-2" required pattern="[0-9]{10,11}" title="Contact number must be 11 digits" <?php echo $can_update ? '' : 'disabled'; ?>>
                             </label>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Year Graduated
-                                <select name="year_graduated" class="w-full border rounded-lg p-2" required <?php if (!$can_update) echo 'disabled'; ?>>
+                                <select name="year_graduated" class="w-full border rounded-lg p-2" required <?php echo $can_update ? '' : 'disabled'; ?>>
                                     <option value="">Select Year</option>
                                     <?php
                                     $currentYear = date('Y');
@@ -298,7 +337,7 @@ ob_start();
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Employment Status
-                                <select id="employmentStatusSelect" name="employment_status" class="w-full border rounded-lg p-2" required <?php if (!$can_update) echo 'disabled'; ?>>
+                                <select id="employmentStatusSelect" name="employment_status" class="w-full border rounded-lg p-2" required <?php echo $can_update ? '' : 'disabled'; ?>>
                                     <option value="">Select Status</option>
                                     <option value="Employed" <?php echo ($profile['employment_status'] ?? '') === 'Employed' ? 'selected' : ''; ?>>Employed</option>
                                     <option value="Self-Employed" <?php echo ($profile['employment_status'] ?? '') === 'Self-Employed' ? 'selected' : ''; ?>>Self-Employed</option>
@@ -445,39 +484,79 @@ ob_start();
                                 <input type="text" name="degree_pursued" value="<?php echo htmlspecialchars($education['degree_pursued'] ?? ''); ?>" class="w-full border rounded-lg p-2" autocomplete="off">
                             </label>
                         </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Start Year
+                                <select name="start_year" class="w-full border rounded-lg p-2">
+                                    <option value="">Select Start Year</option>
+                                    <?php
+                                    $currentYear = date('Y');
+                                    for ($y = $currentYear; $y >= 2000; $y--) {
+                                        $selected = ($education['start_year'] ?? '') == $y ? 'selected' : '';
+                                        echo "<option value=\"$y\" $selected>$y</option>";
+                                    }
+                                    ?>
+                                </select>
+                            </label>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">End Year (Expected)
+                                <select name="end_year" class="w-full border rounded-lg p-2">
+                                    <option value="">Select End Year</option>
+                                    <?php
+                                    $currentYear = date('Y');
+                                    for ($y = $currentYear + 5; $y >= 2000; $y--) {
+                                        $selected = ($education['end_year'] ?? '') == $y ? 'selected' : '';
+                                        echo "<option value=\"$y\" $selected>$y</option>";
+                                    }
+                                    ?>
+                                </select>
+                            </label>
+                        </div>
                     </div>
                 </div>
+
 
                 <!-- Supporting Documents Section -->
                 <div id="supportingDocumentsSection" class="hidden bg-white p-6 rounded-xl shadow-lg">
                     <h3 class="text-lg font-medium text-gray-600 mb-4">Supporting Documents</h3>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <?php if ($can_update || in_array('COE', $rejected_docs)): ?>
-                            <div id="coeField" class="hidden">
-                                <label class="block text-sm font-medium text-gray-700">Certificate of Employment (COE)
-                                    <input type="file" name="coe_file" accept="application/pdf" class="w-full border rounded-lg p-2">
-                                </label>
-                            </div>
-                        <?php endif; ?>
-                        <?php if ($can_update || in_array('B_CERT', $rejected_docs)): ?>
-                            <div id="businessCertField" class="hidden">
-                                <label class="block text-sm font-medium text-gray-700">Business Certificate
-                                    <input type="file" name="business_file" accept="application/pdf" class="w-full border rounded-lg p-2">
-                                </label>
-                            </div>
-                        <?php endif; ?>
-                        <?php if ($can_update || in_array('COR', $rejected_docs)): ?>
-                            <div id="corField" class="hidden">
-                                <label class="block text-sm font-medium text-gray-700">Certificate of Registration (COR)
-                                    <input type="file" name="cor_file" accept="application/pdf" class="w-full border rounded-lg p-2">
-                                </label>
-                            </div>
-                        <?php endif; ?>
+                        <!-- COE Field -->
+                        <div id="coeField" class="hidden">
+                            <label class="block text-sm font-medium text-gray-700">
+                                Certificate of Employment (COE)
+                                <?php if ($can_update): ?><span class="text-red-500">*</span><?php endif; ?>
+                                <input type="file" name="coe_file" accept="application/pdf" class="w-full border rounded-lg p-2">
+                            </label>
+                        </div>
+
+                        <!-- Business Certificate Field -->
+                        <div id="businessCertField" class="hidden">
+                            <label class="block text-sm font-medium text-gray-700">
+                                Business Certificate
+                                <?php if ($can_update): ?><span class="text-red-500">*</span><?php endif; ?>
+                                <input type="file" name="business_file" accept="application/pdf" class="w-full border rounded-lg p-2">
+                            </label>
+                        </div>
+
+                        <!-- COR Field -->
+                        <div id="corField" class="hidden">
+                            <label class="block text-sm font-medium text-gray-700">
+                                Certificate of Registration (COR)
+                                <?php if ($can_update): ?><span class="text-red-500">*</span><?php endif; ?>
+                                <input type="file" name="cor_file" accept="application/pdf" class="w-full border rounded-lg p-2">
+                            </label>
+                        </div>
                     </div>
                 </div>
             <?php endif; ?>
+            
+            <!-- Submit Button - ONLY SHOW WHEN CAN UPDATE -->
             <div class="flex justify-end">
-                <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-150 shadow-md">Submit</button>
+                <?php if ($can_update): ?>
+                    <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-150 shadow-md">Submit</button>
+                <?php else: ?>
+                    <button type="button" disabled class="bg-gray-400 text-white px-4 py-2 rounded-lg cursor-not-allowed opacity-60">Submit (Not Available)</button>
+                <?php endif; ?>
             </div>
         </form>
     </div>
@@ -485,6 +564,20 @@ ob_start();
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+
+    <?php if ($auto_open_modal): ?>
+    // Auto-open modal only when specifically triggered by rejection
+    const modal = document.getElementById('profileUpdateModal');
+    if (modal) {
+        // Small delay to ensure page is fully loaded
+        setTimeout(() => {
+            modal.classList.remove('hidden');
+            modal.classList.add('show', 'flex');
+            loadAddressData();
+        }, 100);
+    }
+    <?php endif; ?>
+
     // Modal and form elements
     const updateProfileBtn = document.getElementById('updateProfileBtn');
     const updateProfileModal = document.getElementById('profileUpdateModal');
@@ -509,20 +602,47 @@ document.addEventListener('DOMContentLoaded', () => {
     const municipalitySelect = document.getElementById('municipalitySelect');
     const barangaySelect = document.getElementById('barangaySelect');
     const companyAddressField = document.getElementById('companyAddressField');
-    const submitButton = document.querySelector('#alumniProfileForm button[type="submit"]');
+    const salaryField = document.getElementById('salaryField');
 
     // Track loading state
     let isAddressLoading = false;
+    let addressDataLoaded = false;
 
-    // Modal toggle
+    // Modal toggle - ONLY if user can update
     if (updateProfileBtn) {
-        updateProfileBtn.addEventListener('click', () => {
-            if (updateProfileModal) {
-                updateProfileModal.classList.remove('hidden');
-                updateProfileModal.classList.add('show', 'flex');
-                loadAddressData();
-            }
-        });
+        const canUpdate = <?php echo $can_update ? 'true' : 'false'; ?>;
+        
+            if (canUpdate) {
+                updateProfileBtn.addEventListener('click', () => {
+                    if (updateProfileModal) {
+                        updateProfileModal.classList.remove('hidden');
+                        updateProfileModal.classList.add('show', 'flex');
+                        loadAddressData(); // Always load
+                    }
+                });
+            } else {
+            // Make it visually clear the button is disabled
+            updateProfileBtn.style.cursor = 'not-allowed';
+            updateProfileBtn.style.opacity = '0.6';
+            
+            updateProfileBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                if (!empty(<?php echo !empty($profile) ? 'true' : 'false'; ?>)) {
+                    const status = '<?php echo $profile['submission_status'] ?? ''; ?>';
+                    if (status === 'Approved') {
+                        alert('Your profile has been approved. You can update again after one year from your last update.');
+                    } else if (status === 'Pending') {
+                        alert('Your profile is currently under review. Please wait for administrator approval.');
+                    } else {
+                        alert('Profile update is not available at this time.');
+                    }
+                } else {
+                    alert('Profile update is not available at this time.');
+                }
+            });
+        }
     }
 
     if (closeModalBtn) {
@@ -547,118 +667,128 @@ document.addEventListener('DOMContentLoaded', () => {
     const uploadBtn = document.getElementById("uploadPictureBtn");
     const fileInput = document.getElementById("profilePictureInput");
     const previewImg = document.getElementById("profilePreview");
-    const form = document.getElementById("alumniProfileForm");
 
-    // Click event: open file picker
-    uploadBtn.addEventListener("click", () => {
-        fileInput.click();
-    });
+    if (uploadBtn && fileInput) {
+        uploadBtn.addEventListener("click", () => {
+            fileInput.click();
+        });
+    }
 
-    // File selection event
-    fileInput.addEventListener("change", function () {
-        const file = this.files[0];
-        if (!file) return;
+    if (fileInput && previewImg) {
+        fileInput.addEventListener("change", function () {
+            const file = this.files[0];
+            if (!file) return;
 
-        // Validate type
-        const validTypes = ["image/jpeg", "image/png"];
-        if (!validTypes.includes(file.type)) {
-            alert("Only JPG and PNG files are allowed.");
-            this.value = "";
-            return;
-        }
+            // Validate type
+            const validTypes = ["image/jpeg", "image/png"];
+            if (!validTypes.includes(file.type)) {
+                alert("Only JPG and PNG files are allowed.");
+                this.value = "";
+                return;
+            }
 
-        // Validate size (≤ 2MB)
-        if (file.size > 2 * 1024 * 1024) {
-            alert("File size exceeds 2MB.");
-            this.value = "";
-            return;
-        }
+            // Validate size (≤ 2MB)
+            if (file.size > 2 * 1024 * 1024) {
+                alert("File size exceeds 2MB.");
+                this.value = "";
+                return;
+            }
 
-        // Live preview
-        const reader = new FileReader();
-        reader.onload = e => {
-            previewImg.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-    });
-
-    // Prevent submission if no file is uploaded
-    form.addEventListener("submit", function (e) {
-        if (!fileInput.files.length) {
-            e.preventDefault(); // block submission
-            alert("Please upload your profile picture before submitting.");
-            return false;
-        }
-    });
-
+            // Live preview
+            const reader = new FileReader();
+            reader.onload = e => {
+                previewImg.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    }
 
     // Job title toggle for "Other"
-    if (jobTitleSelect) {
+    if (jobTitleSelect && otherJobTitleDiv) {
         jobTitleSelect.addEventListener('change', () => {
-            if (otherJobTitleDiv) {
-                otherJobTitleDiv.style.display = jobTitleSelect.value === 'Other' ? 'block' : 'none';
-            }
+            otherJobTitleDiv.style.display = jobTitleSelect.value === 'Other' ? 'block' : 'none';
         });
     }
 
     // Business type toggle
-    if (businessTypeSelect) {
+    if (businessTypeSelect && businessTypeOtherDiv) {
         businessTypeSelect.addEventListener('change', () => {
-            if (businessTypeOtherDiv) {
-                businessTypeOtherDiv.style.display = businessTypeSelect.value === 'Others (Please specify)' ? 'block' : 'none';
-            }
+            businessTypeOtherDiv.style.display = businessTypeSelect.value === 'Others (Please specify)' ? 'block' : 'none';
         });
     }
 
-    // Employment status toggle
+    // Employment status toggle - COMPLETELY FIXED LOGIC
     function toggleEmploymentSections(status) {
+        console.log('Toggling employment sections for:', status);
+        
+        // Hide all sections first
         if (employmentDetailsSection) employmentDetailsSection.classList.add('hidden');
         if (unemployedSection) unemployedSection.classList.add('hidden');
         if (studentDetailsSection) studentDetailsSection.classList.add('hidden');
+        if (supportingDocumentsSection) supportingDocumentsSection.classList.add('hidden');
+        
+        // Hide individual fields
         if (jobTitleField) jobTitleField.classList.add('hidden');
         if (companyField) companyField.classList.add('hidden');
         if (companyAddressField) companyAddressField.classList.add('hidden');
         if (businessTypeField) businessTypeField.classList.add('hidden');
+        if (salaryField) salaryField.classList.add('hidden');
         if (coeField) coeField.classList.add('hidden');
         if (businessCertField) businessCertField.classList.add('hidden');
         if (corField) corField.classList.add('hidden');
-        if (supportingDocumentsSection) supportingDocumentsSection.classList.add('hidden');
 
-        if (status === 'Employed') {
-            if (employmentDetailsSection) employmentDetailsSection.classList.remove('hidden');
-            if (jobTitleField) jobTitleField.classList.remove('hidden');
-            if (companyField) companyField.classList.remove('hidden');
-            if (companyAddressField) companyAddressField.classList.remove('hidden');
-            if (coeField) coeField.classList.remove('hidden');
-            if (supportingDocumentsSection) supportingDocumentsSection.classList.remove('hidden');
-        } else if (status === 'Self-Employed') {
-            if (employmentDetailsSection) employmentDetailsSection.classList.remove('hidden');
-            if (businessTypeField) businessTypeField.classList.remove('hidden');
-            if (businessCertField) businessCertField.classList.remove('hidden');
-            if (supportingDocumentsSection) supportingDocumentsSection.classList.remove('hidden');
-        } else if (status === 'Unemployed') {
-            if (unemployedSection) unemployedSection.classList.remove('hidden');
-        } else if (status === 'Student') {
-            if (studentDetailsSection) studentDetailsSection.classList.remove('hidden');
-            if (corField) corField.classList.remove('hidden');
-            if (supportingDocumentsSection) supportingDocumentsSection.classList.remove('hidden');
-        } else if (status === 'Employed & Student') {
-            if (employmentDetailsSection) employmentDetailsSection.classList.remove('hidden');
-            if (studentDetailsSection) studentDetailsSection.classList.remove('hidden');
-            if (jobTitleField) jobTitleField.classList.remove('hidden');
-            if (companyField) companyField.classList.remove('hidden');
-            if (companyAddressField) companyAddressField.classList.remove('hidden');
-            if (coeField) coeField.classList.remove('hidden');
-            if (corField) corField.classList.remove('hidden');
-            if (supportingDocumentsSection) supportingDocumentsSection.classList.remove('hidden');
+        // Show relevant sections based on status
+        switch(status) {
+            case 'Employed':
+                if (employmentDetailsSection) employmentDetailsSection.classList.remove('hidden');
+                if (supportingDocumentsSection) supportingDocumentsSection.classList.remove('hidden');
+                if (jobTitleField) jobTitleField.classList.remove('hidden');
+                if (companyField) companyField.classList.remove('hidden');
+                if (companyAddressField) companyAddressField.classList.remove('hidden');
+                if (salaryField) salaryField.classList.remove('hidden');
+                if (coeField) coeField.classList.remove('hidden');
+                break;
+                
+            case 'Self-Employed':
+                if (employmentDetailsSection) employmentDetailsSection.classList.remove('hidden');
+                if (supportingDocumentsSection) supportingDocumentsSection.classList.remove('hidden');
+                if (businessTypeField) businessTypeField.classList.remove('hidden');
+                if (salaryField) salaryField.classList.remove('hidden');
+                if (businessCertField) businessCertField.classList.remove('hidden');
+                break;
+                
+            case 'Unemployed':
+                if (unemployedSection) unemployedSection.classList.remove('hidden');
+                break;
+                
+            case 'Student':
+                if (studentDetailsSection) studentDetailsSection.classList.remove('hidden');
+                if (supportingDocumentsSection) supportingDocumentsSection.classList.remove('hidden');
+                if (corField) corField.classList.remove('hidden');
+                break;
+                
+            case 'Employed & Student':
+                if (employmentDetailsSection) employmentDetailsSection.classList.remove('hidden');
+                if (studentDetailsSection) studentDetailsSection.classList.remove('hidden');
+                if (supportingDocumentsSection) supportingDocumentsSection.classList.remove('hidden');
+                if (jobTitleField) jobTitleField.classList.remove('hidden');
+                if (companyField) companyField.classList.remove('hidden');
+                if (companyAddressField) companyAddressField.classList.remove('hidden');
+                if (salaryField) salaryField.classList.remove('hidden');
+                if (coeField) coeField.classList.remove('hidden');
+                if (corField) corField.classList.remove('hidden');
+                break;
+                
+            default:
+                // Hide everything for unknown status
+                break;
         }
     }
 
+    // Initialize employment sections
     if (employmentStatusSelect) {
         toggleEmploymentSections(employmentStatusSelect.value);
-    }
-
-    if (employmentStatusSelect) {
+        
         employmentStatusSelect.addEventListener('change', () => {
             toggleEmploymentSections(employmentStatusSelect.value);
         });
@@ -669,19 +799,19 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadAddressData() {
         if (isAddressLoading) return;
         isAddressLoading = true;
-        if (submitButton) submitButton.disabled = true; // Disable submit until loaded
+        
         try {
             const regionsResponse = await fetch('../api/get_regions.php');
             if (!regionsResponse.ok) throw new Error('Failed to load regions: ' + regionsResponse.status);
             regionsData = await regionsResponse.json();
             console.log('Regions loaded:', regionsData);
             populateRegions();
+            addressDataLoaded = true;
         } catch (e) {
             console.error('Error loading address data:', e);
             alert('Failed to load address data. Please refresh and try again.');
         } finally {
             isAddressLoading = false;
-            if (submitButton) submitButton.disabled = false;
         }
     }
 
@@ -709,12 +839,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!regionCode) return;
 
         isAddressLoading = true;
-        if (submitButton) submitButton.disabled = true;
         try {
             const response = await fetch(`../api/get_provinces.php?region_id=${encodeURIComponent(regionCode)}`);
             if (!response.ok) throw new Error('Failed to load provinces: ' + response.status);
             const provinces = await response.json();
-            console.log('Provinces loaded:', provinces);
             provinces.forEach(prov => {
                 const option = document.createElement('option');
                 option.value = prov.prov_code;
@@ -727,10 +855,8 @@ document.addEventListener('DOMContentLoaded', () => {
             <?php endif; ?>
         } catch (e) {
             console.error('Error fetching provinces:', e);
-            alert('Failed to load provinces. Please try again.');
         } finally {
             isAddressLoading = false;
-            if (submitButton) submitButton.disabled = false;
         }
     }
 
@@ -742,12 +868,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!provinceCode) return;
 
         isAddressLoading = true;
-        if (submitButton) submitButton.disabled = true;
         try {
             const response = await fetch(`../api/get_municipalities.php?province_id=${encodeURIComponent(provinceCode)}`);
             if (!response.ok) throw new Error('Failed to load municipalities: ' + response.status);
             const municipalities = await response.json();
-            console.log('Municipalities loaded:', municipalities);
             municipalities.forEach(mun => {
                 const option = document.createElement('option');
                 option.value = mun.mun_code;
@@ -760,10 +884,8 @@ document.addEventListener('DOMContentLoaded', () => {
             <?php endif; ?>
         } catch (e) {
             console.error('Error fetching municipalities:', e);
-            alert('Failed to load municipalities. Please try again.');
         } finally {
             isAddressLoading = false;
-            if (submitButton) submitButton.disabled = false;
         }
     }
 
@@ -774,12 +896,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!municipalityCode) return;
 
         isAddressLoading = true;
-        if (submitButton) submitButton.disabled = true;
         try {
             const response = await fetch(`../api/get_barangays.php?municipality_id=${encodeURIComponent(municipalityCode)}`);
             if (!response.ok) throw new Error('Failed to load barangays: ' + response.status);
             const barangays = await response.json();
-            console.log('Barangays loaded:', barangays.map(b => ({ id: b.brgy_code, name: b.name })));
             barangays.sort((a, b) => a.name.localeCompare(b.name));
             barangays.forEach(brgy => {
                 const option = document.createElement('option');
@@ -789,18 +909,11 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             <?php if (!empty($profile['barangay_id'])): ?>
                 barangaySelect.value = '<?php echo htmlspecialchars($profile['barangay_id']); ?>';
-                if (barangaySelect.value !== '<?php echo htmlspecialchars($profile['barangay_id']); ?>') {
-                    console.warn('Barangay ID <?php echo htmlspecialchars($profile['barangay_id']); ?> not found in options for municipality_id:', municipalityCode);
-                } else {
-                    console.log('Barangay ID set:', barangaySelect.value);
-                }
             <?php endif; ?>
         } catch (e) {
             console.error('Error fetching barangays:', e);
-            alert('Failed to load barangays. Please try again.');
         } finally {
             isAddressLoading = false;
-            if (submitButton) submitButton.disabled = false;
         }
     }
 
@@ -809,139 +922,155 @@ document.addEventListener('DOMContentLoaded', () => {
     if (provinceSelect) provinceSelect.addEventListener('change', filterMunicipalities);
     if (municipalitySelect) municipalitySelect.addEventListener('change', filterBarangays);
 
-    // Custom form validation on submit
+    // SIMPLIFIED Form validation - FIXED VERSION
     const alumniProfileForm = document.getElementById('alumniProfileForm');
     if (alumniProfileForm) {
-        alumniProfileForm.addEventListener('submit', async function(event) {
+        alumniProfileForm.addEventListener('submit', function(event) {
+            // Prevent address loading interference
             if (isAddressLoading) {
                 alert('Address data is still loading. Please wait.');
                 event.preventDefault();
                 return;
             }
 
+            /* // Basic permission check
+            <?php if (!$can_update): ?>
+            alert('You are not allowed to update your profile at this time. You can only update once per year unless your submission was rejected.');
+            event.preventDefault();
+            return;
+            <?php endif; ?> */
+
+            // Profile photo validation - FIXED
+            const profilePhotoInput = document.getElementById('profilePictureInput');
+            const hasExistingPhoto = '<?php echo !empty($profile['photo_path']) ? 'true' : 'false'; ?>';
+            
+            if (!profilePhotoInput.files.length && hasExistingPhoto === 'false') {
+                alert('Please upload your profile picture before submitting.');
+                event.preventDefault();
+                return;
+            }
+
+            // Basic required field validation
+            const requiredFields = [
+                { field: 'first_name', message: 'First Name is required.' },
+                { field: 'last_name', message: 'Last Name is required.' },
+                { field: 'contact_number', message: 'Contact Number is required.' },
+                { field: 'year_graduated', message: 'Year Graduated is required.' },
+                { field: 'employment_status', message: 'Employment Status is required.' }
+            ];
+
             let isValid = true;
-            const status = employmentStatusSelect ? employmentStatusSelect.value : '';
-            const barangayId = barangaySelect ? barangaySelect.value.trim() : '';
-            const municipalityId = municipalitySelect ? municipalitySelect.value.trim() : '';
 
-            // Validate personal fields
-            if (!document.querySelector('[name="first_name"]') || !document.querySelector('[name="first_name"]').value.trim()) {
-                alert('First Name is required.');
-                isValid = false;
-            }
-            if (!document.querySelector('[name="last_name"]') || !document.querySelector('[name="last_name"]').value.trim()) {
-                alert('Last Name is required.');
-                isValid = false;
-            }
-            if (!document.querySelector('[name="contact_number"]') || !document.querySelector('[name="contact_number"]').value.trim()) {
-                alert('Contact Number is required.');
-                isValid = false;
-            }
-            if (!document.querySelector('[name="year_graduated"]') || !document.querySelector('[name="year_graduated"]').value.trim()) {
-                alert('Year Graduated is required.');
-                isValid = false;
-            }
-            if (!status) {
-                alert('Employment Status is required.');
-                isValid = false;
-            }
-
-            // Validate address fields for all statuses
-            if (!regionSelect || !regionSelect.value) {
-                alert('Region is required.');
-                isValid = false;
-            }
-            if (!provinceSelect || !provinceSelect.value) {
-                alert('Province is required.');
-                isValid = false;
-            }
-            if (!municipalityId) {
-                alert('Municipality is required.');
-                isValid = false;
-            }
-            if (!barangayId) {
-                alert('Barangay is required.');
-                isValid = false;
-            }
-            if (barangayId && municipalityId) {
-                try {
-                    const response = await fetch(`../api/get_barangays.php?municipality_id=${encodeURIComponent(municipalityId)}`);
-                    if (!response.ok) throw new Error(`Failed to validate barangay: ${response.status}`);
-                    const barangays = await response.json();
-                    console.log('Validating barangays for municipality_id', municipalityId, ':', barangays.map(b => ({ id: b.brgy_code, name: b.name })));
-                    const validBarangay = barangays.some(b => b.brgy_code === barangayId);
-                    if (!validBarangay) {
-                        alert('Selected Barangay is invalid or does not match the selected Municipality. Please choose a valid option.');
-                        console.warn('Invalid barangay_id:', barangayId, 'for municipality_id:', municipalityId);
-                        isValid = false;
-                    } else {
-                        console.log('Valid barangay_id:', barangayId, 'for municipality_id:', municipalityId);
-                    }
-                } catch (e) {
-                    console.error('Error validating barangay:', e);
-                    alert('Failed to validate Barangay. Please refresh and try again.');
+            for (const { field, message } of requiredFields) {
+                const element = document.querySelector(`[name="${field}"]`);
+                if (element && !element.value.trim()) {
+                    alert(message);
                     isValid = false;
+                    break;
                 }
             }
-
-            // Validate employment fields
-            if (['Employed', 'Employed & Student'].includes(status)) {
-                const jobTitle = jobTitleSelect ? jobTitleSelect.value : '';
-                const companyName = document.querySelector('[name="company_name"]') ? document.querySelector('[name="company_name"]').value.trim() : '';
-                if (!jobTitle) {
-                    alert('Job Title is required for this employment status.');
-                    isValid = false;
-                }
-                if (jobTitle === 'Other' && !document.querySelector('[name="other_job_title"]') || !document.querySelector('[name="other_job_title"]').value.trim()) {
-                    alert('Please specify job title if "Other" is selected.');
-                    isValid = false;
-                }
-                if (!companyName) {
-                    alert('Company Name is required for this employment status.');
-                    isValid = false;
-                }
-            }
-
-            // Validate business type for Self-Employed
-            if (status === 'Self-Employed') {
-                const businessType = businessTypeSelect ? businessTypeSelect.value : '';
-                const businessTypeOther = document.querySelector('[name="business_type_other"]') ? document.querySelector('[name="business_type_other"]').value.trim() : '';
-                if (!businessType) {
-                    alert('Business Type is required for Self-Employed status.');
-                    isValid = false;
-                }
-                if (businessType === 'Others (Please specify)' && !businessTypeOther) {
-                    alert('Please specify business type if "Others" is selected.');
-                    isValid = false;
-                }
-            }
-
-            // Validate education fields
-            if (['Student', 'Employed & Student'].includes(status)) {
-                const schoolName = document.querySelector('[name="school_name"]') ? document.querySelector('[name="school_name"]').value.trim() : '';
-                const degreePursued = document.querySelector('[name="degree_pursued"]') ? document.querySelector('[name="degree_pursued"]').value.trim() : '';
-                if (!schoolName) {
-                    alert('School Name is required for this status.');
-                    isValid = false;
-                }
-                if (!degreePursued) {
-                    alert('Degree Pursued is required for this status.');
-                    isValid = false;
-                }
-            }
-
-            // Log for debugging
-            console.log(`Submitting form with barangay_id: '${barangayId}' (hex: ${Array.from(new TextEncoder().encode(barangayId)).map(b => b.toString(16).padStart(2, '0')).join('')}), municipality_id: '${municipalityId}'`);
-            console.log('All barangay options:', Array.from(barangaySelect ? barangaySelect.options : []).map(opt => `${opt.value}: ${opt.textContent}`));
-            console.log(`Employment status: ${status}`);
 
             if (!isValid) {
                 event.preventDefault();
+                return;
             }
+
+            // Address validation
+            const addressFieldIds = ['regionSelect', 'provinceSelect', 'municipalitySelect', 'barangaySelect'];
+                        const addressMessages = ['Region', 'Province', 'Municipality', 'Barangay'];
+
+                        let addressValid = true;
+                        for (let i = 0; i < addressFieldIds.length; i++) {
+                            const el = document.getElementById(addressFieldIds[i]);
+                            if (el && !el.value.trim()) {
+                                alert(addressMessages[i] + ' is required.');
+                                addressValid = false;
+                                break;
+                            }
+                        }
+
+                        if (!addressValid) {
+                            event.preventDefault();
+                            return;
+                        }
+
+            // Employment-specific validation
+            const status = employmentStatusSelect ? employmentStatusSelect.value : '';
             
-            /*if (isValid) {
-                alumniProfileForm.submit(); // Manually submit the form ONLY if all checks passed
-            }*/
+            if (['Employed', 'Employed & Student'].includes(status)) {
+                if (jobTitleSelect && !jobTitleSelect.value) {
+                    alert('Job Title is required for this employment status.');
+                    isValid = false;
+                } else if (jobTitleSelect && jobTitleSelect.value === 'Other') {
+                    const otherTitle = document.querySelector('[name="other_job_title"]');
+                    if (otherTitle && !otherTitle.value.trim()) {
+                        alert('Please specify job title if "Other" is selected.');
+                        isValid = false;
+                    }
+                }
+                
+                const companyName = document.querySelector('[name="company_name"]');
+                if (companyName && !companyName.value.trim()) {
+                    alert('Company Name is required for this employment status.');
+                    isValid = false;
+                }
+                
+                const companyAddress = document.querySelector('[name="company_address"]');
+                if (companyAddress && !companyAddress.value.trim()) {
+                    alert('Company Address is required for this employment status.');
+                    isValid = false;
+                }
+            }
+
+            // Self-Employed validation
+            if (status === 'Self-Employed') {
+                if (businessTypeSelect && !businessTypeSelect.value) {
+                    alert('Business Type is required for Self-Employed status.');
+                    isValid = false;
+                } else if (businessTypeSelect && businessTypeSelect.value === 'Others (Please specify)') {
+                    const businessTypeOther = document.querySelector('[name="business_type_other"]');
+                    if (businessTypeOther && !businessTypeOther.value.trim()) {
+                        alert('Please specify business type if "Others" is selected.');
+                        isValid = false;
+                    }
+                }
+            }
+
+            // Student validation
+            if (['Student', 'Employed & Student'].includes(status)) {
+                const studentFields = [
+                    { field: 'school_name', message: 'School Name is required for student status.' },
+                    { field: 'degree_pursued', message: 'Degree Pursued is required for student status.' },
+                    { field: 'start_year', message: 'Start Year is required for student status.' },
+                    { field: 'end_year', message: 'End Year is required for student status.' }
+                ];
+
+                for (const { field, message } of studentFields) {
+                    const element = document.querySelector(`[name="${field}"]`);
+                    if (element && !element.value.trim()) {
+                        alert(message);
+                        isValid = false;
+                        break;
+                    }
+                }
+            }
+
+            // Salary validation for employment statuses
+            if (['Employed', 'Self-Employed', 'Employed & Student'].includes(status)) {
+                const salaryElement = document.querySelector('[name="salary_range"]');
+                if (salaryElement && !salaryElement.value.trim()) {
+                    const label = status === 'Self-Employed' ? 'Monthly Income Range' : 'Salary Range';
+                    alert(`${label} is required for ${status} status.`);
+                    isValid = false;
+                }
+            }
+
+            if (!isValid) {
+                event.preventDefault();
+                return;
+            }
+
+            console.log('Form validation passed, submitting...');
         });
     }
 });
