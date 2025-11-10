@@ -12,16 +12,14 @@ $reason = $_GET['reason'] ?? '';
 
 if ($user_id && in_array($status, ['Approved', 'Rejected'])) {
     // Update alumni profile status
-    $updateQuery = "UPDATE alumni_profile SET submission_status = ?, rejection_reason = ?, 
-                   rejected_at = " . ($status == 'Rejected' ? "NOW()" : "NULL") . ",
-                   submitted_at = NOW() WHERE user_id = ?";
-    $stmt = $conn->prepare($updateQuery);
-    
     if ($status == 'Rejected') {
+        $updateQuery = "UPDATE alumni_profile SET submission_status = ?, rejection_reason = ?, rejected_at = NOW() WHERE user_id = ?";
+        $stmt = $conn->prepare($updateQuery);
         $stmt->bind_param('ssi', $status, $reason, $user_id);
     } else {
-        $stmt->bind_param('ssi', $status, $reason, $user_id);
-        $reason = ''; // Clear reason if approved
+        $updateQuery = "UPDATE alumni_profile SET submission_status = ?, rejection_reason = NULL, rejected_at = NULL WHERE user_id = ?";
+        $stmt = $conn->prepare($updateQuery);
+        $stmt->bind_param('si', $status, $user_id);
     }
     
     if ($stmt->execute()) {
