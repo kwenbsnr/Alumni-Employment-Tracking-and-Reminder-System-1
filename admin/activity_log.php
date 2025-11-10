@@ -58,8 +58,7 @@ $activityQuery = "
         ul.updated_at,
         u.name as admin_name,
         ap.first_name,
-        ap.last_name,
-        ap.user_id as alumni_user_id
+        ap.last_name
     FROM update_log ul
     LEFT JOIN users u ON ul.updated_by = u.user_id
     LEFT JOIN alumni_profile ap ON ul.updated_id = ap.user_id
@@ -162,12 +161,6 @@ ob_start();
                                     <p class="text-sm font-medium text-gray-800">
                                         <?php echo getEnhancedActivityText($activity); ?>
                                     </p>
-                                    <?php if (!empty($activity['alumni_user_id'])): ?>
-                                        <a href="alumni_profile.php?id=<?php echo $activity['alumni_user_id']; ?>" 
-                                           class="text-xs text-purple-600 hover:text-purple-800 mt-1 inline-block">
-                                            <i class="fas fa-external-link-alt mr-1"></i>View Profile
-                                        </a>
-                                    <?php endif; ?>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <p class="text-sm text-gray-800"><?php echo htmlspecialchars($activity['admin_name']); ?></p>
