@@ -200,6 +200,7 @@ $page_title = $page_title ?? "Alumni Page";
                 notifButton.querySelector('span').classList.add('hidden');
             });
         });
+        
     </script>
 </body>
 </html>
