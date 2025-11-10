@@ -9,55 +9,86 @@ include("../connect.php");
 $page_title = "Dashboard";
 $active_page = "dashboard";
 
-// Fetch employment status distribution (only approved alumni)
+// Debug: Check what's in the alumni_profile table
+$debugQuery = "SELECT submission_status, employment_status, year_graduated, COUNT(*) as count 
+               FROM alumni_profile 
+               GROUP BY submission_status, employment_status, year_graduated 
+               ORDER BY submission_status, employment_status, year_graduated";
+$debugResult = $conn->query($debugQuery);
+
+// Fetch employment status distribution (ALL alumni, not just approved)
 $careerQuery = "SELECT employment_status, COUNT(*) as total 
                 FROM alumni_profile 
-                WHERE submission_status = 'Approved'
+                WHERE employment_status IS NOT NULL 
+                AND employment_status != ''
                 GROUP BY employment_status";
 $result = $conn->query($careerQuery);
+
 if (!$result) {
-    $careerLabels = [];
-    $careerData = [];
+    // If query fails, show error and set empty arrays
+    error_log("Employment status query failed: " . $conn->error);
+    $careerLabels = ['Employed', 'Self-Employed', 'Unemployed', 'Student', 'Employed & Student'];
+    $careerData = [0, 0, 0, 0, 0];
 } else {
     $careerLabels = [];
     $careerData = [];
+    
+    // Initialize all possible employment statuses with zero counts
+    $allStatuses = ['Employed', 'Self-Employed', 'Unemployed', 'Student', 'Employed & Student'];
+    $statusCounts = array_fill_keys($allStatuses, 0);
+    
+    // Update counts with actual data
     while ($row = $result->fetch_assoc()) {
-        $careerLabels[] = $row['employment_status'] ?: 'Unknown';
-        $careerData[] = $row['total'];
+        $status = $row['employment_status'] ?: 'Unknown';
+        $statusCounts[$status] = $row['total'];
+    }
+    
+    // Convert to arrays for Chart.js
+    foreach ($allStatuses as $status) {
+        $careerLabels[] = $status;
+        $careerData[] = $statusCounts[$status];
     }
 }
 
-// Fetch accurate dashboard statistics
+// Fetch ACCURATE dashboard statistics
 $statsQuery = "
     SELECT 
-        (SELECT COUNT(*) FROM alumni_profile) as total_alumni,
+        (SELECT COUNT(*) FROM users WHERE role = 'alumni') as total_alumni,
         (SELECT COUNT(*) FROM alumni_profile WHERE submission_status = 'Approved') as approved_profiles,
         (SELECT COUNT(*) FROM alumni_profile WHERE submission_status = 'Pending') as pending_profiles,
         (SELECT COUNT(*) FROM alumni_profile WHERE submission_status = 'Rejected') as rejected_profiles,
         (SELECT COUNT(*) FROM employment_info WHERE user_id IN (SELECT user_id FROM alumni_profile WHERE submission_status = 'Approved')) as employed_count,
-        (SELECT COUNT(DISTINCT year_graduated) FROM alumni_profile WHERE year_graduated IS NOT NULL AND submission_status = 'Approved') as unique_graduation_years,
-        (SELECT COUNT(*) FROM alumni_documents WHERE user_id IN (SELECT user_id FROM alumni_profile WHERE submission_status = 'Approved')) as total_documents,
-        (SELECT COUNT(*) FROM update_log WHERE DATE(updated_at) = CURDATE()) as today_updates
+        (SELECT COUNT(DISTINCT year_graduated) FROM alumni_profile WHERE year_graduated IS NOT NULL) as unique_graduation_years,
+        (SELECT COUNT(*) FROM alumni_documents WHERE user_id IN (SELECT user_id FROM alumni_profile WHERE submission_status = 'Approved')) as total_documents
 ";
 
 $statsResult = $conn->query($statsQuery);
 $stats = $statsResult->fetch_assoc();
 
-// Fetch graduation trends (only approved alumni)
+// Fetch graduation trends (ALL alumni with graduation years)
 $graduatesQuery = "
     SELECT year_graduated, COUNT(*) as count 
     FROM alumni_profile 
     WHERE year_graduated IS NOT NULL 
-    AND submission_status = 'Approved'
+    AND year_graduated != ''
+    AND year_graduated != '0000'
+    AND year_graduated != 0
     GROUP BY year_graduated 
     ORDER BY year_graduated
 ";
 $graduatesResult = $conn->query($graduatesQuery);
 $gradYears = [];
 $gradCounts = [];
-while ($row = $graduatesResult->fetch_assoc()) {
-    $gradYears[] = $row['year_graduated'];
-    $gradCounts[] = $row['count'];
+
+if ($graduatesResult && $graduatesResult->num_rows > 0) {
+    while ($row = $graduatesResult->fetch_assoc()) {
+        $gradYears[] = (string)$row['year_graduated']; // Convert to string for JSON
+        $gradCounts[] = $row['count'];
+    }
+} else {
+    // If no data, set default empty arrays
+    $gradYears = [];
+    $gradCounts = [];
 }
 
 // Fetch enhanced recent activity from update_log with more details
@@ -66,21 +97,14 @@ $recentActivityQuery = "
         ul.log_id,
         ul.updated_by,
         ul.updated_id,
-        ul.updated_table,
         ul.update_type,
         ul.updated_at,
         u.name as admin_name,
         ap.first_name,
-        ap.last_name,
-        ad.document_type,
-        ei.company_name,
-        ed.school_name
+        ap.last_name
     FROM update_log ul
     LEFT JOIN users u ON ul.updated_by = u.user_id
-    LEFT JOIN alumni_profile ap ON ul.updated_id = ap.user_id AND ul.updated_table = 'alumni_profile'
-    LEFT JOIN alumni_documents ad ON ul.updated_id = ad.doc_id AND ul.updated_table = 'alumni_documents'
-    LEFT JOIN employment_info ei ON ul.updated_id = ei.employment_id AND ul.updated_table = 'employment_info'
-    LEFT JOIN education_info ed ON ul.updated_id = ed.education_id AND ul.updated_table = 'education_info'
+    LEFT JOIN alumni_profile ap ON ul.updated_id = ap.user_id
     ORDER BY ul.updated_at DESC
     LIMIT 10
 ";
@@ -90,8 +114,8 @@ ob_start();
 ?>
 <div class="space-y-6">
     <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <!-- Total Alumni -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Total Alumni - NOW ACCURATE -->
         <div class="bg-white p-6 rounded-xl shadow-lg stats-card card-hover border-l-4 border-blue-500">
             <div class="flex items-center">
                 <div class="p-3 rounded-full bg-blue-100 text-blue-500 mr-4">
@@ -100,6 +124,7 @@ ob_start();
                 <div>
                     <p class="text-sm font-medium text-gray-600">Total Alumni</p>
                     <p class="text-2xl font-bold text-gray-800"><?php echo $stats['total_alumni']; ?></p>
+                    <p class="text-xs text-gray-500 mt-1">All registered alumni users</p>
                 </div>
             </div>
         </div>
@@ -113,6 +138,7 @@ ob_start();
                 <div>
                     <p class="text-sm font-medium text-gray-600">Approved Profiles</p>
                     <p class="text-2xl font-bold text-gray-800"><?php echo $stats['approved_profiles']; ?></p>
+                    <p class="text-xs text-gray-500 mt-1">Verified alumni profiles</p>
                 </div>
             </div>
         </div>
@@ -126,40 +152,57 @@ ob_start();
                 <div>
                     <p class="text-sm font-medium text-gray-600">Pending Reviews</p>
                     <p class="text-2xl font-bold text-gray-800"><?php echo $stats['pending_profiles']; ?></p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Today's Updates -->
-        <div class="bg-white p-6 rounded-xl shadow-lg stats-card card-hover border-l-4 border-purple-500">
-            <div class="flex items-center">
-                <div class="p-3 rounded-full bg-purple-100 text-purple-500 mr-4">
-                    <i class="fas fa-sync text-xl"></i>
-                </div>
-                <div>
-                    <p class="text-sm font-medium text-gray-600">Today's Alumni Updates</p>
-                    <p class="text-2xl font-bold text-gray-800"><?php echo $stats['today_updates']; ?></p>
+                    <p class="text-xs text-gray-500 mt-1">Awaiting approval</p>
                 </div>
             </div>
         </div>
     </div>
+
+<!--
+    Debug Information (remove this section after testing) 
+    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+        <h4 class="font-bold text-yellow-800 mb-2">Debug Information (Remove after testing):</h4>
+        <div class="text-sm text-yellow-700">
+            <p><strong>Employment Data:</strong> <?php echo json_encode($careerLabels); ?> -> <?php echo json_encode($careerData); ?></p>
+            <p><strong>Graduation Data:</strong> <?php echo json_encode($gradYears); ?> -> <?php echo json_encode($gradCounts); ?></p>
+            <p><strong>Total Alumni in DB:</strong> <?php echo $stats['total_alumni']; ?></p>
+            <p><strong>Approved Profiles:</strong> <?php echo $stats['approved_profiles']; ?></p>
+        </div>
+    </div>
+-->
 
     <!-- Charts Section -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Employment Distribution Chart -->
         <div class="bg-white p-6 rounded-xl shadow-lg stats-card card-hover">
             <h3 class="text-lg font-bold text-gray-800 mb-4">Employment Status Distribution</h3>
-            <div class="relative w-full h-80">
-                <canvas id="employmentChart"></canvas>
-            </div>
+            <?php if (array_sum($careerData) > 0): ?>
+                <div class="relative w-full h-80">
+                    <canvas id="employmentChart"></canvas>
+                </div>
+            <?php else: ?>
+                <div class="flex flex-col items-center justify-center h-80 text-gray-500">
+                    <i class="fas fa-chart-pie text-4xl mb-3"></i>
+                    <p class="text-lg">No employment data available</p>
+                    <p class="text-sm">Alumni employment status data will appear here</p>
+                </div>
+            <?php endif; ?>
         </div>
 
         <!-- Graduation Trends Chart -->
         <div class="bg-white p-6 rounded-xl shadow-lg stats-card card-hover">
             <h3 class="text-lg font-bold text-gray-800 mb-4">Graduation Trends</h3>
-            <div class="relative w-full h-80">
-                <canvas id="graduationChart"></canvas>
-            </div>
+            <?php if (!empty($gradYears) && array_sum($gradCounts) > 0): ?>
+                <div class="relative w-full h-80">
+                    <canvas id="graduationChart"></canvas>
+                </div>
+            <?php else: ?>
+                <div class="flex flex-col items-center justify-center h-80 text-gray-500">
+                    <i class="fas fa-chart-line text-4xl mb-3"></i>
+                    <p class="text-lg">No graduation data available</p>
+                    <p class="text-sm">Graduation year data will appear here</p>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -196,7 +239,7 @@ ob_start();
                                 <?php echo ucfirst($activity['update_type']); ?>
                             </span>
                             <p class="text-xs text-gray-500 mt-1">
-                                <?php echo ucfirst(str_replace('_', ' ', $activity['updated_table'])); ?>
+                                Alumni Profile
                             </p>
                         </div>
                     </div>
@@ -215,6 +258,7 @@ ob_start();
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 // Employment Distribution Chart
+<?php if (array_sum($careerData) > 0): ?>
 const employmentCtx = document.getElementById('employmentChart').getContext('2d');
 new Chart(employmentCtx, {
     type: 'pie',
@@ -254,8 +298,10 @@ new Chart(employmentCtx, {
         }
     }
 });
+<?php endif; ?>
 
 // Graduation Trends Chart
+<?php if (!empty($gradYears) && array_sum($gradCounts) > 0): ?>
 const graduationCtx = document.getElementById('graduationChart').getContext('2d');
 new Chart(graduationCtx, {
     type: 'line',
@@ -293,6 +339,7 @@ new Chart(graduationCtx, {
         }
     }
 });
+<?php endif; ?>
 
 // Toast notification handling
 document.addEventListener("DOMContentLoaded", () => {
@@ -340,27 +387,8 @@ function getEnhancedActivityText($activity) {
     // Get the affected user's name
     if (!empty($activity['first_name']) && !empty($activity['last_name'])) {
         $name = $activity['first_name'] . ' ' . $activity['last_name'];
-    }
-    
-    // Add specific details based on the table and type
-    switch ($activity['updated_table']) {
-        case 'alumni_profile':
-            $details = $name ? "for {$name}" : "alumni profile";
-            break;
-        case 'alumni_documents':
-            $docType = !empty($activity['document_type']) ? " ({$activity['document_type']})" : '';
-            $details = $name ? "{$name}'s document{$docType}" : "document";
-            break;
-        case 'employment_info':
-            $company = !empty($activity['company_name']) ? " at {$activity['company_name']}" : '';
-            $details = $name ? "{$name}'s employment{$company}" : "employment information";
-            break;
-        case 'education_info':
-            $school = !empty($activity['school_name']) ? " at {$activity['school_name']}" : '';
-            $details = $name ? "{$name}'s education{$school}" : "education information";
-            break;
-        default:
-            $details = $activity['updated_table'];
+    } else {
+        $name = "Alumni";
     }
     
     $actions = [
@@ -371,7 +399,7 @@ function getEnhancedActivityText($activity) {
     
     $action = $actions[$activity['update_type']] ?? 'Modified';
     
-    return "{$action} {$details}";
+    return "{$action} {$name}'s profile";
 }
 
 function time_elapsed_string($datetime, $full = false) {
