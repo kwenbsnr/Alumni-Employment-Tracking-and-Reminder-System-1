@@ -40,6 +40,9 @@ Employment/Academic Details display cards after successful submission have issue
 4. Header bar scroll issue: The header bar must remain fixed and not be scrollable.
 
 
+______________________
+______________________
+______________________
 
 **Alumni Module Bug Report**
 
