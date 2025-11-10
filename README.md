@@ -41,3 +41,11 @@ Employment/Academic Details display cards after successful submission have issue
 
 
 
+**Alumni Module Bug Report**
+
+🟢 Low Priority 
+______________________
+
+1. Sidebar and Header Bar Improvements: Currently, both have a fixed height and are scrollable.
+
+2. General UI refinement.
