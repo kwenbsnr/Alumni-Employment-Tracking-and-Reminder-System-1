@@ -135,7 +135,7 @@ include("../connect.php");
         <div class="login-right">
             <div class="login-box">
                 <div class="text-center mb-8">
-                    <h2 class="text-3xl font-bold text-gray-800 mb-2">Welcome Back</h2>
+                    <h2 class="text-3xl font-bold text-gray-800 mb-2">Welcome Back!</h2>
                     <p class="text-gray-600">Please select your role and sign in</p>
                 </div>
 

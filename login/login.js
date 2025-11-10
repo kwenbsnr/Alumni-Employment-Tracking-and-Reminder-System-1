@@ -103,6 +103,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }, 5000);
   }
+  
 
   // Make function globally available
   window.showCustomAlert = showCustomAlert;
