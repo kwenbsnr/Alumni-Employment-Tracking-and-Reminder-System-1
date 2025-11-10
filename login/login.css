@@ -78,7 +78,7 @@ body {
     padding-top: 50px;
 }
 
-/* Left Side - Branding - FIXED BACKGROUND - ABSOLUTELY FIXED */
+/* Left Side - Branding - FIXED BACKGROUND - COVERS 3/4 OF SCREEN */
 .school-branding {
     background-image: url('images/jh-building.png');
     background-size: cover;
@@ -86,7 +86,7 @@ body {
     background-attachment: fixed;
     background-repeat: no-repeat;
     height: 100vh;
-    width: 70%;
+    width: 60%; /* Changed from 70% to 75% to cover 3/4 of screen */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -151,15 +151,15 @@ body {
     background: rgba(255, 255, 255, 0.25);
 }
 
-/* Right Side - Login Form */
+/* Right Side - Login Form - COVERS 1/4 OF SCREEN */
 .login-right {
     background: var(--light-bg);
-    width: 45%;
+    width: 40%; /* Changed from 45% to 25% to cover 1/4 of screen */
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 2rem;
-    margin-left: 70%; /* Push to right of fixed background */
+    margin-left: 60%; /* Push to right of fixed background */
     position: relative;
     z-index: 2;
 }
