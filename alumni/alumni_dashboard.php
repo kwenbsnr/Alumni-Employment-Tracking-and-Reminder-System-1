@@ -144,84 +144,125 @@ ob_start();
         <?php unset($_SESSION['show_welcome']); ?>
     <?php endif; ?>
 
- <!-- Stats Grid: 2x2 Layout (enhanced) -->
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto px-4">
-
-    <!-- ==== PROFILE STATUS ==== -->
-    <div class="relative overflow-hidden bg-gradient-to-br from-amber-50 via-amber-100 to-amber-200 
-                rounded-2xl shadow-xl p-10 flex flex-col justify-between 
-                hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 
-                border-t-4 <?php echo $is_profile_complete ? 'border-green-600' : 'border-amber-600'; ?>">
-        <div class="absolute inset-0 opacity-10 pointer-events-none"
-             style="background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.8) 0%, transparent 70%);"></div>
-
-        <div class="flex items-center justify-between mb-6">
-            <h3 class="text-base font-bold tracking-wider text-gray-700 uppercase">Profile Status</h3>
-            <i class="fas fa-user-check text-4xl <?php echo $is_profile_complete ? 'text-green-600' : 'text-amber-600'; ?>"></i>
+    <!-- Enhanced Stats Grid: Compact and Elegant -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+        
+        <!-- Profile Status Card -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 <?php echo $is_profile_complete ? 'border-green-500' : 'border-amber-500'; ?> hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+            <div class="flex items-center justify-between mb-4">
+                <div class="p-3 rounded-xl <?php echo $is_profile_complete ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'; ?>">
+                    <i class="fas fa-user-check text-lg"></i>
+                </div>
+                <span class="text-xs font-semibold px-2 py-1 rounded-full <?php echo $is_profile_complete ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'; ?>">
+                    <?php echo $is_profile_complete ? 'Complete' : 'Action Needed'; ?>
+                </span>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-800 mb-2">Profile</h3>
+            <p class="text-sm text-gray-600 mb-1"><?php echo $is_profile_complete ? 'All details filled' : 'Required fields missing'; ?></p>
+            <div class="w-full bg-gray-200 rounded-full h-2 mt-3">
+                <div class="<?php echo $is_profile_complete ? 'bg-green-500' : 'bg-amber-500'; ?> h-2 rounded-full" style="width: <?php echo $is_profile_complete ? '100' : '60'; ?>%"></div>
+            </div>
         </div>
 
-        <p class="text-5xl font-extrabold text-gray-900"><?php echo $is_profile_complete ? 'Complete' : 'Incomplete'; ?></p>
-        <p class="mt-4 text-sm text-gray-600">
-            <?php echo $is_profile_complete ? 'All required fields filled' : 'Required fields missing'; ?>
-        </p>
-    </div>
-
-    <!-- ==== EMPLOYMENT STATUS ==== -->
-    <div class="relative overflow-hidden bg-gradient-to-br from-emerald-50 via-emerald-100 to-emerald-200 
-                rounded-2xl shadow-xl p-10 flex flex-col justify-between 
-                hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 
-                border-t-4 border-emerald-600">
-        <div class="absolute inset-0 opacity-10 pointer-events-none"
-             style="background: radial-gradient(circle at 70% 30%, rgba(255,255,255,.8) 0%, transparent 70%);"></div>
-
-        <div class="flex items-center justify-between mb-6">
-            <h3 class="text-base font-bold tracking-wider text-gray-700 uppercase">Employment Status</h3>
-            <i class="fas fa-briefcase text-4xl text-emerald-600"></i>
+        <!-- Employment Status Card -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-blue-500 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+            <div class="flex items-center justify-between mb-4">
+                <div class="p-3 rounded-xl bg-blue-50 text-blue-600">
+                    <i class="fas fa-briefcase text-lg"></i>
+                </div>
+                <span class="text-xs font-semibold px-2 py-1 rounded-full bg-blue-100 text-blue-800">
+                    Status
+                </span>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-800 mb-2">Employment</h3>
+            <p class="text-sm text-gray-600 mb-1"><?php echo htmlspecialchars($profile['employment_status']); ?></p>
+            <div class="flex items-center mt-3 text-xs text-gray-500">
+                <i class="fas fa-clock mr-1"></i>
+                <span>Latest update</span>
+            </div>
         </div>
 
-        <p class="text-5xl font-extrabold text-gray-900"><?php echo htmlspecialchars($profile['employment_status']); ?></p>
-        <p class="mt-4 text-sm text-gray-600">Latest reported status.</p>
-    </div>
-
-    <!-- ==== DOCUMENT STATUS ==== -->
-    <div class="relative overflow-hidden bg-gradient-to-br from-sky-50 via-sky-100 to-sky-200 
-                rounded-2xl shadow-xl p-10 flex flex-col justify-between 
-                hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 
-                border-t-4 border-sky-600">
-        <div class="absolute inset-0 opacity-10 pointer-events-none"
-             style="background: radial-gradient(circle at 30% 70%, rgba(255,255,255,.8) 0%, transparent 70%);"></div>
-
-        <div class="flex items-center justify-between mb-6">
-            <h3 class="text-base font-bold tracking-wider text-gray-700 uppercase">Document Status</h3>
-            <i class="fas fa-file-alt text-4xl text-sky-600"></i>
+        <!-- Document Status Card -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-purple-500 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+            <div class="flex items-center justify-between mb-4">
+                <div class="p-3 rounded-xl bg-purple-50 text-purple-600">
+                    <i class="fas fa-file-alt text-lg"></i>
+                </div>
+                <?php
+                $doc_status_class = 'bg-gray-100 text-gray-800';
+                $doc_icon_class = 'text-gray-500';
+                if ($document['submission_status'] === 'Approved') {
+                    $doc_status_class = 'bg-green-100 text-green-800';
+                    $doc_icon_class = 'text-green-500';
+                } elseif ($document['submission_status'] === 'Rejected') {
+                    $doc_status_class = 'bg-red-100 text-red-800';
+                    $doc_icon_class = 'text-red-500';
+                } elseif ($document['submission_status'] === 'Under Review') {
+                    $doc_status_class = 'bg-yellow-100 text-yellow-800';
+                    $doc_icon_class = 'text-yellow-500';
+                }
+                ?>
+                <span class="text-xs font-semibold px-2 py-1 rounded-full <?php echo $doc_status_class; ?>">
+                    <?php echo htmlspecialchars($document['submission_status']); ?>
+                </span>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-800 mb-2">Documents</h3>
+            <p class="text-sm text-gray-600 mb-1"><?php echo htmlspecialchars($document['message']); ?></p>
+            <div class="flex items-center justify-between mt-3">
+                <span class="text-xs text-gray-500"><?php echo $document['document_count']; ?> files</span>
+                <i class="fas <?php echo $document['document_count'] > 0 ? 'fa-check-circle text-green-500' : 'fa-exclamation-triangle text-amber-500'; ?>"></i>
+            </div>
         </div>
 
-        <p class="text-5xl font-extrabold text-gray-900"><?php echo htmlspecialchars($document['submission_status']); ?></p>
-        <p class="mt-4 text-sm text-gray-600"><?php echo htmlspecialchars($document['message']); ?></p>
-    </div>
-
-    <!-- ==== DOCUMENTS UPLOADED ==== -->
-    <div class="relative overflow-hidden 
-                <?php echo $document['document_count'] > 0 
-                    ? 'bg-gradient-to-br from-teal-50 via-teal-100 to-teal-200 border-t-4 border-teal-600' 
-                    : 'bg-gradient-to-br from-rose-50 via-rose-100 to-rose-200 border-t-4 border-rose-600'; ?>
-                rounded-2xl shadow-xl p-10 flex flex-col justify-between 
-                hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300">
-        <div class="absolute inset-0 opacity-10 pointer-events-none"
-             style="background: radial-gradient(circle at 70% 70%, rgba(255,255,255,.8) 0%, transparent 70%);"></div>
-
-        <div class="flex items-center justify-between mb-6">
-            <h3 class="text-base font-bold tracking-wider text-gray-700 uppercase">Documents</h3>
-            <i class="fas fa-paperclip text-4xl <?php echo $document['document_count'] > 0 ? 'text-teal-600' : 'text-rose-600'; ?>"></i>
+        <!-- Documents Count Card -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-teal-500 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+            <div class="flex items-center justify-between mb-4">
+                <div class="p-3 rounded-xl bg-teal-50 text-teal-600">
+                    <i class="fas fa-paperclip text-lg"></i>
+                </div>
+                <span class="text-xs font-semibold px-2 py-1 rounded-full <?php echo $document['document_count'] > 0 ? 'bg-teal-100 text-teal-800' : 'bg-rose-100 text-rose-800'; ?>">
+                    <?php echo $document['document_count'] > 0 ? 'Uploaded' : 'Empty'; ?>
+                </span>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-800 mb-2">Files</h3>
+            <p class="text-sm text-gray-600 mb-1">Total documents uploaded</p>
+            <div class="flex items-center justify-between mt-3">
+                <span class="text-3xl font-bold <?php echo $document['document_count'] > 0 ? 'text-teal-600' : 'text-rose-600'; ?>">
+                    <?php echo $document['document_count']; ?>
+                </span>
+                <div class="text-2xl <?php echo $document['document_count'] > 0 ? 'text-teal-500' : 'text-rose-500'; ?>">
+                    <i class="fas <?php echo $document['document_count'] > 0 ? 'fa-folder-open' : 'fa-folder'; ?>"></i>
+                </div>
+            </div>
         </div>
-
-        <p class="text-5xl font-extrabold text-gray-900"><?php echo $document['document_count']; ?></p>
-        <p class="mt-4 text-sm text-gray-600">
-            <?php echo $document['document_count'] > 0 ? 'Files uploaded' : 'No documents yet'; ?>
-        </p>
     </div>
 
-</div>
+    <!-- Quick Actions Section -->
+    <div class="max-w-7xl mx-auto mt-8">
+        <div class="bg-white rounded-2xl shadow-lg p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Quick Actions</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <a href="alumni_profile.php" class="flex items-center p-4 border border-gray-200 rounded-xl hover:border-green-500 hover:bg-green-50 transition-all duration-300 group">
+                    <div class="p-3 rounded-lg bg-green-100 text-green-600 mr-4 group-hover:bg-green-200 transition-colors">
+                        <i class="fas fa-user-edit"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-800">Update Profile</h4>
+                        <p class="text-sm text-gray-600">Keep your information current</p>
+                    </div>
+                </a>
+                <a href="alumni_profile.php#documents" class="flex items-center p-4 border border-gray-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all duration-300 group">
+                    <div class="p-3 rounded-lg bg-blue-100 text-blue-600 mr-4 group-hover:bg-blue-200 transition-colors">
+                        <i class="fas fa-upload"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-800">Upload Documents</h4>
+                        <p class="text-sm text-gray-600">Submit required files</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
