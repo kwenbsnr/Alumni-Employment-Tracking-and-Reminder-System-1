@@ -1,7 +1,16 @@
 /* login.css */
-html, body { height: 100%; margin: 0; overflow: hidden; }
+html, body { 
+    height: 100%; 
+    margin: 0; 
+    overflow: hidden; 
+    position: fixed;
+    width: 100%;
+}
 ::-webkit-scrollbar { display: none; }
-body { -ms-overflow-style: none; scrollbar-width: none; }
+body { 
+    -ms-overflow-style: none; 
+    scrollbar-width: none;
+}
 
 body {
     font-family: 'Inter', sans-serif;
@@ -69,11 +78,13 @@ body {
     padding-top: 50px;
 }
 
-/* Left Side - Branding */
+/* Left Side - Branding - FIXED BACKGROUND - ABSOLUTELY FIXED */
 .school-branding {
     background-image: url('images/jh-building.png');
     background-size: cover;
     background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
     height: 100vh;
     width: 70%;
     display: flex;
@@ -81,9 +92,22 @@ body {
     align-items: center;
     justify-content: center;
     padding: 3rem;
-    position: relative;
+    position: fixed;
+    left: 0;
+    top: 0;
     overflow: hidden;
     color: white;
+    z-index: 1;
+    /* Force fixed positioning - no movement */
+    transform: none !important;
+    transform-origin: center !important;
+    backface-visibility: hidden;
+    perspective: 1000;
+    will-change: transform;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
 }
 
 /* Black Overlay for the image */
@@ -120,11 +144,11 @@ body {
     backdrop-filter: blur(3px);
     padding: 1rem;
     border-radius: 12px;
-    transition: transform 0.2s;
+    transition: background-color 0.2s;
     box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
 .school-branding .grid div:hover {
-     transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.25);
 }
 
 /* Right Side - Login Form */
@@ -135,6 +159,9 @@ body {
     align-items: center;
     justify-content: center;
     padding: 2rem;
+    margin-left: 70%; /* Push to right of fixed background */
+    position: relative;
+    z-index: 2;
 }
 
 /* Login Box */
@@ -145,10 +172,9 @@ body {
     width: 100%;
     max-width: 450px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: box-shadow 0.3s ease;
 }
 .login-box:hover {
-    transform: translateY(-3px);
     box-shadow: 0 15px 35px rgba(0,0,0,0.2);
 }
 .login-box h2 {
@@ -171,14 +197,12 @@ body {
 }
 .role-selector:hover {
     border-color: #d1d5db;
-    transform: translateY(-3px);
     background: #e6f2e6;
     box-shadow: 0 6px 10px rgba(0,0,0,0.1);
 }
 .role-selector.selected {
     border-color: var(--forest-green);
     background: #e6f7e6;
-    transform: scale(1.02);
     box-shadow: 0 0 15px rgba(0, 100, 0, 0.2);
 }
 .role-selector i {
@@ -213,8 +237,16 @@ input:focus {
 }
 #loginButton:hover {
     background: var(--forest-green);
-    transform: translateY(-2px);
     box-shadow: 0 6px 8px rgba(0, 100, 0, 0.4);
+}
+
+/* --- ADDED FOR ALIGNMENT FIX --- */
+/* This ensures the space collapses completely when no error is present */
+.error-placeholder {
+    height: 0;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
 }
 
 /* Enhanced Error Message Container */
@@ -276,15 +308,16 @@ input:focus {
         flex-direction: column; 
         padding-top: 30px; 
     }
-    .school-branding, .login-right { 
-        width: 100%; 
-    }
     .school-branding { 
-        padding: 3rem 2rem;
+        width: 100%; 
+        position: relative;
         height: 40vh;
         min-height: auto;
+        background-attachment: scroll;
     }
     .login-right { 
+        width: 100%;
+        margin-left: 0;
         padding: 3rem 2rem;
         min-height: 60vh;
     }

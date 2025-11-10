@@ -7,20 +7,44 @@ include("../connect.php");
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>JHCSC IT Alumni Portal Login</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <link href="../assets/css/output.css" rel="stylesheet">
     <link href="login.css" rel="stylesheet">
     <style>
-        
         /* ---- LOCK PAGE & HIDE SCROLLBAR ---- */
-        html, body { height: 100%; margin: 0; overflow: hidden; }
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            touch-action: manipulation;
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+        }
         ::-webkit-scrollbar { display: none; }
-        body { -ms-overflow-style: none; scrollbar-width: none; }
-        
-        /* Enhanced Error Message Styles */
+        body {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Reserve space for error message to prevent layout shift */
+        .error-placeholder {
+            height: 0;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            transition: none;
+        }
+
         .error-container {
             margin-top: 0.75rem;
             padding: 0.75rem 1rem;
@@ -36,29 +60,35 @@ include("../connect.php");
             animation: slideDown 0.3s ease-out;
             box-shadow: 0 2px 6px rgba(254, 178, 178, 0.2);
         }
-        
+
         .error-container i {
             font-size: 1rem;
             color: #dc2626;
         }
-        
+
         .error-container span {
             flex: 1;
         }
-        
+
         @keyframes slideDown {
-            from { 
-                opacity: 0; 
-                transform: translateY(-8px); 
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
             }
-            to { 
-                opacity: 1; 
-                transform: translateY(0); 
+            to {
+                opacity: 1;
+                transform: translateY(0);
             }
+        }
+
+        /* Ensure password field container has consistent height */
+        .password-field {
+            position: relative;
         }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="bg-gray-50">
+
     <header class="fixed top-0 left-0 w-full z-50">
         <div class="top-green-bar"></div>
         <div class="top-links">
@@ -81,8 +111,8 @@ include("../connect.php");
     </header>
 
     <div id="loginPage" class="login-container">
-        <div class="school-branding flex items-center justify-center p-8">
-           
+        <!-- LEFT: FIXED BACKGROUND -->
+        <div class="school-branding">
             <div class="text-center text-white z-10 p-4 max-w-lg">
                 <div class="flex items-center justify-center gap-6 mb-18">
                     <div class="w-32 h-32 rounded-full flex items-center justify-center shadow-lg">
@@ -104,7 +134,8 @@ include("../connect.php");
                 </div>
             </div>
         </div>
-                
+
+        <!-- RIGHT: LOGIN FORM -->
         <div class="login-right">
             <div class="login-box">
                 <div class="text-center mb-8">
@@ -131,21 +162,23 @@ include("../connect.php");
                         <input type="email" id="loginEmail" name="email" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all" placeholder="Enter your email" autocomplete="email">
                     </div>
 
-                    <div>
+                    <div class="password-field">
                         <label for="loginPassword" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
                         <input type="password" id="loginPassword" name="password" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all" placeholder="Enter your password" autocomplete="current-password">
-                        
-                        <!-- ENHANCED ERROR MESSAGE CONTAINER -->
+
+                        <!-- Dynamic error handling -->
                         <?php if (isset($_SESSION['login_error'])): ?>
                             <div class="error-container">
                                 <i class="fas fa-exclamation-triangle"></i>
                                 <span><strong>Login failed:</strong> <?php echo htmlspecialchars($_SESSION['login_error']); ?></span>
                             </div>
                             <?php unset($_SESSION['login_error']); ?>
+                        <?php else: ?>
+                            <div class="error-placeholder"></div>
                         <?php endif; ?>
                     </div>
 
-                    <button type="submit" id="loginButton" class="w-full py-3 font-medium bg-gray-300 text-gray-500 cursor-not-allowed" disabled>
+                    <button type="submit" id="loginButton" class="w-full py-3 font-medium bg-gray-300 text-gray-500 cursor-not-allowed rounded-lg" disabled>
                         Sign In
                     </button>
                 </form>
