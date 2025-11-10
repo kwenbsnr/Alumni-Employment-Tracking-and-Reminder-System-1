@@ -1,4 +1,5 @@
 connect.php
+generate_hash.php
 uploads/*
 node_modules/
 alumni/seed_address.php
