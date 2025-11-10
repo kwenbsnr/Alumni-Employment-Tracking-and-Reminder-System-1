@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3307
--- Generation Time: Nov 09, 2025 at 06:21 AM
+-- Generation Time: Nov 10, 2025 at 02:27 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -42,6 +42,7 @@ INSERT INTO `address` (`address_id`, `barangay_id`) VALUES
 (54, '023137039'),
 (74, '030801001'),
 (79, '043419006'),
+(99, '051610015'),
 (75, '056208019'),
 (92, '060610017'),
 (94, '063034033'),
@@ -54,6 +55,7 @@ INSERT INTO `address` (`address_id`, `barangay_id`) VALUES
 (49, '101301012'),
 (66, '101316017'),
 (24, '101318019'),
+(98, '101802003'),
 (77, '101805003'),
 (91, '103504008'),
 (58, '103504023'),
@@ -107,11 +109,9 @@ CREATE TABLE `alumni_documents` (
 --
 
 INSERT INTO `alumni_documents` (`doc_id`, `user_id`, `document_type`, `file_path`) VALUES
-(30, 2, 'COE', 'Uploads/coe/_coe.pdf'),
 (31, 9, 'B_CERT', 'Uploads/business/_business.pdf'),
-(32, 6, 'COE', 'Uploads/coe/_coe.pdf'),
-(33, 6, 'COR', 'Uploads/cor/_cor.pdf'),
-(34, 14, 'COE', 'uploads/coe/_coe.pdf');
+(34, 14, 'COE', 'uploads/coe/_coe.pdf'),
+(36, 2, 'COR', 'uploads/cor/Bisnar_cor.pdf');
 
 -- --------------------------------------------------------
 
@@ -142,14 +142,12 @@ CREATE TABLE `alumni_profile` (
 
 INSERT INTO `alumni_profile` (`user_id`, `address_id`, `first_name`, `middle_name`, `last_name`, `contact_number`, `year_graduated`, `employment_status`, `photo_path`, `last_profile_update`, `submission_status`, `rejection_reason`, `rejected_at`, `submitted_at`) VALUES
 (1, 13, 'Josie', 'Gumera', 'Oliveros', '09367891026', '2023', 'Employed', 'Uploads/photos/Oliveros_profile.jpg', '2025-10-17 14:15:29', 'Pending', NULL, NULL, '2025-11-08 04:28:16'),
-(2, 88, 'Quien', 'Bendula', 'Bisnar', '09231654897', '2024', 'Employed', 'Uploads/photos/Bisnar_profile.png', '2025-11-05 11:32:55', 'Rejected', NULL, NULL, '2025-11-08 04:28:16'),
+(2, 98, 'Quien', 'Bendula', 'Bisnar', '09121112124', '2022', 'Student', 'uploads/photos/Bisnar_profile.png', '2025-11-10 04:50:35', 'Pending', NULL, NULL, '2025-11-10 04:50:35'),
 (5, 14, 'Ronaldo', '', 'Repe', '09125124512', '2022', 'Student', 'Uploads/photos/Repe_profile.png', '2025-10-17 23:22:03', 'Pending', NULL, NULL, '2025-11-08 04:28:16'),
-(6, 91, 'China Dave', '', 'Labadan', '09121111210', '2019', 'Employed & Student', 'Uploads/photos/Labadan_profile.jpg', '2025-11-06 08:24:42', 'Pending', NULL, NULL, '2025-11-08 04:28:16'),
-(7, 97, 'Marian', 'Getigan', 'Bisnar', '09987654321', '2011', '', 'uploads/photos/Bisnar_profile.png', '2025-11-08 07:21:30', 'Pending', NULL, NULL, '2025-11-08 07:21:30'),
 (9, 90, 'Jaafar', '', 'Omar', '09121112121', '2023', 'Self-Employed', 'Uploads/photos/Omar_profile.png', '2025-11-06 08:12:11', 'Pending', NULL, NULL, '2025-11-08 04:28:16'),
-(10, 41, 'Reymark', '', 'Buhian', '09125124512', '2023', 'Employed', 'Uploads/photos/Buhian_profile.jpg', '2025-10-18 02:13:25', 'Pending', NULL, NULL, '2025-11-08 04:28:16'),
+(10, 41, 'Reymark', '', 'Buhian', '09125124512', '2023', 'Employed', 'Uploads/photos/Buhian_profile.jpg', '2025-10-18 02:13:25', 'Rejected', 'No documents were submitted.', '2025-11-10 08:34:42', '2025-11-08 04:28:16'),
 (13, 24, 'Maureen', '', 'Guadalquiver', '09987654321', '2022', 'Student', 'Uploads/photos/Guadalquiver_profile.jpg', '2025-10-17 23:15:45', 'Pending', NULL, NULL, '2025-11-08 04:28:16'),
-(14, 94, 'Kia', 'Banac', 'Balucos', '09121112123', '2024', 'Employed', 'uploads/photos/Balucos_profile.png', '2025-11-07 06:48:38', 'Pending', NULL, NULL, '2025-11-08 04:28:16');
+(14, 94, 'Kia', 'Banac', 'Balucos', '09121112123', '2024', 'Employed', 'uploads/photos/Balucos_profile.png', '2025-11-07 06:48:38', 'Approved', NULL, NULL, '2025-11-08 04:28:16');
 
 -- --------------------------------------------------------
 
@@ -172,7 +170,7 @@ CREATE TABLE `education_info` (
 
 INSERT INTO `education_info` (`education_id`, `user_id`, `school_name`, `degree_pursued`, `start_year`, `end_year`) VALUES
 (1, 13, 'Central Mindanao University', 'Doctor of Philosophy (PhD) in Information Technology', NULL, NULL),
-(12, 6, 'Ateneo de Manila University', 'Doctor of Information Technology', NULL, NULL);
+(14, 2, 'University of Sto. Tomas', 'Master&#039;s', '2023', '2026');
 
 -- --------------------------------------------------------
 
@@ -197,9 +195,7 @@ CREATE TABLE `employment_info` (
 INSERT INTO `employment_info` (`employment_id`, `user_id`, `job_title_id`, `company_name`, `salary_range`, `business_type`, `company_address`) VALUES
 (1, 1, 1, 'INCA', 'Above ₱50,000', 'Food Service / Catering', NULL),
 (2, 10, 2, 'Aztec Civilization', '₱20,000–₱30,000', 'Food Service / Catering', NULL),
-(27, 2, 12, 'Meta', 'Above ₱50,000', '', 'USA'),
 (28, 9, NULL, '', '₱30,000–₱40,000', 'Real Estate / Property Leasing', ''),
-(29, 6, 1, 'Openai', '₱30,000–₱40,000', '', 'USA'),
 (30, 14, 9, 'Meta', 'Above ₱50,000', '', 'USA');
 
 -- --------------------------------------------------------
@@ -43250,7 +43246,6 @@ CREATE TABLE `update_log` (
   `log_id` int(11) NOT NULL,
   `updated_by` int(11) NOT NULL,
   `updated_id` int(11) NOT NULL,
-  `updated_table` enum('alumni_profile','alumni_documents','employment_info','education_info') DEFAULT NULL,
   `update_type` enum('update','approve','reject') DEFAULT NULL,
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -43259,22 +43254,24 @@ CREATE TABLE `update_log` (
 -- Dumping data for table `update_log`
 --
 
-INSERT INTO `update_log` (`log_id`, `updated_by`, `updated_id`, `updated_table`, `update_type`, `updated_at`) VALUES
-(1, 3, 2, 'alumni_profile', '', '2025-10-17 13:12:26'),
-(2, 3, 2, 'alumni_profile', '', '2025-10-17 13:12:34'),
-(3, 3, 1, 'alumni_profile', '', '2025-10-17 13:14:10'),
-(4, 3, 1, 'alumni_profile', '', '2025-10-17 13:32:13'),
-(5, 3, 1, 'alumni_profile', '', '2025-10-17 13:36:26'),
-(6, 3, 2, 'alumni_profile', '', '2025-10-17 14:04:09'),
-(7, 3, 2, 'alumni_profile', '', '2025-10-17 14:13:06'),
-(8, 3, 2, 'alumni_profile', '', '2025-10-17 14:13:12'),
-(9, 3, 1, 'alumni_profile', '', '2025-10-17 14:13:30'),
-(10, 3, 1, 'alumni_profile', '', '2025-10-17 14:15:29'),
-(11, 3, 5, 'alumni_profile', '', '2025-10-17 14:37:06'),
-(12, 3, 5, 'alumni_profile', '', '2025-10-17 15:02:26'),
-(13, 3, 5, 'alumni_profile', '', '2025-10-17 15:02:32'),
-(14, 3, 5, 'alumni_profile', '', '2025-10-17 23:22:03'),
-(15, 4, 2, 'alumni_profile', '', '2025-10-28 08:26:57');
+INSERT INTO `update_log` (`log_id`, `updated_by`, `updated_id`, `update_type`, `updated_at`) VALUES
+(1, 3, 2, '', '2025-10-17 13:12:26'),
+(2, 3, 2, '', '2025-10-17 13:12:34'),
+(3, 3, 1, '', '2025-10-17 13:14:10'),
+(4, 3, 1, '', '2025-10-17 13:32:13'),
+(5, 3, 1, '', '2025-10-17 13:36:26'),
+(6, 3, 2, '', '2025-10-17 14:04:09'),
+(7, 3, 2, '', '2025-10-17 14:13:06'),
+(8, 3, 2, '', '2025-10-17 14:13:12'),
+(9, 3, 1, '', '2025-10-17 14:13:30'),
+(10, 3, 1, '', '2025-10-17 14:15:29'),
+(11, 3, 5, '', '2025-10-17 14:37:06'),
+(12, 3, 5, '', '2025-10-17 15:02:26'),
+(13, 3, 5, '', '2025-10-17 15:02:32'),
+(14, 3, 5, '', '2025-10-17 23:22:03'),
+(15, 4, 2, '', '2025-10-28 08:26:57'),
+(16, 4, 14, 'approve', '2025-11-10 08:33:49'),
+(17, 4, 10, 'approve', '2025-11-10 08:34:42');
 
 -- --------------------------------------------------------
 
@@ -43318,7 +43315,12 @@ INSERT INTO `users` (`user_id`, `email`, `password`, `role`, `name`, `created_at
 (20, 'drexzelescoreal@gmail.com', '$2y$10$nj7WTWt9ueBZF5YmZHa.F.9WGyNSzFh6WH93WFYAaIX1ZJSY7kHJ.', 'alumni', 'Drexzel Escoreal', '2025-10-17 12:01:39'),
 (21, 'danrylboncales@gmail.com', '$2y$10$EkIQueUtH4eI.KK.Ef49seYbAu6XCStVKjVk16X/33BuzsQTgt0s2', 'alumni', 'Danryl James Usa', '2025-10-17 12:01:39'),
 (22, 'davemadrazo7@gmail.com', '$2y$10$6U8i3VrEMwuhzax5GKUOi.JOZbWqok4/6hKld3CL44i.aYxTe12Mq', 'alumni', 'Dave Jay Madrazo', '2025-10-17 12:01:39'),
-(23, 'salvadorvincecyrus@gmail.com', '$2y$10$2rxmPdtdOr8NgmNmvVPiEOgxKeAC.OQTQw0C58EY5/CnEzoeCrKDi', 'alumni', 'Vince Cyrus Salvador', '2025-10-17 15:13:32');
+(23, 'salvadorvincecyrus@gmail.com', '$2y$10$2rxmPdtdOr8NgmNmvVPiEOgxKeAC.OQTQw0C58EY5/CnEzoeCrKDi', 'alumni', 'Vince Cyrus Salvador', '2025-10-17 15:13:32'),
+(25, 'rthdbl672@gmail.com', '$2y$10$5MS6n8OUf8kJ2D3eHCAfwecHkuIAXKlkB8vrq5dCIwitcNfdyvcni', 'alumni', 'Arth Dablo', '2025-11-10 13:24:20'),
+(26, 'dexenebliskg@mail.com', '$2y$10$mLuf6qUWB59SVVpsu4fDg.5uVxsWeJ2sOnPHL8.4wOHcl2d.baQ7C', 'alumni', 'Dexene Bliss Kilat', '2025-11-10 13:24:20'),
+(27, 'anjofernandez0705@gmail.com', '$2y$10$mGcZLCHvtbYb0GpPPnq3v.eUFzKx.LxoPEtOBNUIg4dVSOSlt3YqW', 'alumni', 'Anjo Fernandez', '2025-11-10 13:24:20'),
+(28, 'jancarlorabe9@gmail.com', '$2y$10$JjvjQDB5HnysBAaExlAuvekp7UjkvxGJqaJt4FUe/Qr9OuDmiCLLy', 'alumni', 'Jan Carlo Rabe', '2025-11-10 13:24:20'),
+(29, 'catalanvincent222@gmail.com', '$2y$10$EjziH7HJLkjcO/t5w5CXy.a4mmAnYO..nZAbgDXLidU9iomVkcl3m', 'alumni', 'Vincent Catalan', '2025-11-10 13:24:20');
 
 --
 -- Indexes for dumped tables
@@ -43416,19 +43418,19 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `address`
 --
 ALTER TABLE `address`
-  MODIFY `address_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=98;
+  MODIFY `address_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=100;
 
 --
 -- AUTO_INCREMENT for table `alumni_documents`
 --
 ALTER TABLE `alumni_documents`
-  MODIFY `doc_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
+  MODIFY `doc_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
 
 --
 -- AUTO_INCREMENT for table `education_info`
 --
 ALTER TABLE `education_info`
-  MODIFY `education_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `education_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT for table `employment_info`
@@ -43446,13 +43448,13 @@ ALTER TABLE `job_titles`
 -- AUTO_INCREMENT for table `update_log`
 --
 ALTER TABLE `update_log`
-  MODIFY `log_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `log_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
 
 --
 -- Constraints for dumped tables
