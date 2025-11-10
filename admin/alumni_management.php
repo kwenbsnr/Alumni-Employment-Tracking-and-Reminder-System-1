@@ -12,9 +12,9 @@ $active_page = "alumni_management";
 $query = "
     SELECT ap.user_id AS alumni_id, ap.first_name, ap.middle_name, ap.last_name, ap.employment_status AS job, ap.year_graduated AS batch, u.email,
            COUNT(ad.doc_id) AS total_docs,
-           SUM(CASE WHEN ad.document_status = 'Pending' THEN 1 ELSE 0 END) AS pending_docs,
-           SUM(CASE WHEN ad.document_status = 'Approved' THEN 1 ELSE 0 END) AS approved_docs,
-           SUM(CASE WHEN ad.document_status = 'Rejected' THEN 1 ELSE 0 END) AS rejected_docs
+           SUM(CASE WHEN ap.submission_status = 'Pending' THEN 1 ELSE 0 END) AS pending_docs,
+           SUM(CASE WHEN ap.submission_status = 'Approved' THEN 1 ELSE 0 END) AS approved_docs,
+           SUM(CASE WHEN ap.submission_status = 'Rejected' THEN 1 ELSE 0 END) AS rejected_docs
     FROM alumni_profile ap
     LEFT JOIN users u ON ap.user_id = u.user_id
     LEFT JOIN alumni_documents ad ON ap.user_id = ad.user_id
