@@ -34,6 +34,7 @@ include("../connect.php");
             user-select: none;
             -webkit-touch-callout: none;
             -webkit-tap-highlight-color: transparent;
+            font-family: 'Inter', sans-serif;
         }
 
         /* Reserve space for error message to prevent layout shift */
@@ -44,7 +45,6 @@ include("../connect.php");
             overflow: hidden;
             transition: none;
         }
-
         .error-container {
             margin-top: 0.75rem;
             padding: 0.75rem 1rem;
@@ -60,16 +60,13 @@ include("../connect.php");
             animation: slideDown 0.3s ease-out;
             box-shadow: 0 2px 6px rgba(254, 178, 178, 0.2);
         }
-
         .error-container i {
             font-size: 1rem;
             color: #dc2626;
         }
-
         .error-container span {
             flex: 1;
         }
-
         @keyframes slideDown {
             from {
                 opacity: 0;
@@ -81,14 +78,13 @@ include("../connect.php");
             }
         }
 
-        /* Ensure password field container has consistent height */
+        /* Password field wrapper */
         .password-field {
             position: relative;
         }
     </style>
 </head>
 <body class="bg-gray-50">
-
     <header class="fixed top-0 left-0 w-full z-50">
         <div class="top-green-bar"></div>
         <div class="top-links">
@@ -111,7 +107,7 @@ include("../connect.php");
     </header>
 
     <div id="loginPage" class="login-container">
-        <!-- LEFT: FIXED BACKGROUND -->
+        <!-- LEFT: ORIGINAL GUI (EXACT FROM OLD CODE) -->
         <div class="school-branding">
             <div class="text-center text-white z-10 p-4 max-w-lg">
                 <div class="flex items-center justify-center gap-6 mb-18">
@@ -135,7 +131,7 @@ include("../connect.php");
             </div>
         </div>
 
-        <!-- RIGHT: LOGIN FORM -->
+        <!-- RIGHT: LOGIN FORM (NEW FUNCTIONALITY + DYNAMIC THEMING) -->
         <div class="login-right">
             <div class="login-box">
                 <div class="text-center mb-8">
@@ -165,8 +161,8 @@ include("../connect.php");
                     <div class="password-field">
                         <label for="loginPassword" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
                         <input type="password" id="loginPassword" name="password" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all" placeholder="Enter your password" autocomplete="current-password">
-
-                        <!-- Dynamic error handling -->
+                        
+                        <!-- Dynamic error message with placeholder -->
                         <?php if (isset($_SESSION['login_error'])): ?>
                             <div class="error-container">
                                 <i class="fas fa-exclamation-triangle"></i>

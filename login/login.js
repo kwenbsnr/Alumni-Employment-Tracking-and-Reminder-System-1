@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const loginForm     = document.getElementById("loginForm");
   const loginEmail    = document.getElementById("loginEmail");
   const loginPassword = document.getElementById("loginPassword");
+  const body          = document.body;
 
   if (!roleSelectors.length || !roleInput || !loginButton || !loginForm || !loginEmail || !loginPassword) {
     console.error("Missing required DOM elements");
@@ -17,15 +18,35 @@ document.addEventListener("DOMContentLoaded", () => {
   // ---------- Role selection ----------
   roleSelectors.forEach(selector => {
     selector.addEventListener("click", () => {
+      // Remove all selections and role classes from body
       roleSelectors.forEach(s => s.classList.remove("selected"));
+      body.classList.remove("alumni-selected", "admin-selected");
+      
+      // Add new selection
       selector.classList.add("selected");
       roleInput.value = selector.dataset.role;
       console.log("Role selected:", roleInput.value);
 
-      // Enable button
+      // Add role class to body for CSS theming
+      if (roleInput.value === "admin") {
+        body.classList.add("admin-selected");
+      } else {
+        body.classList.add("alumni-selected");
+      }
+
+      // Enable button and apply appropriate styles
       loginButton.disabled = false;
-      loginButton.classList.remove("bg-gray-300", "text-gray-500", "cursor-not-allowed");
-      loginButton.classList.add("bg-green-600", "hover:bg-green-700", "text-white", "cursor-pointer");
+      
+      // Remove all existing button classes
+      loginButton.classList.remove(
+        "bg-gray-300", "text-gray-500", "cursor-not-allowed",
+        "bg-green-600", "hover:bg-green-700"
+      );
+      
+      // Add base enabled styles
+      loginButton.classList.add("cursor-pointer", "text-white");
+      
+      // Focus email field
       loginEmail.focus();
     });
   });
