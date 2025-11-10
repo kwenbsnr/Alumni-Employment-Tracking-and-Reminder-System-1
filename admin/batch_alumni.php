@@ -20,17 +20,11 @@ $search = $_GET['search'] ?? '';
 $employment_status = $_GET['employment_status'] ?? '';
 $submission_status = $_GET['submission_status'] ?? '';
 
-// Fetch batch statistics
+// Fetch batch statistics for submission status only
 $statsQuery = "SELECT 
-                COUNT(*) as total_count,
                 SUM(CASE WHEN submission_status = 'Approved' THEN 1 ELSE 0 END) as approved_count,
                 SUM(CASE WHEN submission_status = 'Pending' THEN 1 ELSE 0 END) as pending_count,
-                SUM(CASE WHEN submission_status = 'Rejected' THEN 1 ELSE 0 END) as rejected_count,
-                SUM(CASE WHEN employment_status = 'Unemployed' THEN 1 ELSE 0 END) as unemployed_count,
-                SUM(CASE WHEN employment_status = 'Self-Employed' THEN 1 ELSE 0 END) as self_employed_count,
-                SUM(CASE WHEN employment_status = 'Employed' THEN 1 ELSE 0 END) as employed_count,
-                SUM(CASE WHEN employment_status = 'Student' THEN 1 ELSE 0 END) as student_count,
-                SUM(CASE WHEN employment_status = 'Employed & Student' THEN 1 ELSE 0 END) as employed_student_count
+                SUM(CASE WHEN submission_status = 'Rejected' THEN 1 ELSE 0 END) as rejected_count
                FROM alumni_profile 
                WHERE year_graduated = ?";
 $statsStmt = $conn->prepare($statsQuery);
@@ -95,7 +89,7 @@ $alumniResult = $stmt->get_result();
 ob_start();
 ?>
 
-<div class="space-y-6 max-w-7xl mx-auto">
+<div class="space-y-6">
     <!-- Back Button and Header -->
     <div class="flex items-center space-x-4">
         <a href="alumni_management.php<?php echo !empty($_GET['search']) ? '?search=' . urlencode($_GET['search']) : ''; ?>" 
@@ -105,61 +99,6 @@ ob_start();
         <div>
             <h1 class="text-2xl font-bold text-gray-800">Batch <?php echo $batch_year; ?> Alumni</h1>
             <p class="text-gray-600">Manage and review alumni records for this graduation year</p>
-        </div>
-    </div>
-
-    <!-- Combined Statistics Card -->
-    <div class="bg-white p-6 rounded-xl shadow-lg">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Total Alumni & Submission Status -->
-            <div class="space-y-4">
-                <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Overview</h3>
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="text-center p-4 bg-blue-50 rounded-lg">
-                        <p class="text-2xl font-bold text-blue-600"><?php echo $batchStats['total_count']; ?></p>
-                        <p class="text-sm text-blue-600 font-medium">Total Alumni</p>
-                    </div>
-                    <div class="text-center p-4 bg-green-50 rounded-lg">
-                        <p class="text-2xl font-bold text-green-600"><?php echo $batchStats['approved_count']; ?></p>
-                        <p class="text-sm text-green-600 font-medium">Approved</p>
-                    </div>
-                    <div class="text-center p-4 bg-yellow-50 rounded-lg">
-                        <p class="text-2xl font-bold text-yellow-600"><?php echo $batchStats['pending_count']; ?></p>
-                        <p class="text-sm text-yellow-600 font-medium">Pending</p>
-                    </div>
-                    <div class="text-center p-4 bg-red-50 rounded-lg">
-                        <p class="text-2xl font-bold text-red-600"><?php echo $batchStats['rejected_count']; ?></p>
-                        <p class="text-sm text-red-600 font-medium">Rejected</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Employment/Academic Status -->
-            <div class="lg:col-span-2">
-                <h3 class="text-lg font-semibold text-gray-800 border-b pb-2 mb-4">Employment/Academic Status</h3>
-                <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
-                    <div class="text-center p-3 bg-red-50 rounded-lg">
-                        <p class="text-lg font-bold text-red-600"><?php echo $batchStats['unemployed_count']; ?></p>
-                        <p class="text-xs text-red-600 font-medium">Unemployed</p>
-                    </div>
-                    <div class="text-center p-3 bg-blue-50 rounded-lg">
-                        <p class="text-lg font-bold text-blue-600"><?php echo $batchStats['self_employed_count']; ?></p>
-                        <p class="text-xs text-blue-600 font-medium">Self-Employed</p>
-                    </div>
-                    <div class="text-center p-3 bg-green-50 rounded-lg">
-                        <p class="text-lg font-bold text-green-600"><?php echo $batchStats['employed_count']; ?></p>
-                        <p class="text-xs text-green-600 font-medium">Employed</p>
-                    </div>
-                    <div class="text-center p-3 bg-purple-50 rounded-lg">
-                        <p class="text-lg font-bold text-purple-600"><?php echo $batchStats['student_count']; ?></p>
-                        <p class="text-xs text-purple-600 font-medium">Student</p>
-                    </div>
-                    <div class="text-center p-3 bg-yellow-50 rounded-lg">
-                        <p class="text-lg font-bold text-yellow-600"><?php echo $batchStats['employed_student_count']; ?></p>
-                        <p class="text-xs text-yellow-600 font-medium">Student & Employed</p>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -212,112 +151,144 @@ ob_start();
         </form>
     </div>
 
-    <!-- Alumni Table -->
-    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <h3 class="text-lg font-bold text-gray-800">
-                Alumni Records
-                <span class="text-sm font-normal text-gray-600 ml-2">
-                    (<?php echo $alumniResult->num_rows; ?> records found)
-                </span>
-            </h3>
+    <!-- Simplified Submission Status -->
+    <div class="bg-white p-4 rounded-xl shadow-lg">
+        <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-gray-800">Submission Status Overview</h3>
+            <div class="flex space-x-4">
+                <div class="text-center">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                        <i class="fas fa-check-circle mr-1"></i>
+                        Approved: <?php echo $batchStats['approved_count']; ?>
+                    </span>
+                </div>
+                <div class="text-center">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                        <i class="fas fa-clock mr-1"></i>
+                        Pending: <?php echo $batchStats['pending_count']; ?>
+                    </span>
+                </div>
+                <div class="text-center">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                        <i class="fas fa-times-circle mr-1"></i>
+                        Rejected: <?php echo $batchStats['rejected_count']; ?>
+                    </span>
+                </div>
+            </div>
         </div>
-        
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alumni</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employment Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Submission Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Documents</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    <?php if ($alumniResult->num_rows > 0): ?>
-                        <?php while ($alumni = $alumniResult->fetch_assoc()): ?>
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center">
-                                        <div class="flex-shrink-0 h-10 w-10">
-                                            <?php if (!empty($alumni['photo_path'])): ?>
-                                                <img class="h-10 w-10 rounded-full object-cover" src="../<?php echo $alumni['photo_path']; ?>" alt="">
-                                            <?php else: ?>
-                                                <div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                                                    <i class="fas fa-user text-gray-500"></i>
-                                                </div>
-                                            <?php endif; ?>
-                                        </div>
-                                        <div class="ml-4">
-                                            <div class="text-sm font-medium text-gray-900 alumni-name-hover" 
-                                                 data-user-id="<?php echo $alumni['user_id']; ?>">
-                                                <?php echo htmlspecialchars($alumni['first_name'] . ' ' . $alumni['last_name']); ?>
-                                            </div>
-                                            <div class="text-sm text-gray-500"><?php echo htmlspecialchars($alumni['email']); ?></div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                        <?php echo getEmploymentStatusColor($alumni['employment_status']); ?>">
-                                        <?php echo $alumni['employment_status']; ?>
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                        <?php echo getSubmissionStatusColor($alumni['submission_status']); ?>">
-                                        <?php echo $alumni['submission_status']; ?>
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    <?php if ($alumni['document_count'] > 0): ?>
-                                        <button onclick="viewDocuments(<?php echo $alumni['user_id']; ?>)" 
-                                                class="text-blue-600 hover:text-blue-900 flex items-center">
-                                            <i class="fas fa-file-alt mr-1"></i>
-                                            View (<?php echo $alumni['document_count']; ?>)
-                                        </button>
-                                    <?php else: ?>
-                                        <span class="text-gray-400">No documents</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <?php if ($alumni['submission_status'] == 'Pending'): ?>
-                                        <button onclick="approveAlumni(<?php echo $alumni['user_id']; ?>)" 
-                                                class="text-green-600 hover:text-green-900 mr-3">
-                                            <i class="fas fa-check"></i> Approve
-                                        </button>
-                                        <button onclick="rejectAlumni(<?php echo $alumni['user_id']; ?>)" 
-                                                class="text-red-600 hover:text-red-900">
-                                            <i class="fas fa-times"></i> Reject
-                                        </button>
-                                    <?php elseif ($alumni['submission_status'] == 'Approved'): ?>
-                                        <button onclick="rejectAlumni(<?php echo $alumni['user_id']; ?>)" 
-                                                class="text-red-600 hover:text-red-900">
-                                            <i class="fas fa-times"></i> Revoke
-                                        </button>
-                                    <?php else: ?>
-                                        <button onclick="approveAlumni(<?php echo $alumni['user_id']; ?>)" 
-                                                class="text-green-600 hover:text-green-900">
-                                            <i class="fas fa-check"></i> Approve
-                                        </button>
-                                    <?php endif; ?>
-                                    <a href="edit_alumni.php?id=<?php echo $alumni['user_id']; ?>" 
-                                       class="text-blue-600 hover:text-blue-900 ml-3">
-                                        <i class="fas fa-edit"></i> Edit
-                                    </a>
-                                </td>
+    </div>
+
+    <!-- Centered Alumni Records -->
+    <div class="flex justify-center">
+        <div class="w-full max-w-7xl">
+            <!-- Alumni Table -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-bold text-gray-800">
+                        Alumni Records
+                        <span class="text-sm font-normal text-gray-600 ml-2">
+                            (<?php echo $alumniResult->num_rows; ?> records found)
+                        </span>
+                    </h3>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alumni</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employment Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Submission Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Documents</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
-                        <?php endwhile; ?>
-                    <?php else: ?>
-                        <tr>
-                            <td colspan="5" class="px-6 py-4 text-center text-gray-500">
-                                No alumni records found matching your criteria.
-                            </td>
-                        </tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <?php if ($alumniResult->num_rows > 0): ?>
+                                <?php while ($alumni = $alumniResult->fetch_assoc()): ?>
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="flex-shrink-0 h-10 w-10">
+                                                    <?php if (!empty($alumni['photo_path'])): ?>
+                                                        <img class="h-10 w-10 rounded-full object-cover" src="../<?php echo $alumni['photo_path']; ?>" alt="">
+                                                    <?php else: ?>
+                                                        <div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                                                            <i class="fas fa-user text-gray-500"></i>
+                                                        </div>
+                                                    <?php endif; ?>
+                                                </div>
+                                                <div class="ml-4">
+                                                    <div class="text-sm font-medium text-gray-900 alumni-name-hover" 
+                                                         data-user-id="<?php echo $alumni['user_id']; ?>">
+                                                        <?php echo htmlspecialchars($alumni['first_name'] . ' ' . $alumni['last_name']); ?>
+                                                    </div>
+                                                    <div class="text-sm text-gray-500"><?php echo htmlspecialchars($alumni['email']); ?></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                                <?php echo getEmploymentStatusColor($alumni['employment_status']); ?>">
+                                                <?php echo $alumni['employment_status']; ?>
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                                <?php echo getSubmissionStatusColor($alumni['submission_status']); ?>">
+                                                <?php echo $alumni['submission_status']; ?>
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            <?php if ($alumni['document_count'] > 0): ?>
+                                                <button onclick="viewDocuments(<?php echo $alumni['user_id']; ?>)" 
+                                                        class="text-blue-600 hover:text-blue-900 flex items-center">
+                                                    <i class="fas fa-file-alt mr-1"></i>
+                                                    View (<?php echo $alumni['document_count']; ?>)
+                                                </button>
+                                            <?php else: ?>
+                                                <span class="text-gray-400">No documents</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <?php if ($alumni['submission_status'] == 'Pending'): ?>
+                                                <button onclick="approveAlumni(<?php echo $alumni['user_id']; ?>)" 
+                                                        class="text-green-600 hover:text-green-900 mr-3">
+                                                    <i class="fas fa-check"></i> Approve
+                                                </button>
+                                                <button onclick="rejectAlumni(<?php echo $alumni['user_id']; ?>)" 
+                                                        class="text-red-600 hover:text-red-900">
+                                                    <i class="fas fa-times"></i> Reject
+                                                </button>
+                                            <?php elseif ($alumni['submission_status'] == 'Approved'): ?>
+                                                <button onclick="rejectAlumni(<?php echo $alumni['user_id']; ?>)" 
+                                                        class="text-red-600 hover:text-red-900">
+                                                    <i class="fas fa-times"></i> Revoke
+                                                </button>
+                                            <?php else: ?>
+                                                <button onclick="approveAlumni(<?php echo $alumni['user_id']; ?>)" 
+                                                        class="text-green-600 hover:text-green-900">
+                                                    <i class="fas fa-check"></i> Approve
+                                                </button>
+                                            <?php endif; ?>
+                                            <a href="edit_alumni.php?id=<?php echo $alumni['user_id']; ?>" 
+                                               class="text-blue-600 hover:text-blue-900 ml-3">
+                                                <i class="fas fa-edit"></i> Edit
+                                            </a>
+                                        </td>
+                                    </tr>
+                                <?php endwhile; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+                                        No alumni records found matching your criteria.
+                                    </td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 </div>
