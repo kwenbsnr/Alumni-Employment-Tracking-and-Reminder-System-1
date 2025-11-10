@@ -3,10 +3,6 @@ session_start();
 include("../connect.php");
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-define('DEBUG_MODE', false); // change to true when debugging
-/*if (DEBUG_MODE) {
-    error_log("Raw POST data: " . json_encode($_POST));
-}*/
 
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../login/login.php");
@@ -14,190 +10,321 @@ if (!isset($_SESSION['user_id'])) {
 }
 $user_id = $_SESSION['user_id'];
 
-// Check yearly update restriction and re-upload eligibility
-$stmt = $conn->prepare("SELECT last_profile_update, last_name, user_id, photo_path, address_id FROM alumni_profile WHERE user_id = ?");
+// ---- 1. Profile & Permissions ------------------------------------------------
+$stmt = $conn->prepare("SELECT last_profile_update, last_name, user_id, photo_path, address_id, employment_status, submission_status 
+                        FROM alumni_profile WHERE user_id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
-$result = $stmt->get_result();
-$profile = $result->fetch_assoc();
-$can_update = !$profile || ($profile && ($profile['last_profile_update'] === null || strtotime($profile['last_profile_update'] . ' +1 year') <= time()));
-$alumni_id = $profile ? $profile['user_id'] : null;
-$last_name = $profile['last_name'] ?? '';
-$existing_address_id = $profile['address_id'] ?? null;
+$profile = $stmt->get_result()->fetch_assoc() ?: [];
 $stmt->close();
 
-// Check for rejected documents needing re-upload
-$can_reupload = false;
-$rejected_docs = [];
-if ($alumni_id) {
-    $stmt = $conn->prepare("SELECT document_type FROM alumni_documents WHERE user_id = ? AND document_status = 'Rejected' AND needs_reupload = 1");
-    $stmt->bind_param("i", $alumni_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    while ($doc = $result->fetch_assoc()) {
-        $rejected_docs[] = $doc['document_type'];
-        $can_reupload = true;
-    }
-    $stmt->close();
-}
-if (!$can_update && !$can_reupload) {
-    header("Location: alumni_profile.php?error=You can only update your profile once per year, unless re-uploading rejected documents.");
+// ---- 2. Profile Permissions --------------------------------------------------------
+$is_profile_rejected = !empty($profile) && ($profile['submission_status'] ?? '') === 'Rejected';
+$can_update_yearly = empty($profile) || 
+                     ($profile && ($profile['last_profile_update'] === null || 
+                      strtotime($profile['last_profile_update'] . ' +1 year') <= time()));
+
+$can_update = $can_update_yearly || $is_profile_rejected;
+
+// PERMISSION CHECK - PREVENT UNAUTHORIZED UPDATES
+if (!$can_update) {
+    header("Location: alumni_profile.php?error=" . urlencode(
+        "You can only update once per year unless your submission was rejected."
+    ));
     exit;
 }
 
-function upload_file($field, $dir, $surname, $type, $allowed_types = ['application/pdf']) {
-    if (!isset($_FILES[$field]) || $_FILES[$field]['error'] !== UPLOAD_ERR_OK) return null;
-
-    // MIME and extension checks
-    $fileType = $_FILES[$field]['type'];
-    $fileName = $_FILES[$field]['name'];
-    $fileSize = $_FILES[$field]['size'];
-    $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-
-    // Allowed extensions based on MIME types
-    $allowed_extensions = [];
-    foreach ($allowed_types as $t) {
-        if ($t === 'image/jpeg') $allowed_extensions[] = 'jpg';
-        elseif ($t === 'image/png') $allowed_extensions[] = 'png';
-        elseif ($t === 'application/pdf') $allowed_extensions[] = 'pdf';
-    }
-
-    // Validate type and extension
-    if (!in_array($fileType, $allowed_types) || !in_array($ext, $allowed_extensions)) return null;
-    if ($fileSize > 2 * 1024 * 1024) return null; // 2MB limit
-
-    if (!is_dir($dir)) mkdir($dir, 0777, true);
-
-    // Create sanitized, unique filename
-    $file_name = preg_replace('/[^a-zA-Z0-9_\-]/', '', $surname) . '_' . $type . '.' . $ext;
-    $target = rtrim($dir, '/') . '/' . $file_name;
-
-    // Move uploaded file
-    if (move_uploaded_file($_FILES[$field]['tmp_name'], $target)) {
-        return str_replace('../', '', $target); // Relative path for DB
-    }
-    return null;
+// If profile was rejected, clean up old data before new submission
+if ($is_profile_rejected) {
+    handle_rejection_cleanup($user_id, $conn);
+    // Refresh profile data after cleanup
+    $profile = [];
+    $existing_address_id = null;
+    $last_name = '';
+    $current_employment_status = '';
 }
 
+if ($is_profile_rejected && !isset($_SESSION['profile_rejected'])) {
+    $_SESSION['profile_rejected'] = true;
+}
 
-// Handle form submission
+$alumni_id = $user_id;
+$last_name = $profile['last_name'] ?? '';
+$existing_address_id = $profile['address_id'] ?? null;
+$current_employment_status = $profile['employment_status'] ?? '';
+
+// ---- 3. Helper: file upload --------------------------------------------------
+function upload_file($field, $dir, $surname, $type, $allowed = ['application/pdf']) {
+    if (!isset($_FILES[$field]) || $_FILES[$field]['error'] !== UPLOAD_ERR_OK) {
+        if ($_FILES[$field]['error'] === UPLOAD_ERR_INI_SIZE || $_FILES[$field]['error'] === UPLOAD_ERR_FORM_SIZE) {
+            throw new Exception("File size too large. Maximum allowed is 2MB.");
+        }
+        return null;
+    }
+
+    $fileType = $_FILES[$field]['type'];
+    $ext = strtolower(pathinfo($_FILES[$field]['name'], PATHINFO_EXTENSION));
+    $size = $_FILES[$field]['size'];
+
+    $extMap = [
+        'image/jpeg' => 'jpg', 'image/png' => 'png', 'application/pdf' => 'pdf'
+    ];
+    $allowedExt = array_map(fn($t) => $extMap[$t] ?? '', $allowed);
+
+    if (!in_array($fileType, $allowed, true)) {
+        throw new Exception("Invalid file type. Allowed: " . implode(', ', array_keys($extMap)));
+    }
+    
+    if (!in_array($ext, $allowedExt, true)) {
+        throw new Exception("Invalid file extension. Allowed: " . implode(', ', $allowedExt));
+    }
+    
+    if ($size > 2 * 1024 * 1024) {
+        throw new Exception("File size exceeds 2MB limit.");
+    }
+
+    if (!is_dir($dir)) {
+        if (!mkdir($dir, 0777, true)) {
+            throw new Exception("Could not create upload directory.");
+        }
+    }
+
+    $name = preg_replace('/[^a-zA-Z0-9_-]/', '', $surname) . '_' . $type . '.' . $ext;
+    $target = rtrim($dir, '/') . '/' . $name;
+
+    if (!move_uploaded_file($_FILES[$field]['tmp_name'], $target)) {
+        throw new Exception("File upload failed. Please try again.");
+    }
+    
+    return str_replace('../', '', $target);
+}
+
+// ---- 4. Document handler (DRY) -----------------------------------------------
+function handle_document($field, $dir, $surname, $code) {
+    global $conn, $user_id;
+    
+    if (!isset($_FILES[$field]) || $_FILES[$field]['error'] !== UPLOAD_ERR_OK) {
+        return null;
+    }
+
+    $new_path = upload_file($field, $dir, $surname, strtolower($code), ['application/pdf']);
+    if ($new_path) {
+        // Delete old document if exists
+        $stmt = $conn->prepare("DELETE FROM alumni_documents WHERE user_id = ? AND document_type = ?");
+        $stmt->bind_param("is", $user_id, $code);
+        $stmt->execute();
+        $stmt->close();
+        
+        // Insert new document
+        $stmt = $conn->prepare("INSERT INTO alumni_documents (user_id, document_type, file_path) VALUES (?, ?, ?)");
+        $stmt->bind_param("iss", $user_id, $code, $new_path);
+        $stmt->execute();
+        $stmt->close();
+        return true;
+    }
+    return false;
+}
+
+// ---- 5. REJECTION HANDLER ---------------------------------------------
+function handle_rejection_cleanup($user_id, $conn) {
+    // Delete all user data except users table
+    $tables = ['employment_info', 'education_info', 'alumni_documents'];
+    
+    foreach ($tables as $table) {
+        $stmt = $conn->prepare("DELETE FROM $table WHERE user_id = ?");
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $stmt->close();
+    }
+    
+    // Reset alumni_profile but keep user_id and set submission_status to NULL
+    $stmt = $conn->prepare("UPDATE alumni_profile SET 
+        first_name = NULL, middle_name = NULL, last_name = NULL, 
+        contact_number = NULL, year_graduated = NULL, employment_status = NULL,
+        photo_path = NULL, address_id = NULL, last_profile_update = NULL,
+        submission_status = NULL, rejection_reason = NULL, rejected_at = NULL, submitted_at = NULL
+        WHERE user_id = ?");
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $stmt->close();
+    
+    // Delete address record if exists
+    $stmt = $conn->prepare("DELETE a FROM address a 
+                           INNER JOIN alumni_profile ap ON a.address_id = ap.address_id 
+                           WHERE ap.user_id = ?");
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $stmt->close();
+}
+
+// ---- 6. POST handling --------------------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Retrieve form data
-    $first = trim($_POST['first_name'] ?? '');
-    $middle = trim($_POST['middle_name'] ?? '');
-    $last = trim($_POST['last_name'] ?? '');
-    $contact = trim($_POST['contact_number'] ?? '');
-    $year_graduated = trim($_POST['year_graduated'] ?? '');
-    $employment_status = trim($_POST['employment_status'] ?? '');
-    $raw_barangay_id = $_POST['barangay_id'] ?? '';
-    $barangay_id = trim($raw_barangay_id);
-    $job_title = trim($_POST['job_title'] ?? '');
-    if ($job_title === 'Other') {
-        $job_title = trim($_POST['other_job_title'] ?? '');
-    }
-    $company = trim($_POST['company_name'] ?? '');
-    $company_address = trim($_POST['company_address'] ?? '');
-    $salary = trim($_POST['salary_range'] ?? '');
-    $business_type = trim($_POST['business_type'] ?? '');
-    if ($business_type === 'Others (Please specify)') {
-        $business_type = 'Others: ' . trim($_POST['business_type_other'] ?? '');
-    }
-    $school = trim($_POST['school_name'] ?? '');
-    $degree = trim($_POST['degree_pursued'] ?? '');
+    // DEBUG: Log everything for troubleshooting
+    error_log("=== PROFILE UPDATE START ===");
+    error_log("POST Data: " . print_r($_POST, true));
+    error_log("FILES Data: " . print_r($_FILES, true));
+    error_log("User ID: " . $user_id);
+    error_log("Can Update: " . ($can_update ? 'YES' : 'NO'));
+    
+    $conn->begin_transaction();
+    
+    try {
+        // ---- 6.1 Retrieve & sanitise --------------------------------------------
+        $first = htmlspecialchars(trim($_POST['first_name'] ?? ''));
+        $middle = htmlspecialchars(trim($_POST['middle_name'] ?? ''));
+        $last = htmlspecialchars(trim($_POST['last_name'] ?? ''));
+        $contact = htmlspecialchars(trim($_POST['contact_number'] ?? ''));
+        $year = htmlspecialchars(trim($_POST['year_graduated'] ?? ''));
+        $status = htmlspecialchars(trim($_POST['employment_status'] ?? ''));
 
-    // Backend validation for required fields
-    if ($can_update) {
-        if (empty($first) || empty($last) || empty($contact) || empty($year_graduated) || empty($employment_status)) {
-            header("Location: alumni_profile.php?error=" . urlencode("All personal fields are required."));
-            exit;
+        // Address fields - using correct names from frontend
+        $region_id = htmlspecialchars(trim($_POST['region_id'] ?? ''));
+        $province_id = htmlspecialchars(trim($_POST['province_id'] ?? ''));
+        $municipality_id = htmlspecialchars(trim($_POST['municipality_id'] ?? ''));
+        $barangay_id = htmlspecialchars(trim($_POST['barangay_id'] ?? ''));
+
+        // Employment fields
+        $job_title = htmlspecialchars(trim($_POST['job_title'] ?? ''));
+        if ($job_title === 'Other') $job_title = htmlspecialchars(trim($_POST['other_job_title'] ?? ''));
+
+        $company = htmlspecialchars(trim($_POST['company_name'] ?? ''));
+        $company_address = htmlspecialchars(trim($_POST['company_address'] ?? ''));
+        $salary = htmlspecialchars(trim($_POST['salary_range'] ?? ''));
+
+        $business_type = htmlspecialchars(trim($_POST['business_type'] ?? ''));
+        if ($business_type === 'Others (Please specify)') {
+            $business_type = 'Others: ' . htmlspecialchars(trim($_POST['business_type_other'] ?? ''));
         }
 
-        if (in_array($employment_status, ['Employed', 'Self-Employed', 'Employed & Student'])) {
-            if (empty($barangay_id)) {
-                header("Location: alumni_profile.php?error=" . urlencode("All address fields are required for this employment status."));
-                exit;
+         // Debug employment status
+        error_log("Employment Status: " . $status);
+        error_log("Employment Fields - Job Title: " . $job_title);
+        error_log("Employment Fields - Company: " . $company);
+
+        // Education fields - including new ones
+        $school = htmlspecialchars(trim($_POST['school_name'] ?? ''));
+        $degree = htmlspecialchars(trim($_POST['degree_pursued'] ?? ''));
+        $start_year = htmlspecialchars(trim($_POST['start_year'] ?? ''));
+        $end_year = htmlspecialchars(trim($_POST['end_year'] ?? ''));
+
+        // Validate year format
+        if ($can_update && in_array($status, ['Student', 'Employed & Student'])) {
+            if (!preg_match('/^\d{4}$/', $start_year) || $start_year < 2000 || $start_year > date('Y')) {
+                throw new Exception("Invalid start year format.");
+            }
+            if (!preg_match('/^\d{4}$/', $end_year) || $end_year < $start_year || $end_year > (date('Y') + 5)) {
+                throw new Exception("Invalid end year format.");
             }
         }
 
-        if (in_array($employment_status, ['Employed', 'Employed & Student'])) {
-            if (empty($job_title) || empty($company) || empty($company_address)) {
-                header("Location: alumni_profile.php?error=" . urlencode("Job Title, Company Name, and Company Address are required for this employment status."));
-                exit;
+        // ---- 6.2 Backend validation (only when full update) --------------------
+        if ($can_update) {
+            // Required personal fields (middle name is optional per requirement #4)
+            $required_personal = [$first, $last, $contact, $year, $status];
+            if (in_array('', $required_personal)) {
+                throw new Exception("All personal fields are required except middle name.");
+            }
+
+            // Address required for all statuses
+            if (!$region_id || !$province_id || !$municipality_id || !$barangay_id) {
+                throw new Exception("Complete address is required.");
+            }
+
+            // Employment-specific validation
+            if (in_array($status, ['Employed', 'Employed & Student'])) {
+                if (!$job_title) throw new Exception("Job title is required.");
+                if (!$company) throw new Exception("Company name is required.");
+                if (!$company_address) throw new Exception("Company address is required.");
+            }
+            
+            if ($status === 'Self-Employed') {
+                if (!$business_type) throw new Exception("Business type is required.");
+                // Clear company fields for self-employed
+                $company = '';
+                $company_address = '';
+            }
+
+            // Education validation
+            if (in_array($status, ['Student', 'Employed & Student'])) {
+                if (!$school) throw new Exception("School name is required.");
+                if (!$degree) throw new Exception("Degree pursued is required.");
+                if (!$start_year) throw new Exception("Start year is required.");
+                if (!$end_year) throw new Exception("End year is required.");
             }
         }
 
-        if ($employment_status === 'Self-Employed') {
-            if (empty($business_type)) {
-                header("Location: alumni_profile.php?error=" . urlencode("Business Type is required for Self-Employed status."));
-                exit;
+        // ---- 6.3 Photo – REQUIRED IN ALL CASES (Requirement #1) ---------------
+        $photo_path = $profile['photo_path'] ?? null;
+
+        // Check if this is a new submission or re-upload after rejection
+        if (empty($_FILES['profile_photo']['name'])) {
+            // Only require photo if this is a new profile or re-upload after rejection
+            if (empty($profile) || $is_profile_rejected || empty($photo_path)) {
+                throw new Exception("Profile photo is required.");
             }
+            // Keep existing photo if no new one uploaded and we have an existing one
+            $new_photo = $photo_path;
+        } else {
+            // Process new photo upload
+            $new_photo = upload_file('profile_photo', '../uploads/photos/', $last, 'profile', ['image/jpeg','image/png']);
+            if (!$new_photo) {
+                throw new Exception("Photo upload failed. JPG/PNG only, max 2MB.");
+            }
+
+            // Delete old photo if exists and different from new one
+            if ($photo_path && $photo_path !== $new_photo && file_exists('../' . $photo_path)) {
+                unlink('../' . $photo_path);
+            }
+            $photo_path = $new_photo;
         }
 
-        if (in_array($employment_status, ['Student', 'Employed & Student'])) {
-            if (empty($school) || empty($degree)) {
-                header("Location: alumni_profile.php?error=" . urlencode("School Name and Degree Pursued are required for this status."));
-                exit;
-            }
-        }
-    }
+        // ---- 6.4 Address Handling ---------------------------------------------
+        $address_id = $existing_address_id;
 
-    // Process address
-    $address_id = $existing_address_id;
-    $barangay_id = trim($_POST['barangay_id'] ?? '');
-    $municipality_id = trim($_POST['municipality_id'] ?? '');
+        if ($barangay_id) {
+            // Validate address hierarchy using the correct field names from your schema
+            $valid_region = false;
+            $valid_province = false;
+            $valid_municipality = false;
+            $valid_barangay = false;
 
-    error_log("Raw POST data for address: " . json_encode([
-        'barangay_id' => $barangay_id,
-        'municipality_id' => $municipality_id,
-        'employment_status' => $employment_status
-    ]));
+            // Check region (use only region_id as per your schema)
+            $stmt = $conn->prepare("SELECT 1 FROM table_region WHERE region_id = ?");
+            $stmt->bind_param("s", $region_id);
+            $stmt->execute();
+            if ($stmt->get_result()->num_rows > 0) $valid_region = true;
+            $stmt->close();
 
-    if ($can_update && ($barangay_id || $municipality_id)) {
-        // Require all address fields
-        if (empty($barangay_id) || empty($municipality_id)) {
-            error_log("Incomplete address fields for user_id $user_id: barangay_id='$barangay_id', municipality_id='$municipality_id', employment_status='$employment_status'");
-            header("Location: alumni_profile.php?error=" . urlencode("All address fields (Region, Province, Municipality, Barangay) are required."));
-            exit;
-        }
+            if (!$valid_region) throw new Exception("Invalid region selected");
 
-        error_log("Processing address for user_id $user_id: barangay_id='$barangay_id' (hex: " . bin2hex($barangay_id) . "), municipality_id='$municipality_id', employment_status='$employment_status'");
+            // Check province (use only province_id and region_id as per your schema)
+            $stmt = $conn->prepare("SELECT 1 FROM table_province WHERE province_id = ? AND region_id = ?");
+            $stmt->bind_param("ss", $province_id, $region_id);
+            $stmt->execute();
+            if ($stmt->get_result()->num_rows > 0) $valid_province = true;
+            $stmt->close();
 
-        // Start transaction
-        $conn->begin_transaction();
+            if (!$valid_province) throw new Exception("Invalid province selected for the chosen region");
 
-        try {
-            // Validate municipality_id exists
-            $mun_check_stmt = $conn->prepare("SELECT municipality_id FROM table_municipality WHERE municipality_id = ?");
-            $mun_check_stmt->bind_param("s", $municipality_id);
-            $mun_check_stmt->execute();
-            $mun_check_result = $mun_check_stmt->get_result();
-            if ($mun_check_result->num_rows === 0) {
-                throw new Exception("Invalid municipality_id: '$municipality_id' not found in table_municipality");
-            }
-            $mun_check_stmt->close();
+            // Check municipality (use only municipality_id and province_id as per your schema)
+            $stmt = $conn->prepare("SELECT 1 FROM table_municipality WHERE municipality_id = ? AND province_id = ?");
+            $stmt->bind_param("ss", $municipality_id, $province_id);
+            $stmt->execute();
+            if ($stmt->get_result()->num_rows > 0) $valid_municipality = true;
+            $stmt->close();
 
-            // Validate barangay_id exists and belongs to the municipality
-            $check_stmt = $conn->prepare("SELECT barangay_id FROM table_barangay WHERE barangay_id = ? AND municipality_id = ?");
-            $check_stmt->bind_param("ss", $barangay_id, $municipality_id);
-            $check_stmt->execute();
-            $check_result = $check_stmt->get_result();
-            if ($check_result->num_rows === 0) {
-                // Log all valid barangay_ids for the municipality
-                $debug_stmt = $conn->prepare("SELECT barangay_id, barangay_name FROM table_barangay WHERE municipality_id = ? ORDER BY barangay_name");
-                $debug_stmt->bind_param("s", $municipality_id);
-                $debug_stmt->execute();
-                $debug_result = $debug_stmt->get_result();
-                $valid_barangays = [];
-                while ($row = $debug_result->fetch_assoc()) {
-                    $valid_barangays[] = ['id' => $row['barangay_id'], 'name' => $row['barangay_name']];
-                }
-                $debug_stmt->close();
-                error_log("Valid barangays for municipality_id '$municipality_id': " . json_encode($valid_barangays));
-                throw new Exception("Invalid barangay_id: '$barangay_id' (hex: " . bin2hex($barangay_id) . ") not found in table_barangay for municipality_id '$municipality_id'");
-            }
-            $check_stmt->close();
+            if (!$valid_municipality) throw new Exception("Invalid municipality selected for the chosen province");
 
-            // Proceed with insert or update
+            // Check barangay (use only barangay_id and municipality_id as per your schema)
+            $stmt = $conn->prepare("SELECT 1 FROM table_barangay WHERE barangay_id = ? AND municipality_id = ?");
+            $stmt->bind_param("ss", $barangay_id, $municipality_id);
+            $stmt->execute();
+            if ($stmt->get_result()->num_rows > 0) $valid_barangay = true;
+            $stmt->close();
+
+            if (!$valid_barangay) throw new Exception("Invalid barangay selected for the chosen municipality");
+
+            // Create/update address
             if ($address_id) {
                 $stmt = $conn->prepare("UPDATE address SET barangay_id = ? WHERE address_id = ?");
                 $stmt->bind_param("si", $barangay_id, $address_id);
@@ -205,261 +332,178 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt = $conn->prepare("INSERT INTO address (barangay_id) VALUES (?)");
                 $stmt->bind_param("s", $barangay_id);
             }
-            if (!$stmt->execute()) {
-                throw new Exception("Execute failed: " . $stmt->error);
-            }
+            $stmt->execute();
             $address_id = $address_id ?: $conn->insert_id;
             $stmt->close();
-
-            // Update alumni_profile with new address_id
-            $profile_stmt = $conn->prepare("UPDATE alumni_profile SET address_id = ? WHERE user_id = ?");
-            $profile_stmt->bind_param("ii", $address_id, $user_id);
-            if (!$profile_stmt->execute()) {
-                throw new Exception("Failed to update alumni_profile address_id: " . $profile_stmt->error);
-            }
-            $profile_stmt->close();
-
-            // Commit transaction
-            $conn->commit();
-        } catch (Exception $e) {
-            $conn->rollback();
-            error_log("Address error for user_id $user_id: " . $e->getMessage());
-            header("Location: alumni_profile.php?error=" . urlencode("Address update failed: " . $e->getMessage()));
-            exit;
         }
-    } elseif ($can_update) {
-        // Require address fields for all statuses
-        error_log("Missing address fields for user_id $user_id: barangay_id='$barangay_id', municipality_id='$municipality_id', employment_status='$employment_status'");
-        header("Location: alumni_profile.php?error=" . urlencode("All address fields (Region, Province, Municipality, Barangay) are required."));
-        exit;
-    }
 
-   // Process profile (require photo upload)
-$photo_path = $profile['photo_path'] ?? null;
-
-if ($can_update) {
-    // Require photo upload for all alumni
-    if (empty($_FILES['profile_photo']['name']) && empty($photo_path)) {
-        header("Location: alumni_profile.php?error=" . urlencode("Profile photo is required. Please upload a valid JPG or PNG file."));
-        exit;
-    }
-
-    // Proceed with upload (2MB max enforced inside upload_file)
-    $new_photo_path = upload_file('profile_photo', '../Uploads/photos/', $last, 'profile', ['image/jpeg', 'image/png']);
-
-    // 🧹 Delete old file only after successful new upload
-    if ($new_photo_path && $photo_path && file_exists('../' . $photo_path)) {
-        unlink('../' . $photo_path);
-    }
-
-    // If a new file was uploaded successfully, use it; otherwise keep old
-    $photo_path = $new_photo_path ?? $photo_path;
-
-    // If still no valid photo path, block submission
-    if (empty($photo_path)) {
-        header("Location: alumni_profile.php?error=" . urlencode("Profile photo upload failed or missing. Please try again."));
-        exit;
-    }
-
-    // Continue with profile update logic
-    if ($profile) {
-        $stmt = $conn->prepare("UPDATE alumni_profile 
-            SET first_name = ?, middle_name = ?, last_name = ?, contact_number = ?, year_graduated = ?, 
-                employment_status = ?, photo_path = ?, last_profile_update = NOW(), address_id = ? 
-            WHERE user_id = ?");
-        $stmt->bind_param("ssssssssi", $first, $middle, $last, $contact, $year_graduated, $employment_status, $photo_path, $address_id, $user_id);
-    } else {
-        $stmt = $conn->prepare("INSERT INTO alumni_profile 
-            (user_id, first_name, middle_name, last_name, contact_number, year_graduated, employment_status, photo_path, last_profile_update, address_id) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)");
-        $stmt->bind_param("isssssssi", $user_id, $first, $middle, $last, $contact, $year_graduated, $employment_status, $photo_path, $address_id);
-    }
-    $stmt->execute();
-    $stmt->close();
-    $alumni_id = $profile ? $profile['user_id'] : $user_id;
-}
-
-
-    // Process employment info
-    $employment_id = null;
-    if ($can_update && in_array($employment_status, ['Employed', 'Self-Employed', 'Employed & Student'])) {
-        // Fetch existing employment_id if any
-        $stmt = $conn->prepare("SELECT employment_id FROM employment_info WHERE user_id = ?");
-        $stmt->bind_param("i", $user_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        if ($row = $result->fetch_assoc()) {
-            $employment_id = $row['employment_id'];
-        }
-        $stmt->close();
-
-        // Get or create job_title_id based on job_title string (not direct ID from POST)
-        $job_title_id = null;
-        if (!empty($job_title) && in_array($employment_status, ['Employed', 'Employed & Student'])) {
-            $stmt = $conn->prepare("SELECT job_title_id FROM job_titles WHERE title = ?");
-            $stmt->bind_param("s", $job_title);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            if ($row = $result->fetch_assoc()) {
-                $job_title_id = $row['job_title_id'];
+        // ---- 6.5 Profile INSERT / UPDATE ----------------------------------------
+        if ($can_update) {
+            if ($profile) {
+                $stmt = $conn->prepare("UPDATE alumni_profile SET 
+                    first_name=?, middle_name=?, last_name=?, contact_number=?, year_graduated=?,
+                    employment_status=?, photo_path=?, last_profile_update=NOW(), address_id=?,
+                    submission_status='Pending', submitted_at=NOW()
+                    WHERE user_id=?");
+                $stmt->bind_param("ssssssssi", $first, $middle, $last, $contact, $year, $status, $photo_path, $address_id, $user_id);
             } else {
-                $insert_stmt = $conn->prepare("INSERT INTO job_titles (title) VALUES (?)");
-                $insert_stmt->bind_param("s", $job_title);
-                $insert_stmt->execute();
-                $job_title_id = $conn->insert_id;
-                $insert_stmt->close();
+                $stmt = $conn->prepare("INSERT INTO alumni_profile 
+                    (user_id, first_name, middle_name, last_name, contact_number, year_graduated,
+                    employment_status, photo_path, last_profile_update, address_id, submission_status, submitted_at)
+                    VALUES (?,?,?,?,?,?,?,?,NOW(),?,'Pending',NOW())");
+                $stmt->bind_param("isssssssi", $user_id, $first, $middle, $last, $contact, $year, $status, $photo_path, $address_id);
             }
-            $stmt->close();
-        } elseif (empty($job_title) && in_array($employment_status, ['Employed', 'Employed & Student'])) {
-            throw new Exception("Job Title is required for employment status '$employment_status'");
-        }
-
-        // For Self-Employed, ensure job_title_id is null and clear company fields
-        if ($employment_status === 'Self-Employed') {
-            $job_title_id = null;
-            $company_name = '';
-            $company_address = '';
-        } else {
-            $company_name = $company;
-           // $company_address = $company_address; // Already from POST
-        }
-
-        error_log("Processing employment for user_id $user_id: job_title_id='$job_title_id', company_name='$company_name', business_type='$business_type', salary_range='$salary', employment_status='$employment_status'");
-
-        // INSERT or UPDATE
-        if ($employment_id) {
-            $stmt = $conn->prepare("UPDATE employment_info SET job_title_id = ?, company_name = ?, company_address = ?, business_type = ?, salary_range = ? WHERE employment_id = ?");
-            $stmt->bind_param("issssi", $job_title_id, $company_name, $company_address, $business_type, $salary, $employment_id);
-        } else {
-            $stmt = $conn->prepare("INSERT INTO employment_info (user_id, job_title_id, company_name, company_address, business_type, salary_range) VALUES (?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param("iissss", $user_id, $job_title_id, $company_name, $company_address, $business_type, $salary);
-        }
-        if (!$stmt->execute()) {
-            throw new Exception("Execute failed: " . $stmt->error);
-        }
-        $employment_id = $employment_id ?: $conn->insert_id;
-        $stmt->close();
-    }
-
-    // Process education
-    if ($can_update) {
-        if ($school && ($employment_status === 'Student' || $employment_status === 'Employed & Student')) {
-            $stmt = $conn->prepare("REPLACE INTO education_info (user_id, school_name, degree_pursued) VALUES (?, ?, ?)");
-            $stmt->bind_param("iss", $user_id, $school, $degree);
             $stmt->execute();
             $stmt->close();
-        } elseif ($employment_status !== 'Student' && $employment_status !== 'Employed & Student') {
+        }
+
+        // ---- 6.6 Employment ------------------------------------------------------
+        if ($can_update) {
+            // Delete existing employment info first (requirement #4)
+            $stmt = $conn->prepare("DELETE FROM employment_info WHERE user_id = ?");
+            $stmt->bind_param("i", $user_id);
+            $stmt->execute();
+            $stmt->close();
+
+            error_log("Processing employment for status: " . $status);
+            
+            // Insert employment info for relevant statuses
+            if (in_array($status, ['Employed', 'Self-Employed', 'Employed & Student'])) {
+                $job_title_id = null;
+                
+                // Handle job title for employed statuses
+                if (in_array($status, ['Employed', 'Employed & Student']) && !empty($job_title)) {
+                    $stmt = $conn->prepare("SELECT job_title_id FROM job_titles WHERE title = ?");
+                    $stmt->bind_param("s", $job_title);
+                    $stmt->execute();
+                    $result = $stmt->get_result();
+                    if ($result->num_rows > 0) {
+                        $row = $result->fetch_assoc();
+                        $job_title_id = $row['job_title_id'];
+                    } else {
+                        $ins = $conn->prepare("INSERT INTO job_titles (title) VALUES (?)");
+                        $ins->bind_param("s", $job_title);
+                        $ins->execute();
+                        $job_title_id = $conn->insert_id;
+                        $ins->close();
+                    }
+                    $stmt->close();
+                }
+
+                // For Self-Employed, ensure company fields are empty and job_title_id is null
+                if ($status === 'Self-Employed') {
+                    $job_title_id = null;
+                    $company = '';
+                    $company_address = '';
+                }
+
+                // Ensure salary range is set
+                if (empty($salary)) {
+                    throw new Exception("Salary range is required.");
+                }
+
+                error_log("Inserting employment info - Job Title ID: " . ($job_title_id ?? 'NULL') . 
+                         ", Company: '$company', Salary: '$salary', Business Type: '$business_type'");
+
+                // Insert employment info
+                $stmt = $conn->prepare("
+                    INSERT INTO employment_info 
+                    (user_id, job_title_id, company_name, company_address, business_type, salary_range)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                ");
+                $stmt->bind_param(
+                    "iissss",
+                    $user_id,
+                    $job_title_id,
+                    $company,
+                    $company_address,
+                    $business_type,
+                    $salary
+                );
+                
+                if (!$stmt->execute()) {
+                    error_log("Employment insert failed: " . $stmt->error);
+                    throw new Exception("Failed to save employment info: " . $stmt->error);
+                }
+                $stmt->close();
+                
+                error_log("Employment info inserted successfully for user: " . $user_id);
+            } else {
+                error_log("Skipping employment insert for status: " . $status);
+            }
+        }
+
+        // ---- 6.7 Education -------------------------------------------------------
+        if ($can_update) {
+            // Delete existing education info first (requirement #4)
             $stmt = $conn->prepare("DELETE FROM education_info WHERE user_id = ?");
             $stmt->bind_param("i", $user_id);
             $stmt->execute();
             $stmt->close();
+
+            if (in_array($status, ['Student', 'Employed & Student'])) {
+                $stmt = $conn->prepare("INSERT INTO education_info 
+                    (user_id, school_name, degree_pursued, start_year, end_year)
+                    VALUES (?,?,?,?,?)");
+                $stmt->bind_param("issss", $user_id, $school, $degree, $start_year, $end_year);
+                $stmt->execute();
+                $stmt->close();
+            }
         }
-    }
 
-    // Process documents
-if ($can_update || in_array('COE', $rejected_docs)) {
-
-    // 🧹 OLD FILE CLEANUP — COE
-    $oldFileStmt = $conn->prepare("SELECT file_path FROM alumni_documents WHERE user_id = ? AND document_type = 'COE'");
-    $oldFileStmt->bind_param("i", $alumni_id);
-    $oldFileStmt->execute();
-    $oldResult = $oldFileStmt->get_result();
-    if ($old = $oldResult->fetch_assoc()) {
-        $oldPath = '../' . $old['file_path'];
-        if (file_exists($oldPath)) unlink($oldPath);
-    }
-    $oldFileStmt->close();
-
-    // File upload handling
-    $coe_path = upload_file('coe_file', '../Uploads/coe/', $last_name, 'coe', ['application/pdf']);
-    if ($coe_path) {
-        $stmt = $conn->prepare("INSERT INTO alumni_documents (user_id, document_type, file_path, document_status, needs_reupload) VALUES (?, 'COE', ?, 'Pending', 0)");
-        $stmt->bind_param("is", $alumni_id, $coe_path);
-        if (!$stmt->execute()) {
-            error_log("COE insert failed for user_id $alumni_id: " . $stmt->error);
-            header("Location: alumni_profile.php?error=" . urlencode("COE document insert failed: " . $stmt->error));
-            exit;
+        // ---- 6.8 Documents – STATUS-BASED VALIDATION ----------------------------
+        $required_docs = [];
+        if (in_array($status, ['Employed', 'Employed & Student'])) {
+            $required_docs['COE'] = 'coe_file';
         }
-        $stmt->close();
-    } else if (!empty($_FILES['coe_file']['name'])) {
-        error_log("COE file upload failed for user_id $alumni_id: " . ($_FILES['coe_file']['error'] ?? 'No file or invalid type/size'));
-        header("Location: alumni_profile.php?error=" . urlencode("COE file upload failed: Invalid file type or size exceeded"));
+        if ($status === 'Self-Employed') {
+            $required_docs['B_CERT'] = 'business_file';
+        }
+        if (in_array($status, ['Student', 'Employed & Student'])) {
+            $required_docs['COR'] = 'cor_file';
+        }
+
+        error_log("Required documents for status {$status}: " . print_r($required_docs, true));
+        error_log("FILES data for documents: " . print_r($_FILES, true));
+
+        // Process required documents
+        foreach ($required_docs as $code => $field) {
+            // Check if file was uploaded and has no errors
+            if (!isset($_FILES[$field]) || $_FILES[$field]['error'] !== UPLOAD_ERR_OK) {
+                $doc_name = $code === 'COE' ? 'Certificate of Employment' : 
+                        ($code === 'B_CERT' ? 'Business Certificate' : 'Certificate of Registration');
+                throw new Exception("{$doc_name} is required for your employment status ({$status}).");
+            }
+            
+            // Check if file has a name (was actually selected)
+            if (empty($_FILES[$field]['name'])) {
+                $doc_name = $code === 'COE' ? 'Certificate of Employment' : 
+                        ($code === 'B_CERT' ? 'Business Certificate' : 'Certificate of Registration');
+                throw new Exception("{$doc_name} is required for your employment status ({$status}). Please select a file.");
+            }
+            
+            $dir = $code === 'COE' ? '../uploads/coe/' : 
+                ($code === 'B_CERT' ? '../uploads/business/' : '../uploads/cor/');
+            
+            if (!handle_document($field, $dir, $last, $code)) {
+                $doc_name = $code === 'COE' ? 'Certificate of Employment' : 
+                        ($code === 'B_CERT' ? 'Business Certificate' : 'Certificate of Registration');
+                throw new Exception("{$doc_name} upload failed. PDF only, max 2MB.");
+            }
+            
+            error_log("Successfully processed document: {$code}");
+        }
+
+        $conn->commit();
+        header("Location: alumni_profile.php?success=Profile updated successfully!");
+        exit;
+
+    } catch (Exception $e) {
+        $conn->rollback();
+        header("Location: alumni_profile.php?error=" . urlencode($e->getMessage()));
         exit;
     }
 }
 
-if ($can_update || in_array('B_CERT', $rejected_docs)) {
-
-    // 🧹 OLD FILE CLEANUP — BUSINESS CERTIFICATE
-    $oldFileStmt = $conn->prepare("SELECT file_path FROM alumni_documents WHERE user_id = ? AND document_type = 'B_CERT'");
-    $oldFileStmt->bind_param("i", $alumni_id);
-    $oldFileStmt->execute();
-    $oldResult = $oldFileStmt->get_result();
-    if ($old = $oldResult->fetch_assoc()) {
-        $oldPath = '../' . $old['file_path'];
-        if (file_exists($oldPath)) unlink($oldPath);
-    }
-    $oldFileStmt->close();
-
-    // File upload handling
-    $business_path = upload_file('business_file', '../Uploads/business/', $last_name, 'business', ['application/pdf']);
-    if ($business_path) {
-        $stmt = $conn->prepare("INSERT INTO alumni_documents (user_id, document_type, file_path, document_status, needs_reupload) VALUES (?, 'B_CERT', ?, 'Pending', 0)");
-        $stmt->bind_param("is", $alumni_id, $business_path);
-        if (!$stmt->execute()) {
-            error_log("B_CERT insert failed for user_id $alumni_id: " . $stmt->error);
-            header("Location: alumni_profile.php?error=" . urlencode("Business certificate insert failed: " . $stmt->error));
-            exit;
-        }
-        $stmt->close();
-    } else if (!empty($_FILES['business_file']['name'])) {
-        error_log("B_CERT file upload failed for user_id $alumni_id: " . ($_FILES['business_file']['error'] ?? 'No file or invalid type/size'));
-        header("Location: alumni_profile.php?error=" . urlencode("Business certificate file upload failed: Invalid file type or size exceeded"));
-        exit;
-    }
-}
-
-if ($can_update || in_array('COR', $rejected_docs)) {
-
-    // OLD FILE CLEANUP — COR (Certificate of Registration)
-    $oldFileStmt = $conn->prepare("SELECT file_path FROM alumni_documents WHERE user_id = ? AND document_type = 'COR'");
-    $oldFileStmt->bind_param("i", $alumni_id);
-    $oldFileStmt->execute();
-    $oldResult = $oldFileStmt->get_result();
-    if ($old = $oldResult->fetch_assoc()) {
-        $oldPath = '../' . $old['file_path'];
-        if (file_exists($oldPath)) unlink($oldPath);
-    }
-    $oldFileStmt->close();
-
-    // File upload handling
-    $cor_path = upload_file('cor_file', '../Uploads/cor/', $last_name, 'cor', ['application/pdf']);
-    if ($cor_path) {
-        $stmt = $conn->prepare("INSERT INTO alumni_documents (user_id, document_type, file_path, document_status, needs_reupload) VALUES (?, 'COR', ?, 'Pending', 0)");
-        $stmt->bind_param("is", $alumni_id, $cor_path);
-        if (!$stmt->execute()) {
-            error_log("COR insert failed for user_id $alumni_id: " . $stmt->error);
-            header("Location: alumni_profile.php?error=" . urlencode("COR document insert failed: " . $stmt->error));
-            exit;
-        }
-        $stmt->close();
-    } else if (!empty($_FILES['cor_file']['name'])) {
-        error_log("COR file upload failed for user_id $alumni_id: " . ($_FILES['cor_file']['error'] ?? 'No file or invalid type/size'));
-        header("Location: alumni_profile.php?error=" . urlencode("COR file upload failed: Invalid file type or size exceeded"));
-        exit;
-    }
-}
-
-if ($can_update) {
-    $update_stmt = $conn->prepare("UPDATE alumni_profile SET last_profile_update = NOW() WHERE user_id = ?");
-    $update_stmt->bind_param("i", $user_id);
-    $update_stmt->execute();
-    $update_stmt->close();
-}
-
-header("Location: alumni_profile.php?success=Profile updated successfully!");
-exit;
-}
-
-// close DB connection
 $conn->close();
+?>
