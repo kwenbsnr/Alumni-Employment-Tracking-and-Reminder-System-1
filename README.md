@@ -4,7 +4,7 @@
 🔴 Critical
 ____________________
 
-1. Start year vs. graduation year check:
+1. Start year vs. graduation year logic:
 If a user is a "Student" or “Employed & Student,” check that start year is later than graduation year. Additionally, the graduation year must be later than the start year.
 
 2. "Employed & Student" submission issue:
@@ -36,6 +36,8 @@ Values must display correctly in the Employment/Academic Details card after succ
 
 3. Apostrophe handling:
 Employment/Academic Details display cards after successful submission have issues with apostrophe rendering.
+
+4. Header bar scroll issue: The header bar must remain fixed and not be scrollable.
 
 
 
