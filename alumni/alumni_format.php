@@ -210,7 +210,7 @@ $page_title = $page_title ?? "Alumni Page";
                     <div class="w-10 h-10 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
                         <i class="fas fa-graduation-cap text-lg" aria-hidden="true"></i>
                     </div>
-                    <h2 class="font-bold text-lg">Alumni</h2>
+                    <h2 class="font-bold text-lg">Alumni Portal</h2>
                 </div>
 
                 <!-- Profile Section -->
