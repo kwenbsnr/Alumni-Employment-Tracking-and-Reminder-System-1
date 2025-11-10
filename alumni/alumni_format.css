@@ -34,11 +34,6 @@
 
 .profile-avatar {
     background: linear-gradient(135deg, var(--lime-green) 0%, var(--sea-green) 100%);
-    transition: transform 0.3s ease;
-}
-
-.profile-avatar:hover {
-    transform: scale(1.05);
 }
 
 .stats-card {
@@ -77,16 +72,24 @@
 
 #profileUpdateModal.show { opacity: 1; }
 
-/* Responsive adjustments */
+/* Sidebar Profile Section */
+.sidebar-profile {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    margin-bottom: 1rem;
+}
+
+.sidebar-profile-avatar {
+    width: 80px;
+    height: 80px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Responsive adjustments for 2x2 grid */
 @media (max-width: 768px) {
     .grid-cols-1.md\:grid-cols-2 > div {
         padding: 1.5rem !important;
     }
     .text-4xl {
         font-size: 2rem;
-    }
-    .w-20.h-20 {
-        width: 4rem !important;
-        height: 4rem !important;
     }
 }
