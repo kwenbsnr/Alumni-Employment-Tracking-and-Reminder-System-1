@@ -3,14 +3,12 @@ if (!isset($_SESSION["user_id"]) || $_SESSION["role"] !== "alumni") {
     header("Location: ../login/login.php");
     exit();
 }
-
 include("../connect.php");
-
 $user_id = $_SESSION["user_id"];
 
-// First try to fetch name from alumni_profile
+// Fetch name and email
 $stmt = $conn->prepare("
-    SELECT ap.first_name, ap.last_name, u.email, u.name as user_name
+    SELECT ap.first_name, ap.last_name, u.email, u.name as user_name, ap.photo_path
     FROM users u
     LEFT JOIN alumni_profile ap ON u.user_id = ap.user_id
     WHERE u.user_id = ?
@@ -19,53 +17,69 @@ $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
 $profile = $result->fetch_assoc() ?: [];
+$stmt->close();
 
-// Construct full name with proper checks
-$full_name = 'Alumni'; // Default fallback
+// Construct full name
+$full_name = 'Alumni';
 if (!empty($profile)) {
     if (!empty($profile['first_name']) || !empty($profile['last_name'])) {
-        // Use first and last name from alumni_profile if available
-        $full_name = trim(
-            ($profile['first_name'] ?? '') . ' ' .
-            ($profile['last_name'] ?? '')
-        );
+        $full_name = trim(($profile['first_name'] ?? '') . ' ' . ($profile['last_name'] ?? ''));
     } elseif (!empty($profile['user_name'])) {
-        // Fall back to name from users table if alumni_profile is empty
         $full_name = $profile['user_name'];
     }
-    // Keep default 'Alumni' if both are empty
 }
+$user_email = $profile['email'] ?? '';
+$photo_path = $profile['photo_path'] ?? null;
 
 // Set default page title
 $page_title = $page_title ?? "Alumni Page";
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($page_title); ?></title>
-
     <!-- Tailwind CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="alumni_format.css">
-
 </head>
-
 <body class="bg-gray-50 min-h-screen flex">
     <!-- ==================== SIDEBAR ==================== -->
     <aside class="w-72 gradient-bg text-white flex-shrink-0">
-        <div class="sidebar-wrapper flex flex-col justify-between">
-            <!-- Top Section -->
+        <div class="sidebar-wrapper flex flex-col">
+            <!-- Top Section: Logo + Profile -->
             <div class="p-6">
-                <div class="flex items-center space-x-3 mb-8">
+                <div class="flex items-center space-x-3 mb-6">
                     <div class="w-10 h-10 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
                         <i class="fas fa-graduation-cap text-lg" aria-hidden="true"></i>
                     </div>
                     <h2 class="font-bold text-lg">Alumni</h2>
                 </div>
 
+                <!-- Profile Section in Sidebar -->
+                <div class="bg-white bg-opacity-10 rounded-xl p-4 mb-6">
+                    <div class="flex items-center space-x-4">
+                        <div class="profile-avatar w-20 h-20 rounded-full flex items-center justify-center text-white font-bold text-2xl overflow-hidden shadow-lg">
+                            <?php
+                            $initials = strtoupper(substr(trim($full_name ?: 'Alumni'), 0, 2));
+                            if ($photo_path && file_exists("../" . $photo_path)) {
+                                echo '<img src="../' . htmlspecialchars($photo_path) . '" alt="Profile" class="w-full h-full object-cover">';
+                            } else {
+                                echo htmlspecialchars($initials);
+                            }
+                            ?>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="font-semibold text-white truncate"><?php echo htmlspecialchars($full_name); ?></p>
+                            <p class="text-xs text-gray-200 truncate"><?php echo htmlspecialchars($user_email); ?></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation -->
                 <nav class="space-y-2">
                     <a href="alumni_dashboard.php"
                        class="sidebar-item <?php echo ($active_page ?? '') === 'dashboard' ? 'active' : ''; ?>
@@ -82,8 +96,8 @@ $page_title = $page_title ?? "Alumni Page";
                 </nav>
             </div>
 
-            <!-- Bottom Section (Logout) -->
-            <div class="p-6">
+            <!-- Bottom Section: Logout -->
+            <div class="p-6 mt-auto">
                 <hr class="border-gray-400 my-6">
                 <a href="../login/logout.php"
                    class="flex items-center space-x-3 text-white hover:text-red-500 p-3 rounded-lg">
@@ -96,11 +110,10 @@ $page_title = $page_title ?? "Alumni Page";
 
     <!-- ==================== MAIN CONTENT ==================== -->
     <div class="flex-1 flex flex-col">
-        <!-- Top Bar -->
+        <!-- Top Bar (Notifications Only) -->
         <header class="bg-white shadow-sm border-b p-4">
             <div class="flex items-center justify-between">
                 <h1 class="text-2xl font-bold text-gray-800"><?php echo htmlspecialchars($page_title); ?></h1>
-
                 <div class="flex items-center space-x-6">
                     <!-- Notification -->
                     <div class="relative">
@@ -109,7 +122,6 @@ $page_title = $page_title ?? "Alumni Page";
                             <i class="fas fa-bell text-xl"></i>
                             <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
                         </button>
-
                         <div id="notifPopup"
                              class="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl hidden z-50 overflow-hidden">
                             <div class="p-4 border-b font-bold text-gray-700 flex justify-between items-center sticky top-0 bg-white">
@@ -135,38 +147,6 @@ $page_title = $page_title ?? "Alumni Page";
                             </div>
                         </div>
                     </div>
-
-                    <!-- Profile Info -->
-                    <div class="flex items-center space-x-3">
-                        <div class="profile-avatar w-10 h-10 rounded-full flex items-center justify-center text-white font-bold overflow-hidden">
-                            <?php 
-                            // Check for photo in alumni_profile
-                            $stmt = $conn->prepare("SELECT ap.photo_path, u.name, u.email FROM users u LEFT JOIN alumni_profile ap ON u.user_id = ap.user_id WHERE u.user_id = ?");
-                            $stmt->bind_param("i", $user_id);
-                            $stmt->execute();
-                            $result = $stmt->get_result();
-                            $initials = 'AL';
-                            $user_email = '';
-                            $photo_path = null;
-                            if ($row = $result->fetch_assoc()) {
-                                $initials = strtoupper(substr(trim($row['name'] ?: 'Alumni'), 0, 2));
-                                $user_email = $row['email'];
-                                $photo_path = $row['photo_path'];
-                            }
-                            $stmt->close();
-                            
-                            if ($photo_path && file_exists("../" . $photo_path)) {
-                                echo '<img src="../' . htmlspecialchars($photo_path) . '" alt="Profile" class="w-full h-full object-cover">';
-                            } else {
-                                echo htmlspecialchars($initials);
-                            }
-                            ?>
-                        </div>
-                        <div class="hidden md:block">
-                            <p class="font-medium text-gray-800"><?php echo htmlspecialchars($full_name); ?></p>
-                            <p class="font-medium text-gray-700 text-sm"><?php echo htmlspecialchars($user_email); ?></p>
-                        </div>
-                    </div>
                 </div>
             </div>
         </header>
@@ -181,26 +161,22 @@ $page_title = $page_title ?? "Alumni Page";
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const notifButton = document.getElementById('notificationBtn');
-            const notifPopup   = document.getElementById('notifPopup');
-
+            const notifPopup = document.getElementById('notifPopup');
             notifButton.addEventListener('click', (e) => {
                 e.stopPropagation();
                 notifPopup.classList.toggle('hidden');
             });
-
             document.addEventListener('click', (e) => {
-                if (!notifPopup.classList.contains('hidden') && 
-                    !notifPopup.contains(e.target) && 
+                if (!notifPopup.classList.contains('hidden') &&
+                    !notifPopup.contains(e.target) &&
                     e.target !== notifButton) {
                     notifPopup.classList.add('hidden');
                 }
             });
-
             document.getElementById('markReadBtn').addEventListener('click', () => {
                 notifButton.querySelector('span').classList.add('hidden');
             });
         });
-        
     </script>
 </body>
 </html>
