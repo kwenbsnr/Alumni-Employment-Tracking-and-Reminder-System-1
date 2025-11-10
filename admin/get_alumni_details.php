@@ -50,11 +50,29 @@ if ($user_id) {
     $alumni = $result->fetch_assoc();
     
     if ($alumni) {
-        // Check which documents are submitted
+        // Determine documents based on employment status
         $submitted_docs = [];
-        if (!empty($alumni['cor_path'])) $submitted_docs[] = ['type' => 'Certificate of Registration', 'path' => $alumni['cor_path']];
-        if (!empty($alumni['coe_path'])) $submitted_docs[] = ['type' => 'Certificate of Employment', 'path' => $alumni['coe_path']];
-        if (!empty($alumni['b_cert_path'])) $submitted_docs[] = ['type' => 'Birth Certificate', 'path' => $alumni['b_cert_path']];
+        $employment_status = $alumni['employment_status'];
+        
+        // COR for Students and Employed & Student
+        if (!empty($alumni['cor_path']) && in_array($employment_status, ['Student', 'Employed & Student'])) {
+            $submitted_docs[] = ['type' => 'Certificate of Registration', 'path' => $alumni['cor_path']];
+        }
+        
+        // COE for Employed and Employed & Student
+        if (!empty($alumni['coe_path']) && in_array($employment_status, ['Employed', 'Employed & Student'])) {
+            $submitted_docs[] = ['type' => 'Certificate of Employment', 'path' => $alumni['coe_path']];
+        }
+        
+        // Business Certificate for Self-Employed
+        if (!empty($alumni['b_cert_path']) && $employment_status == 'Self-Employed') {
+            $submitted_docs[] = ['type' => 'Business Certificate', 'path' => $alumni['b_cert_path']];
+        }
+        
+        // Birth Certificate for Unemployed (if provided)
+        if (!empty($alumni['b_cert_path']) && $employment_status == 'Unemployed') {
+            $submitted_docs[] = ['type' => 'Birth Certificate', 'path' => $alumni['b_cert_path']];
+        }
         ?>
         <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-2xl">
             <!-- Header with Photo and Basic Info -->
@@ -75,16 +93,12 @@ if ($user_id) {
                 <!-- Basic Information -->
                 <div class="flex-1">
                     <h2 class="text-2xl font-bold text-gray-800 mb-2">
-                        <?php echo htmlspecialchars($alumni['first_name'] . ' ' . $alumni['last_name']); ?>
+                        <?php echo htmlspecialchars($alumni['first_name'] . ' ' . ($alumni['middle_name'] ? $alumni['middle_name'] . ' ' : '') . $alumni['last_name']); ?>
                     </h2>
                     <div class="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
                         <div>
                             <span class="font-medium text-gray-600">Email:</span>
                             <span class="text-gray-800"><?php echo htmlspecialchars($alumni['email']); ?></span>
-                        </div>
-                        <div>
-                            <span class="font-medium text-gray-600">Contact:</span>
-                            <span class="text-gray-800"><?php echo htmlspecialchars($alumni['contact_number'] ?: 'Not provided'); ?></span>
                         </div>
                         <div>
                             <span class="font-medium text-gray-600">Batch:</span>
@@ -102,117 +116,122 @@ if ($user_id) {
 
             <!-- Main Content -->
             <div class="p-6 space-y-6">
-                <!-- Personal Information -->
+                <!-- Personal Information - Same for all employment statuses -->
                 <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-5 border border-blue-100">
                     <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
                         <i class="fas fa-user-circle text-blue-500 mr-3 text-xl"></i>
                         Personal Information
                     </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                        <div class="space-y-3">
-                            <div class="flex justify-between items-start">
-                                <span class="font-medium text-gray-600">Full Name:</span>
-                                <span class="text-gray-800 text-right font-medium">
-                                    <?php echo htmlspecialchars($alumni['first_name'] . ' ' . ($alumni['middle_name'] ? $alumni['middle_name'] . ' ' : '') . $alumni['last_name']); ?>
-                                </span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="font-medium text-gray-600">Employment Status:</span>
-                                <span class="px-3 py-1 text-xs font-semibold rounded-full <?php echo getEmploymentStatusColor($alumni['employment_status']); ?>">
-                                    <?php echo $alumni['employment_status']; ?>
-                                </span>
-                            </div>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex justify-between items-center">
+                            <span class="font-medium text-gray-600">Employment Status:</span>
+                            <span class="text-gray-800"><?php echo $alumni['employment_status']; ?></span>
                         </div>
-                        <div class="space-y-3">
-                            <?php if (!empty($alumni['full_address'])): ?>
-                            <div>
-                                <span class="font-medium text-gray-600 block mb-1">Complete Address:</span>
-                                <span class="text-gray-800 text-sm bg-white px-3 py-2 rounded-lg border border-gray-200 block">
-                                    <?php echo htmlspecialchars($alumni['full_address']); ?>
-                                </span>
-                            </div>
-                            <?php endif; ?>
+                        <?php if (!empty($alumni['contact_number'])): ?>
+                        <div class="flex justify-between items-center">
+                            <span class="font-medium text-gray-600">Contact Number:</span>
+                            <span class="text-gray-800"><?php echo htmlspecialchars($alumni['contact_number']); ?></span>
                         </div>
+                        <?php endif; ?>
+                        <?php if (!empty($alumni['full_address'])): ?>
+                        <div class="flex justify-between items-start">
+                            <span class="font-medium text-gray-600">Address:</span>
+                            <span class="text-gray-800 text-right max-w-xs"><?php echo htmlspecialchars($alumni['full_address']); ?></span>
+                        </div>
+                        <?php endif; ?>
                     </div>
                 </div>
 
-                <!-- Education Information -->
-                <?php if (!empty($alumni['school_name'])): ?>
-                <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-5 border border-purple-100">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                        <i class="fas fa-graduation-cap text-purple-500 mr-3 text-xl"></i>
-                        Education Information
-                    </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                        <div class="space-y-3">
-                            <div class="flex justify-between items-start">
-                                <span class="font-medium text-gray-600">School/University:</span>
-                                <span class="text-gray-800 text-right font-medium"><?php echo htmlspecialchars($alumni['school_name']); ?></span>
-                            </div>
-                            <?php if (!empty($alumni['degree_pursued'])): ?>
-                            <div class="flex justify-between items-start">
-                                <span class="font-medium text-gray-600">Degree/Course:</span>
-                                <span class="text-gray-800 text-right"><?php echo htmlspecialchars($alumni['degree_pursued']); ?></span>
-                            </div>
-                            <?php endif; ?>
-                        </div>
-                        <div class="space-y-3">
-                            <?php if (!empty($alumni['start_year']) || !empty($alumni['end_year'])): ?>
-                            <div class="flex justify-between items-center">
-                                <span class="font-medium text-gray-600">Duration:</span>
-                                <span class="text-gray-800 font-medium">
-                                    <?php echo $alumni['start_year']; ?> - <?php echo $alumni['end_year'] ?: 'Present'; ?>
-                                </span>
-                            </div>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                </div>
-                <?php endif; ?>
-
-                <!-- Employment Information -->
-                <?php if (!empty($alumni['company_name'])): ?>
+                <!-- Employment Information for Employed, Self-Employed, and Employed & Student -->
+                <?php if (in_array($employment_status, ['Employed', 'Self-Employed', 'Employed & Student'])): ?>
                 <div class="bg-gradient-to-br from-green-50 to-teal-50 rounded-xl p-5 border border-green-100">
                     <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
                         <i class="fas fa-briefcase text-green-500 mr-3 text-xl"></i>
                         Employment Information
                     </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                        <div class="space-y-3">
-                            <div class="flex justify-between items-start">
-                                <span class="font-medium text-gray-600">Company/Organization:</span>
-                                <span class="text-gray-800 text-right font-medium"><?php echo htmlspecialchars($alumni['company_name']); ?></span>
-                            </div>
+                    <div class="space-y-3 text-sm">
+                        <?php if ($employment_status == 'Employed' || $employment_status == 'Employed & Student'): ?>
                             <?php if (!empty($alumni['job_title'])): ?>
-                            <div class="flex justify-between items-start">
-                                <span class="font-medium text-gray-600">Position/Title:</span>
-                                <span class="text-gray-800 text-right"><?php echo htmlspecialchars($alumni['job_title']); ?></span>
+                            <div class="flex justify-between items-center">
+                                <span class="font-medium text-gray-600">Job Title:</span>
+                                <span class="text-gray-800"><?php echo htmlspecialchars($alumni['job_title']); ?></span>
                             </div>
                             <?php endif; ?>
-                        </div>
-                        <div class="space-y-3">
-                            <?php if (!empty($alumni['salary_range'])): ?>
+                            <?php if (!empty($alumni['company_name'])): ?>
+                            <div class="flex justify-between items-center">
+                                <span class="font-medium text-gray-600">Company Name:</span>
+                                <span class="text-gray-800"><?php echo htmlspecialchars($alumni['company_name']); ?></span>
+                            </div>
+                            <?php endif; ?>
+                        <?php endif; ?>
+                        
+                        <?php if ($employment_status == 'Self-Employed' && !empty($alumni['business_type'])): ?>
+                            <div class="flex justify-between items-center">
+                                <span class="font-medium text-gray-600">Business Type:</span>
+                                <span class="text-gray-800"><?php echo htmlspecialchars($alumni['business_type']); ?></span>
+                            </div>
+                        <?php endif; ?>
+                        
+                        <?php if (!empty($alumni['salary_range'])): ?>
                             <div class="flex justify-between items-center">
                                 <span class="font-medium text-gray-600">Salary Range:</span>
-                                <span class="text-gray-800 font-medium"><?php echo $alumni['salary_range']; ?></span>
+                                <span class="text-gray-800"><?php echo $alumni['salary_range']; ?></span>
                             </div>
-                            <?php endif; ?>
-                            <?php if (!empty($alumni['business_type'])): ?>
+                        <?php endif; ?>
+                        
+                        <?php if (!empty($alumni['company_address'])): ?>
                             <div class="flex justify-between items-start">
-                                <span class="font-medium text-gray-600">Business Type:</span>
-                                <span class="text-gray-800 text-right"><?php echo htmlspecialchars($alumni['business_type']); ?></span>
+                                <span class="font-medium text-gray-600">
+                                    <?php echo $employment_status == 'Self-Employed' ? 'Business Address:' : 'Company Address:'; ?>
+                                </span>
+                                <span class="text-gray-800 text-right max-w-xs"><?php echo htmlspecialchars($alumni['company_address']); ?></span>
                             </div>
-                            <?php endif; ?>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <?php endif; ?>
+
+                <!-- Education Information for Student and Employed & Student -->
+                <?php if (in_array($employment_status, ['Student', 'Employed & Student']) && !empty($alumni['school_name'])): ?>
+                <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-5 border border-purple-100">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-graduation-cap text-purple-500 mr-3 text-xl"></i>
+                        Education Information
+                    </h3>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex justify-between items-center">
+                            <span class="font-medium text-gray-600">School Name:</span>
+                            <span class="text-gray-800"><?php echo htmlspecialchars($alumni['school_name']); ?></span>
                         </div>
+                        <?php if (!empty($alumni['degree_pursued'])): ?>
+                        <div class="flex justify-between items-center">
+                            <span class="font-medium text-gray-600">Degree Pursued:</span>
+                            <span class="text-gray-800"><?php echo htmlspecialchars($alumni['degree_pursued']); ?></span>
+                        </div>
+                        <?php endif; ?>
+                        <?php if (!empty($alumni['start_year']) || !empty($alumni['end_year'])): ?>
+                        <div class="flex justify-between items-center">
+                            <span class="font-medium text-gray-600">Academic Period:</span>
+                            <span class="text-gray-800">
+                                <?php echo $alumni['start_year']; ?> - <?php echo $alumni['end_year'] ?: 'Present'; ?>
+                            </span>
+                        </div>
+                        <?php endif; ?>
                     </div>
-                    <?php if (!empty($alumni['company_address'])): ?>
-                    <div class="mt-4 pt-4 border-t border-green-200">
-                        <span class="font-medium text-gray-600 block mb-1">Company Address:</span>
-                        <span class="text-gray-800 text-sm bg-white px-3 py-2 rounded-lg border border-gray-200 block">
-                            <?php echo htmlspecialchars($alumni['company_address']); ?>
-                        </span>
+                </div>
+                <?php endif; ?>
+
+                <!-- Unemployed Status Message -->
+                <?php if ($employment_status == 'Unemployed'): ?>
+                <div class="bg-gradient-to-br from-gray-50 to-blue-50 rounded-xl p-5 border border-gray-100">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-briefcase text-gray-500 mr-3 text-xl"></i>
+                        Employment Information
+                    </h3>
+                    <div class="text-center py-4">
+                        <i class="fas fa-search text-gray-400 text-3xl mb-2"></i>
+                        <p class="text-gray-600 font-medium">Currently seeking employment opportunities</p>
                     </div>
-                    <?php endif; ?>
                 </div>
                 <?php endif; ?>
 
@@ -229,7 +248,7 @@ if ($user_id) {
                                 <div class="flex items-center justify-between">
                                     <span class="font-medium text-gray-700 text-sm"><?php echo $doc['type']; ?></span>
                                     <a href="../<?php echo $doc['path']; ?>" target="_blank" 
-                                       class="text-blue-600 hover:text-blue-800 flex items-center text-sm bg-blue-50 px-2 py-1 rounded">
+                                       class="text-blue-600 hover:text-blue-800 flex items-center text-sm bg-blue-50 px-2 py-1 rounded hover:bg-blue-100 transition-colors">
                                         <i class="fas fa-external-link-alt mr-1 text-xs"></i> View
                                     </a>
                                 </div>

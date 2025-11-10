@@ -9,7 +9,7 @@ include("../connect.php");
 $page_title = "Dashboard";
 $active_page = "dashboard";
 
-// Fetch career data
+// Fetch employment status distribution (only approved alumni)
 $careerQuery = "SELECT employment_status, COUNT(*) as total 
                 FROM alumni_profile 
                 WHERE submission_status = 'Approved'
@@ -27,23 +27,23 @@ if (!$result) {
     }
 }
 
-// Fetch dashboard statistics
+// Fetch accurate dashboard statistics
 $statsQuery = "
     SELECT 
-        (SELECT COUNT(*) FROM users WHERE role = 'alumni') as total_alumni,
+        (SELECT COUNT(*) FROM alumni_profile) as total_alumni,
         (SELECT COUNT(*) FROM alumni_profile WHERE submission_status = 'Approved') as approved_profiles,
         (SELECT COUNT(*) FROM alumni_profile WHERE submission_status = 'Pending') as pending_profiles,
         (SELECT COUNT(*) FROM alumni_profile WHERE submission_status = 'Rejected') as rejected_profiles,
-        (SELECT COUNT(*) FROM employment_info) as employed_count,
-        (SELECT COUNT(DISTINCT year_graduated) FROM alumni_profile WHERE year_graduated IS NOT NULL) as unique_graduation_years,
-        (SELECT COUNT(*) FROM alumni_documents) as total_documents,
+        (SELECT COUNT(*) FROM employment_info WHERE user_id IN (SELECT user_id FROM alumni_profile WHERE submission_status = 'Approved')) as employed_count,
+        (SELECT COUNT(DISTINCT year_graduated) FROM alumni_profile WHERE year_graduated IS NOT NULL AND submission_status = 'Approved') as unique_graduation_years,
+        (SELECT COUNT(*) FROM alumni_documents WHERE user_id IN (SELECT user_id FROM alumni_profile WHERE submission_status = 'Approved')) as total_documents,
         (SELECT COUNT(*) FROM update_log WHERE DATE(updated_at) = CURDATE()) as today_updates
 ";
 
 $statsResult = $conn->query($statsQuery);
 $stats = $statsResult->fetch_assoc();
 
-// Fetch recent graduates data for line chart
+// Fetch graduation trends (only approved alumni)
 $graduatesQuery = "
     SELECT year_graduated, COUNT(*) as count 
     FROM alumni_profile 
@@ -60,29 +60,31 @@ while ($row = $graduatesResult->fetch_assoc()) {
     $gradCounts[] = $row['count'];
 }
 
-// Fetch salary distribution
-$salaryQuery = "
-    SELECT salary_range, COUNT(*) as total 
-    FROM employment_info 
-    GROUP BY salary_range 
-    ORDER BY 
-        CASE salary_range
-            WHEN 'Below ₱10,000' THEN 1
-            WHEN '₱10,000–₱20,000' THEN 2
-            WHEN '₱20,000–₱30,000' THEN 3
-            WHEN '₱30,000–₱40,000' THEN 4
-            WHEN '₱40,000–₱50,000' THEN 5
-            WHEN 'Above ₱50,000' THEN 6
-            ELSE 7
-        END
+// Fetch enhanced recent activity from update_log with more details
+$recentActivityQuery = "
+    SELECT 
+        ul.log_id,
+        ul.updated_by,
+        ul.updated_id,
+        ul.updated_table,
+        ul.update_type,
+        ul.updated_at,
+        u.name as admin_name,
+        ap.first_name,
+        ap.last_name,
+        ad.document_type,
+        ei.company_name,
+        ed.school_name
+    FROM update_log ul
+    LEFT JOIN users u ON ul.updated_by = u.user_id
+    LEFT JOIN alumni_profile ap ON ul.updated_id = ap.user_id AND ul.updated_table = 'alumni_profile'
+    LEFT JOIN alumni_documents ad ON ul.updated_id = ad.doc_id AND ul.updated_table = 'alumni_documents'
+    LEFT JOIN employment_info ei ON ul.updated_id = ei.employment_id AND ul.updated_table = 'employment_info'
+    LEFT JOIN education_info ed ON ul.updated_id = ed.education_id AND ul.updated_table = 'education_info'
+    ORDER BY ul.updated_at DESC
+    LIMIT 10
 ";
-$salaryResult = $conn->query($salaryQuery);
-$salaryLabels = [];
-$salaryData = [];
-while ($row = $salaryResult->fetch_assoc()) {
-    $salaryLabels[] = $row['salary_range'];
-    $salaryData[] = $row['total'];
-}
+$recentActivityResult = $conn->query($recentActivityQuery);
 
 ob_start();
 ?>
@@ -135,7 +137,7 @@ ob_start();
                     <i class="fas fa-sync text-xl"></i>
                 </div>
                 <div>
-                    <p class="text-sm font-medium text-gray-600">Today's Updates</p>
+                    <p class="text-sm font-medium text-gray-600">Today's Alumni Updates</p>
                     <p class="text-2xl font-bold text-gray-800"><?php echo $stats['today_updates']; ?></p>
                 </div>
             </div>
@@ -152,16 +154,8 @@ ob_start();
             </div>
         </div>
 
-        <!-- Salary Distribution Chart -->
-        <div class="bg-white p-6 rounded-xl shadow-lg stats-card card-hover">
-            <h3 class="text-lg font-bold text-gray-800 mb-4">Salary Range Distribution</h3>
-            <div class="relative w-full h-80">
-                <canvas id="salaryChart"></canvas>
-            </div>
-        </div>
-
         <!-- Graduation Trends Chart -->
-        <div class="bg-white p-6 rounded-xl shadow-lg stats-card card-hover lg:col-span-2">
+        <div class="bg-white p-6 rounded-xl shadow-lg stats-card card-hover">
             <h3 class="text-lg font-bold text-gray-800 mb-4">Graduation Trends</h3>
             <div class="relative w-full h-80">
                 <canvas id="graduationChart"></canvas>
@@ -169,37 +163,51 @@ ob_start();
         </div>
     </div>
 
-    <!-- Quick Actions -->
+    <!-- Recent Activity - Expanded to full width -->
     <div class="bg-white p-6 rounded-xl shadow-lg stats-card">
-        <h3 class="text-lg font-bold text-gray-800 mb-4">Quick Actions</h3>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <a href="admin_alumni.php?filter=pending" class="bg-yellow-50 border border-yellow-200 p-4 rounded-lg hover:bg-yellow-100 transition-colors">
-                <div class="flex items-center">
-                    <i class="fas fa-clock text-yellow-600 text-xl mr-3"></i>
-                    <div>
-                        <p class="font-semibold text-yellow-800">Review Pending</p>
-                        <p class="text-sm text-yellow-600"><?php echo $stats['pending_profiles']; ?> profiles awaiting approval</p>
-                    </div>
-                </div>
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-lg font-bold text-gray-800">Recent Activity</h3>
+            <a href="activity_log.php" class="text-sm text-purple-600 hover:text-purple-800 font-medium">
+                View All Activity <i class="fas fa-arrow-right ml-1"></i>
             </a>
-            <a href="admin_alumni.php" class="bg-blue-50 border border-blue-200 p-4 rounded-lg hover:bg-blue-100 transition-colors">
-                <div class="flex items-center">
-                    <i class="fas fa-list text-blue-600 text-xl mr-3"></i>
-                    <div>
-                        <p class="font-semibold text-blue-800">Manage Alumni</p>
-                        <p class="text-sm text-blue-600">View all alumni profiles</p>
+        </div>
+        <div class="space-y-4">
+            <?php if ($recentActivityResult->num_rows > 0): ?>
+                <?php while ($activity = $recentActivityResult->fetch_assoc()): ?>
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                        <div class="flex items-center space-x-4">
+                            <div class="p-3 rounded-full <?php echo getActivityColor($activity['update_type']); ?>">
+                                <i class="fas fa-<?php echo getActivityIcon($activity['update_type']); ?> text-lg"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-800">
+                                    <?php echo getEnhancedActivityText($activity); ?>
+                                </p>
+                                <p class="text-xs text-gray-500 mt-1">
+                                    <i class="fas fa-user-shield mr-1"></i>
+                                    by <?php echo htmlspecialchars($activity['admin_name']); ?> • 
+                                    <i class="far fa-clock ml-2 mr-1"></i>
+                                    <?php echo time_elapsed_string($activity['updated_at']); ?>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="inline-block px-2 py-1 text-xs font-medium rounded-full <?php echo getActivityBadgeColor($activity['update_type']); ?>">
+                                <?php echo ucfirst($activity['update_type']); ?>
+                            </span>
+                            <p class="text-xs text-gray-500 mt-1">
+                                <?php echo ucfirst(str_replace('_', ' ', $activity['updated_table'])); ?>
+                            </p>
+                        </div>
                     </div>
+                <?php endwhile; ?>
+            <?php else: ?>
+                <div class="text-center py-8 text-gray-500">
+                    <i class="fas fa-inbox text-4xl mb-3"></i>
+                    <p class="text-lg">No recent activity</p>
+                    <p class="text-sm mt-1">System updates will appear here</p>
                 </div>
-            </a>
-            <a href="admin_documents.php" class="bg-green-50 border border-green-200 p-4 rounded-lg hover:bg-green-100 transition-colors">
-                <div class="flex items-center">
-                    <i class="fas fa-file-alt text-green-600 text-xl mr-3"></i>
-                    <div>
-                        <p class="font-semibold text-green-800">Verify Documents</p>
-                        <p class="text-sm text-green-600"><?php echo $stats['total_documents']; ?> documents submitted</p>
-                    </div>
-                </div>
-            </a>
+            <?php endif; ?>
         </div>
     </div>
 </div>
@@ -241,45 +249,6 @@ new Chart(employmentCtx, {
                         const percentage = Math.round((value / total) * 100);
                         return `${label}: ${value} (${percentage}%)`;
                     }
-                }
-            }
-        }
-    }
-});
-
-// Salary Distribution Chart
-const salaryCtx = document.getElementById('salaryChart').getContext('2d');
-new Chart(salaryCtx, {
-    type: 'bar',
-    data: {
-        labels: <?php echo json_encode($salaryLabels); ?>,
-        datasets: [{
-            label: 'Number of Alumni',
-            data: <?php echo json_encode($salaryData); ?>,
-            backgroundColor: '#10b981',
-            borderColor: '#059669',
-            borderWidth: 1,
-            borderRadius: 4
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                display: false
-            }
-        },
-        scales: {
-            y: {
-                beginAtZero: true,
-                ticks: {
-                    stepSize: 1
-                }
-            },
-            x: {
-                ticks: {
-                    maxRotation: 45
                 }
             }
         }
@@ -336,6 +305,101 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
 <?php
+// Enhanced Helper functions
+function getActivityIcon($update_type) {
+    switch ($update_type) {
+        case 'approve': return 'check-circle';
+        case 'reject': return 'times-circle';
+        case 'update': return 'edit';
+        default: return 'sync';
+    }
+}
+
+function getActivityColor($update_type) {
+    switch ($update_type) {
+        case 'approve': return 'bg-green-100 text-green-500';
+        case 'reject': return 'bg-red-100 text-red-500';
+        case 'update': return 'bg-blue-100 text-blue-500';
+        default: return 'bg-purple-100 text-purple-500';
+    }
+}
+
+function getActivityBadgeColor($update_type) {
+    switch ($update_type) {
+        case 'approve': return 'bg-green-100 text-green-800';
+        case 'reject': return 'bg-red-100 text-red-800';
+        case 'update': return 'bg-blue-100 text-blue-800';
+        default: return 'bg-gray-100 text-gray-800';
+    }
+}
+
+function getEnhancedActivityText($activity) {
+    $name = '';
+    $details = '';
+    
+    // Get the affected user's name
+    if (!empty($activity['first_name']) && !empty($activity['last_name'])) {
+        $name = $activity['first_name'] . ' ' . $activity['last_name'];
+    }
+    
+    // Add specific details based on the table and type
+    switch ($activity['updated_table']) {
+        case 'alumni_profile':
+            $details = $name ? "for {$name}" : "alumni profile";
+            break;
+        case 'alumni_documents':
+            $docType = !empty($activity['document_type']) ? " ({$activity['document_type']})" : '';
+            $details = $name ? "{$name}'s document{$docType}" : "document";
+            break;
+        case 'employment_info':
+            $company = !empty($activity['company_name']) ? " at {$activity['company_name']}" : '';
+            $details = $name ? "{$name}'s employment{$company}" : "employment information";
+            break;
+        case 'education_info':
+            $school = !empty($activity['school_name']) ? " at {$activity['school_name']}" : '';
+            $details = $name ? "{$name}'s education{$school}" : "education information";
+            break;
+        default:
+            $details = $activity['updated_table'];
+    }
+    
+    $actions = [
+        'approve' => 'Approved',
+        'reject' => 'Rejected', 
+        'update' => 'Updated'
+    ];
+    
+    $action = $actions[$activity['update_type']] ?? 'Modified';
+    
+    return "{$action} {$details}";
+}
+
+function time_elapsed_string($datetime, $full = false) {
+    $now = new DateTime;
+    $ago = new DateTime($datetime);
+    $diff = $now->diff($ago);
+
+    $string = [
+        'y' => 'year',
+        'm' => 'month',
+        'd' => 'day',
+        'h' => 'hour',
+        'i' => 'minute',
+        's' => 'second',
+    ];
+    
+    foreach ($string as $k => &$v) {
+        if ($diff->$k) {
+            $v = $diff->$k . ' ' . $v . ($diff->$k > 1 ? 's' : '');
+        } else {
+            unset($string[$k]);
+        }
+    }
+
+    if (!$full) $string = array_slice($string, 0, 1);
+    return $string ? implode(', ', $string) . ' ago' : 'just now';
+}
+
 $page_content = ob_get_clean();
 include("admin_format.php");
 ?>

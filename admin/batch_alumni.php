@@ -201,6 +201,18 @@ ob_start();
                 <tbody class="bg-white divide-y divide-gray-200">
                     <?php if ($alumniResult->num_rows > 0): ?>
                         <?php while ($alumni = $alumniResult->fetch_assoc()): ?>
+                            <?php
+                            // Fetch documents for this alumni
+                            $docQuery = "SELECT document_type, file_path FROM alumni_documents WHERE user_id = ?";
+                            $docStmt = $conn->prepare($docQuery);
+                            $docStmt->bind_param('i', $alumni['user_id']);
+                            $docStmt->execute();
+                            $docResult = $docStmt->get_result();
+                            $documents = [];
+                            while ($doc = $docResult->fetch_assoc()) {
+                                $documents[] = $doc;
+                            }
+                            ?>
                             <tr class="hover:bg-gray-50">
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
@@ -234,15 +246,29 @@ ob_start();
                                         <?php echo $alumni['submission_status']; ?>
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    <?php if ($alumni['document_count'] > 0): ?>
-                                        <button onclick="viewDocuments(<?php echo $alumni['user_id']; ?>)" 
-                                                class="text-blue-600 hover:text-blue-900 flex items-center">
-                                            <i class="fas fa-file-alt mr-1"></i>
-                                            View (<?php echo $alumni['document_count']; ?>)
-                                        </button>
+                                <td class="px-6 py-4 text-sm text-gray-500">
+                                    <?php if (!empty($documents)): ?>
+                                        <div class="space-y-1">
+                                            <?php foreach ($documents as $doc): ?>
+                                                <?php
+                                                $doc_types = [
+                                                    'COR' => 'Certificate of Registration',
+                                                    'COE' => 'Certificate of Employment', 
+                                                    'B_CERT' => 'Birth Certificate'
+                                                ];
+                                                $doc_name = $doc_types[$doc['document_type']] ?? $doc['document_type'];
+                                                ?>
+                                                <div class="flex items-center hover:bg-gray-50 rounded px-2 py-1 transition-colors">
+                                                    <span class="font-semibold text-gray-800 text-sm"><?php echo $doc_name; ?></span>
+                                                    <a href="../<?php echo $doc['file_path']; ?>" target="_blank" 
+                                                    class="text-blue-600 hover:text-blue-800 flex items-center text-sm font-semibold ml-2">
+                                                        <i class="fas fa-external-link-alt mr-1"></i> View
+                                                    </a>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        </div>
                                     <?php else: ?>
-                                        <span class="text-gray-400">No documents</span>
+                                        <span class="text-gray-400 text-sm">No documents</span>
                                     <?php endif; ?>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -258,7 +284,7 @@ ob_start();
                                     <?php elseif ($alumni['submission_status'] == 'Approved'): ?>
                                         <button onclick="rejectAlumni(<?php echo $alumni['user_id']; ?>)" 
                                                 class="text-red-600 hover:text-red-900">
-                                            <i class="fas fa-times"></i> Revoke
+                                            <i class="fas fa-times"></i> Reject
                                         </button>
                                     <?php else: ?>
                                         <button onclick="approveAlumni(<?php echo $alumni['user_id']; ?>)" 
@@ -266,10 +292,6 @@ ob_start();
                                             <i class="fas fa-check"></i> Approve
                                         </button>
                                     <?php endif; ?>
-                                    <a href="edit_alumni.php?id=<?php echo $alumni['user_id']; ?>" 
-                                       class="text-blue-600 hover:text-blue-900 ml-3">
-                                        <i class="fas fa-edit"></i> Edit
-                                    </a>
                                 </td>
                             </tr>
                         <?php endwhile; ?>
@@ -299,10 +321,6 @@ ob_start();
 // Global variables for hover functionality
 let hoverTimeout;
 let isModalHovered = false;
-
-function viewDocuments(userId) {
-    window.location.href = `get_documents.php?user_id=${userId}`;
-}
 
 function approveAlumni(userId) {
     if (confirm('Are you sure you want to approve this alumni profile?')) {
