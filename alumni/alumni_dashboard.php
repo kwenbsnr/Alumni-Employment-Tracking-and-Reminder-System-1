@@ -144,121 +144,124 @@ ob_start();
         <?php unset($_SESSION['show_welcome']); ?>
     <?php endif; ?>
 
-    <!-- Enhanced Stats Grid: Compact and Elegant -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
-        
+    <!-- Enhanced Stats Grid: More User-Friendly & Clear -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 max-w-7xl mx-auto">
+       
         <!-- Profile Status Card -->
-        <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 <?php echo $is_profile_complete ? 'border-green-500' : 'border-amber-500'; ?> hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-            <div class="flex items-center justify-between mb-4">
-                <div class="p-3 rounded-xl <?php echo $is_profile_complete ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'; ?>">
-                    <i class="fas fa-user-check text-lg"></i>
+        <div class="bg-white rounded-2xl shadow-md p-6 border-l-5 <?php echo $is_profile_complete ? 'border-green-500' : 'border-amber-500'; ?> hover:shadow-lg transition-all duration-300">
+            <div class="flex items-center justify-between mb-3">
+                <div class="p-3 rounded-full <?php echo $is_profile_complete ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'; ?>">
+                    <i class="fas fa-user-check text-xl"></i>
                 </div>
-                <span class="text-xs font-semibold px-2 py-1 rounded-full <?php echo $is_profile_complete ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'; ?>">
-                    <?php echo $is_profile_complete ? 'Complete' : 'Action Needed'; ?>
+                <span class="text-xs font-bold px-3 py-1 rounded-full <?php echo $is_profile_complete ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'; ?>">
+                    <?php echo $is_profile_complete ? 'Complete' : 'Incomplete'; ?>
                 </span>
             </div>
-            <h3 class="text-2xl font-bold text-gray-800 mb-2">Profile</h3>
-            <p class="text-sm text-gray-600 mb-1"><?php echo $is_profile_complete ? 'All details filled' : 'Required fields missing'; ?></p>
-            <div class="w-full bg-gray-200 rounded-full h-2 mt-3">
-                <div class="<?php echo $is_profile_complete ? 'bg-green-500' : 'bg-amber-500'; ?> h-2 rounded-full" style="width: <?php echo $is_profile_complete ? '100' : '60'; ?>%"></div>
+            <h3 class="text-lg font-bold text-gray-800 mb-1">Profile Status</h3>
+            <p class="text-sm text-gray-600 leading-relaxed">
+                <?php echo $is_profile_complete ? 'Your profile is fully updated.' : 'Some required fields are missing.'; ?>
+            </p>
+            <div class="mt-4">
+                <div class="flex items-center justify-between text-xs text-gray-500 mb-1">
+                    <span>Completion</span>
+                    <span><?php echo $is_profile_complete ? '100' : '60'; ?>%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="<?php echo $is_profile_complete ? 'bg-green-500' : 'bg-amber-500'; ?> h-2 rounded-full transition-all duration-700" 
+                         style="width: <?php echo $is_profile_complete ? '100' : '60'; ?>%"></div>
+                </div>
             </div>
         </div>
 
         <!-- Employment Status Card -->
-        <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-blue-500 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-            <div class="flex items-center justify-between mb-4">
-                <div class="p-3 rounded-xl bg-blue-50 text-blue-600">
-                    <i class="fas fa-briefcase text-lg"></i>
+        <div class="bg-white rounded-2xl shadow-md p-6 border-l-5 border-blue-500 hover:shadow-lg transition-all duration-300">
+            <div class="flex items-center justify-between mb-3">
+                <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                    <i class="fas fa-briefcase text-xl"></i>
                 </div>
-                <span class="text-xs font-semibold px-2 py-1 rounded-full bg-blue-100 text-blue-800">
-                    Status
-                </span>
+                <span class="text-xs font-bold px-3 py-1 rounded-full bg-blue-100 text-blue-700">Current</span>
             </div>
-            <h3 class="text-2xl font-bold text-gray-800 mb-2">Employment</h3>
-            <p class="text-sm text-gray-600 mb-1"><?php echo htmlspecialchars($profile['employment_status']); ?></p>
-            <div class="flex items-center mt-3 text-xs text-gray-500">
-                <i class="fas fa-clock mr-1"></i>
-                <span>Latest update</span>
-            </div>
+            <h3 class="text-lg font-bold text-gray-800 mb-1">Employment</h3>
+            <p class="text-sm text-gray-600 font-medium"><?php echo htmlspecialchars($profile['employment_status']); ?></p>
+            <p class="text-xs text-gray-500 mt-3 flex items-center">
+                <i class="fas fa-sync-alt mr-1"></i> Updated recently
+            </p>
         </div>
 
         <!-- Document Status Card -->
-        <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-purple-500 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-            <div class="flex items-center justify-between mb-4">
-                <div class="p-3 rounded-xl bg-purple-50 text-purple-600">
-                    <i class="fas fa-file-alt text-lg"></i>
+        <div class="bg-white rounded-2xl shadow-md p-6 border-l-5 border-purple-500 hover:shadow-lg transition-all duration-300">
+            <div class="flex items-center justify-between mb-3">
+                <div class="p-3 rounded-full bg-purple-100 text-purple-600">
+                    <i class="fas fa-file-alt text-xl"></i>
                 </div>
                 <?php
-                $doc_status_class = 'bg-gray-100 text-gray-800';
-                $doc_icon_class = 'text-gray-500';
-                if ($document['submission_status'] === 'Approved') {
-                    $doc_status_class = 'bg-green-100 text-green-800';
-                    $doc_icon_class = 'text-green-500';
-                } elseif ($document['submission_status'] === 'Rejected') {
-                    $doc_status_class = 'bg-red-100 text-red-800';
-                    $doc_icon_class = 'text-red-500';
-                } elseif ($document['submission_status'] === 'Under Review') {
-                    $doc_status_class = 'bg-yellow-100 text-yellow-800';
-                    $doc_icon_class = 'text-yellow-500';
-                }
+                $doc_badge = match($document['submission_status']) {
+                    'Approved' => ['bg-green-100 text-green-700', 'fas fa-check-circle'],
+                    'Rejected' => ['bg-red-100 text-red-700', 'fas fa-times-circle'],
+                    'Under Review' => ['bg-yellow-100 text-yellow-700', 'fas fa-clock'],
+                    'Draft' => ['bg-blue-100 text-blue-700', 'fas fa-edit'],
+                    default => ['bg-gray-100 text-gray-700', 'fas fa-exclamation-triangle']
+                };
                 ?>
-                <span class="text-xs font-semibold px-2 py-1 rounded-full <?php echo $doc_status_class; ?>">
+                <span class="text-xs font-bold px-3 py-1 rounded-full <?php echo $doc_badge[0]; ?>">
                     <?php echo htmlspecialchars($document['submission_status']); ?>
                 </span>
             </div>
-            <h3 class="text-2xl font-bold text-gray-800 mb-2">Documents</h3>
-            <p class="text-sm text-gray-600 mb-1"><?php echo htmlspecialchars($document['message']); ?></p>
-            <div class="flex items-center justify-between mt-3">
-                <span class="text-xs text-gray-500"><?php echo $document['document_count']; ?> files</span>
-                <i class="fas <?php echo $document['document_count'] > 0 ? 'fa-check-circle text-green-500' : 'fa-exclamation-triangle text-amber-500'; ?>"></i>
+            <h3 class="text-lg font-bold text-gray-800 mb-1">Document Review</h3>
+            <p class="text-sm text-gray-600 leading-relaxed"><?php echo htmlspecialchars($document['message']); ?></p>
+            <div class="mt-3 flex items-center justify-between text-xs">
+                <span class="text-gray-500"><?php echo $document['document_count']; ?> file(s)</span>
+                <i class="<?php echo $doc_badge[1]; ?> text-lg"></i>
             </div>
         </div>
 
-        <!-- Documents Count Card -->
-        <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-teal-500 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-            <div class="flex items-center justify-between mb-4">
-                <div class="p-3 rounded-xl bg-teal-50 text-teal-600">
-                    <i class="fas fa-paperclip text-lg"></i>
+        <!-- Files Uploaded Card -->
+        <div class="bg-white rounded-2xl shadow-md p-6 border-l-5 <?php echo $document['document_count'] > 0 ? 'border-teal-500' : 'border-rose-500'; ?> hover:shadow-lg transition-all duration-300">
+            <div class="flex items-center justify-between mb-3">
+                <div class="p-3 rounded-full <?php echo $document['document_count'] > 0 ? 'bg-teal-100 text-teal-600' : 'bg-rose-100 text-rose-600'; ?>">
+                    <i class="fas fa-paperclip text-xl"></i>
                 </div>
-                <span class="text-xs font-semibold px-2 py-1 rounded-full <?php echo $document['document_count'] > 0 ? 'bg-teal-100 text-teal-800' : 'bg-rose-100 text-rose-800'; ?>">
-                    <?php echo $document['document_count'] > 0 ? 'Uploaded' : 'Empty'; ?>
+                <span class="text-xs font-bold px-3 py-1 rounded-full <?php echo $document['document_count'] > 0 ? 'bg-teal-100 text-teal-700' : 'bg-rose-100 text-rose-700'; ?>">
+                    <?php echo $document['document_count'] > 0 ? 'Uploaded' : 'None'; ?>
                 </span>
             </div>
-            <h3 class="text-2xl font-bold text-gray-800 mb-2">Files</h3>
-            <p class="text-sm text-gray-600 mb-1">Total documents uploaded</p>
-            <div class="flex items-center justify-between mt-3">
+            <h3 class="text-lg font-bold text-gray-800 mb-1">Total Files</h3>
+            <div class="flex items-end justify-between mt-4">
                 <span class="text-3xl font-bold <?php echo $document['document_count'] > 0 ? 'text-teal-600' : 'text-rose-600'; ?>">
                     <?php echo $document['document_count']; ?>
                 </span>
-                <div class="text-2xl <?php echo $document['document_count'] > 0 ? 'text-teal-500' : 'text-rose-500'; ?>">
-                    <i class="fas <?php echo $document['document_count'] > 0 ? 'fa-folder-open' : 'fa-folder'; ?>"></i>
-                </div>
+                <i class="fas <?php echo $document['document_count'] > 0 ? 'fa-folder-open text-teal-500' : 'fa-folder text-rose-500'; ?> text-2xl"></i>
             </div>
+            <p class="text-xs text-gray-500 mt-2">Documents in your profile</p>
         </div>
     </div>
 
     <!-- Quick Actions Section -->
-    <div class="max-w-7xl mx-auto mt-8">
-        <div class="bg-white rounded-2xl shadow-lg p-6">
-            <h3 class="text-xl font-bold text-gray-800 mb-4">Quick Actions</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <a href="alumni_profile.php" class="flex items-center p-4 border border-gray-200 rounded-xl hover:border-green-500 hover:bg-green-50 transition-all duration-300 group">
+    <div class="max-w-7xl mx-auto mt-10">
+        <div class="bg-white rounded-2xl shadow-md p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-5 flex items-center">
+                <i class="fas fa-bolt text-yellow-500 mr-2"></i> Quick Actions
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <a href="alumni_profile.php" class="flex items-center p-5 border-2 border-gray-200 rounded-xl hover:border-green-500 hover:bg-green-50 transition-all duration-300 group">
                     <div class="p-3 rounded-lg bg-green-100 text-green-600 mr-4 group-hover:bg-green-200 transition-colors">
-                        <i class="fas fa-user-edit"></i>
+                        <i class="fas fa-user-edit text-lg"></i>
                     </div>
                     <div>
-                        <h4 class="font-semibold text-gray-800">Update Profile</h4>
-                        <p class="text-sm text-gray-600">Keep your information current</p>
+                        <h4 class="font-bold text-gray-800 text-lg">Update Profile</h4>
+                        <p class="text-sm text-gray-600">Edit personal info, employment, and contact</p>
                     </div>
+                    <i class="fas fa-arrow-right ml-auto text-gray-400 group-hover:text-green-600"></i>
                 </a>
-                <a href="alumni_profile.php#documents" class="flex items-center p-4 border border-gray-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all duration-300 group">
+                <a href="alumni_profile.php#documents" class="flex items-center p-5 border-2 border-gray-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all duration-300 group">
                     <div class="p-3 rounded-lg bg-blue-100 text-blue-600 mr-4 group-hover:bg-blue-200 transition-colors">
-                        <i class="fas fa-upload"></i>
+                        <i class="fas fa-upload text-lg"></i>
                     </div>
                     <div>
-                        <h4 class="font-semibold text-gray-800">Upload Documents</h4>
-                        <p class="text-sm text-gray-600">Submit required files</p>
+                        <h4 class="font-bold text-gray-800 text-lg">Upload Documents</h4>
+                        <p class="text-sm text-gray-600">Submit diploma, TOR, resume, and more</p>
                     </div>
+                    <i class="fas fa-arrow-right ml-auto text-gray-400 group-hover:text-blue-600"></i>
                 </a>
             </div>
         </div>

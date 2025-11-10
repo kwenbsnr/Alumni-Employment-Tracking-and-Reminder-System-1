@@ -41,12 +41,10 @@ $page_title = $page_title ?? "Alumni Page";
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($page_title); ?></title>
-
     <!-- Tailwind CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="alumni_format.css">
-
     <style>
         :root {
             --primary-green: #034f03;
@@ -104,14 +102,11 @@ $page_title = $page_title ?? "Alumni Page";
             transition: opacity 0.5s;
         }
         #profileUpdateModal.show { opacity: 1; }
-
         /* Sidebar Profile */
         .sidebar-profile {
             border-bottom: 1px solid rgba(255, 255, 255, 0.2);
             margin-bottom: 1rem;
         }
-
-        /* 27mm ≈ 102px (coin size) */
         .sidebar-profile-avatar {
             width: 102px;
             height: 102px;
@@ -132,51 +127,44 @@ $page_title = $page_title ?? "Alumni Page";
         .dashboard-card {
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            line-height: 1.5;
         }
-
         .dashboard-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
         }
-
-        .progress-bar {
-            transition: width 0.5s ease-in-out;
+        .dashboard-card h3 {
+            font-size: 1.125rem;
+            line-height: 1.3;
         }
-
+        .dashboard-card p {
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+        .progress-bar {
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
         .quick-action-card {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-
         .quick-action-card:hover {
             transform: translateY(-2px);
             border-color: currentColor;
         }
-
         .status-badge {
-            font-size: 0.75rem;
-            font-weight: 600;
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+            font-weight: 700;
+            letter-spacing: 0.5px;
         }
 
         /* Card entrance animations */
         @keyframes cardEntrance {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-
         .dashboard-card {
             animation: cardEntrance 0.5s ease-out;
         }
-
         .dashboard-card:nth-child(1) { animation-delay: 0.1s; }
         .dashboard-card:nth-child(2) { animation-delay: 0.2s; }
         .dashboard-card:nth-child(3) { animation-delay: 0.3s; }
@@ -184,27 +172,23 @@ $page_title = $page_title ?? "Alumni Page";
 
         /* Responsive */
         @media (max-width: 768px) {
-            .grid-cols-1.md\:grid-cols-2 > div { padding: 1.5rem !important; }
+            .grid-cols-1.sm\:grid-cols-2 > div { padding: 1.5rem !important; }
             .dashboard-card { padding: 1.25rem !important; }
             .text-4xl { font-size: 2rem; }
             .quick-action-card { padding: 1rem !important; }
         }
-
         @media (max-width: 640px) {
-            .grid-cols-1.md\:grid-cols-2 {
+            .grid-cols-1.sm\:grid-cols-2 {
                 grid-template-columns: 1fr;
             }
-            .dashboard-card {
-                margin-bottom: 1rem;
-            }
+            .dashboard-card { margin-bottom: 1rem; }
         }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen flex">
-    <!-- ==================== SIDEBAR ==================== -->
+    <!-- SIDEBAR -->
     <aside class="w-72 gradient-bg text-white flex-shrink-0">
         <div class="sidebar-wrapper flex flex-col justify-between">
-            <!-- Top Section -->
             <div class="p-6">
                 <div class="flex items-center space-x-3 mb-8">
                     <div class="w-10 h-10 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
@@ -212,11 +196,8 @@ $page_title = $page_title ?? "Alumni Page";
                     </div>
                     <h2 class="font-bold text-lg">Alumni Portal</h2>
                 </div>
-
-                <!-- Profile Section -->
                 <div class="sidebar-profile pb-6 mb-6">
                     <div class="flex flex-col items-center text-center space-y-4">
-                        <!-- Profile Picture (27mm coin size) -->
                         <div class="sidebar-profile-avatar">
                             <?php
                             if ($photo_path && file_exists("../" . $photo_path)) {
@@ -235,34 +216,26 @@ $page_title = $page_title ?? "Alumni Page";
                             }
                             ?>
                         </div>
-
                         <div class="w-full">
                             <h3 class="font-bold text-lg truncate"><?php echo htmlspecialchars($full_name); ?></h3>
                             <p class="text-sm text-gray-200 truncate"><?php echo htmlspecialchars($user_email); ?></p>
                         </div>
                     </div>
                 </div>
-
-                <!-- Navigation -->
                 <nav class="space-y-2">
-                    <a href="alumni_dashboard.php"
-                       class="sidebar-item <?php echo ($active_page ?? '') === 'dashboard' ? 'active' : ''; ?> flex items-center space-x-3 p-3 rounded-lg">
+                    <a href="alumni_dashboard.php" class="sidebar-item <?php echo ($active_page ?? '') === 'dashboard' ? 'active' : ''; ?> flex items-center space-x-3 p-3 rounded-lg">
                         <i class="fas fa-tachometer-alt w-5" aria-hidden="true"></i>
                         <span>Dashboard</span>
                     </a>
-                    <a href="alumni_profile.php"
-                       class="sidebar-item <?php echo ($active_page ?? '') === 'profile' ? 'active' : ''; ?> flex items-center space-x-3 p-3 rounded-lg">
+                    <a href="alumni_profile.php" class="sidebar-item <?php echo ($active_page ?? '') === 'profile' ? 'active' : ''; ?> flex items-center space-x-3 p-3 rounded-lg">
                         <i class="fas fa-user w-5" aria-hidden="true"></i>
                         <span>Profile Management</span>
                     </a>
                 </nav>
             </div>
-
-            <!-- Logout -->
             <div class="p-6">
                 <hr class="border-gray-400 my-6">
-                <a href="../login/logout.php"
-                   class="flex items-center space-x-3 text-white hover:text-red-500 p-3 rounded-lg">
+                <a href="../login/logout.php" class="flex items-center space-x-3 text-white hover:text-red-500 p-3 rounded-lg">
                     <i class="fas fa-sign-out-alt text-xl" aria-hidden="true"></i>
                     <span>Logout</span>
                 </a>
@@ -270,14 +243,12 @@ $page_title = $page_title ?? "Alumni Page";
         </div>
     </aside>
 
-    <!-- ==================== MAIN CONTENT ==================== -->
+    <!-- MAIN CONTENT -->
     <div class="flex-1 flex flex-col">
-        <!-- Top Bar -->
         <header class="bg-white shadow-sm border-b p-4">
             <div class="flex items-center justify-between">
                 <h1 class="text-2xl font-bold text-gray-800"><?php echo htmlspecialchars($page_title); ?></h1>
                 <div class="flex items-center space-x-6">
-                    <!-- Notification Bell -->
                     <div class="relative">
                         <button id="notificationBtn" class="relative text-gray-600 hover:text-blue-600">
                             <i class="fas fa-bell text-xl"></i>
@@ -310,32 +281,24 @@ $page_title = $page_title ?? "Alumni Page";
                 </div>
             </div>
         </header>
-
-        <!-- Page Content -->
         <main class="flex-1 p-6 overflow-auto">
             <?php echo $page_content ?? ''; ?>
         </main>
     </div>
 
-    <!-- ==================== SCRIPTS ==================== -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const notifButton = document.getElementById('notificationBtn');
             const notifPopup = document.getElementById('notifPopup');
-
             notifButton.addEventListener('click', (e) => {
                 e.stopPropagation();
                 notifPopup.classList.toggle('hidden');
             });
-
             document.addEventListener('click', (e) => {
-                if (!notifPopup.classList.contains('hidden') &&
-                    !notifPopup.contains(e.target) &&
-                    e.target !== notifButton) {
+                if (!notifPopup.classList.contains('hidden') && !notifPopup.contains(e.target) && e.target !== notifButton) {
                     notifPopup.classList.add('hidden');
                 }
             });
-
             document.getElementById('markReadBtn').addEventListener('click', () => {
                 notifButton.querySelector('span').classList.add('hidden');
             });
