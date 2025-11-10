@@ -109,16 +109,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
             </header>
 
-
-
-
-
-
-
-
-
-
-            
             <!-- Dynamic Content -->
             <main class="flex-1 p-6 overflow-auto">
                 <?php echo $page_content ?? ''; ?>

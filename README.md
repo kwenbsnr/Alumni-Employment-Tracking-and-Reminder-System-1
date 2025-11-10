@@ -49,3 +49,15 @@ ALUMNI SUGGESTIONS FEATURES
 * Use **pre-populated forms** to automatically fill fields like name, student ID, and graduation year based on existing records, so alumni only need to confirm rather than re-enter their data.
 
 * Add **“Help” or “Info” icons** beside complex fields (e.g., “Employment Status”) to display brief explanations or tooltips when hovered over, ensuring users understand what information is required and improving data accuracy.
+______________________
+______________________
+______________________
+
+**Alumni Module Bug Report**
+
+🟢 Low Priority 
+______________________
+
+1. Sidebar and Header Bar Improvements: Currently, both have a fixed height and are scrollable.
+
+2. General UI refinement.

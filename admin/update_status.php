@@ -6,54 +6,34 @@ if (!isset($_SESSION["user_id"]) || $_SESSION["role"] !== "admin") {
 }
 include("../connect.php");
 
-if (!isset($_GET['id']) || !isset($_GET['status']) || !isset($_GET['user_id']) || !isset($_GET['doc_type'])) {
-    header("Location: alumni_management.php?error=" . urlencode("Missing required parameters"));
-    exit();
-}
+$user_id = $_GET['user_id'] ?? 0;
+$status = $_GET['status'] ?? '';
+$reason = $_GET['reason'] ?? '';
 
-$doc_id = (int)$_GET['id'];
-$status = $_GET['status'];
-$reason = isset($_GET['reason']) ? $conn->real_escape_string($_GET['reason']) : '';
-$user_id = (int)$_GET['user_id'];
-$doc_type = $conn->real_escape_string($_GET['doc_type']);
-
-if (!in_array($status, ['Pending', 'Approved', 'Rejected'])) {
-    header("Location: alumni_management.php?error=" . urlencode("Invalid document status"));
-    exit();
-}
-
-$needs_reupload = ($status == 'Rejected') ? 1 : 0;
-
-$conn->begin_transaction();
-try {
-    $query = "UPDATE alumni_documents SET document_status = ?, rejection_reason = ?, needs_reupload = ? WHERE doc_id = ?";
-    $stmt = $conn->prepare($query);
-    $stmt->bind_param("ssii", $status, $reason, $needs_reupload, $doc_id);
-    if (!$stmt->execute() || $stmt->affected_rows == 0) {
-        throw new Exception("Failed to update document status");
+if ($user_id && in_array($status, ['Approved', 'Rejected'])) {
+    // Update alumni profile status
+    if ($status == 'Rejected') {
+        $updateQuery = "UPDATE alumni_profile SET submission_status = ?, rejection_reason = ?, rejected_at = NOW() WHERE user_id = ?";
+        $stmt = $conn->prepare($updateQuery);
+        $stmt->bind_param('ssi', $status, $reason, $user_id);
+    } else {
+        $updateQuery = "UPDATE alumni_profile SET submission_status = ?, rejection_reason = NULL, rejected_at = NULL WHERE user_id = ?";
+        $stmt = $conn->prepare($updateQuery);
+        $stmt->bind_param('si', $status, $user_id);
     }
-
-    $log_query = "INSERT INTO update_log (user_id, update_type, updated_by, update_description) VALUES (?, ?, ?, ?)";
-    $stmt = $conn->prepare($log_query);
-    $update_type = "Document Status Update";
-    $updated_by = $_SESSION["user_id"];
-    $description = "Document $doc_type status changed to $status" . ($reason ? " with reason: $reason" : "");
-    $stmt->bind_param("isis", $user_id, $update_type, $updated_by, $description);
-    $stmt->execute();
-
-    $notif_query = "INSERT INTO notifications (user_id, message, created_at) VALUES (?, ?, NOW())";
-    $stmt = $conn->prepare($notif_query);
-    $message = "Your $doc_type has been $status" . ($reason ? ". Reason: $reason" : "");
-    $stmt->bind_param("is", $user_id, $message);
-    $stmt->execute();
-
-    $conn->commit();
-    header("Location: alumni_management.php?success=" . urlencode("Document status updated successfully"));
-} catch (Exception $e) {
-    $conn->rollback();
-    header("Location: alumni_management.php?error=" . urlencode("Error updating status: " . $e->getMessage()));
+    
+    if ($stmt->execute()) {
+        // Log the action
+        $logQuery = "INSERT INTO update_log (updated_by, updated_id, updated_table, update_type) VALUES (?, ?, 'alumni_profile', 'approve')";
+        $logStmt = $conn->prepare($logQuery);
+        $logStmt->bind_param('ii', $_SESSION['user_id'], $user_id);
+        $logStmt->execute();
+        
+        header("Location: alumni_management.php?success=Alumni profile " . strtolower($status) . " successfully");
+    } else {
+        header("Location: alumni_management.php?error=Error updating alumni status");
+    }
+} else {
+    header("Location: alumni_management.php?error=Invalid parameters");
 }
-
-$stmt->close();
-$conn->close();
-?>
+exit();
