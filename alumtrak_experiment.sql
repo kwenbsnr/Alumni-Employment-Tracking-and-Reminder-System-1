@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3307
--- Generation Time: Nov 10, 2025 at 02:27 PM
+-- Generation Time: Nov 11, 2025 at 03:19 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -143,7 +143,6 @@ CREATE TABLE `alumni_profile` (
 INSERT INTO `alumni_profile` (`user_id`, `address_id`, `first_name`, `middle_name`, `last_name`, `contact_number`, `year_graduated`, `employment_status`, `photo_path`, `last_profile_update`, `submission_status`, `rejection_reason`, `rejected_at`, `submitted_at`) VALUES
 (1, 13, 'Josie', 'Gumera', 'Oliveros', '09367891026', '2023', 'Employed', 'Uploads/photos/Oliveros_profile.jpg', '2025-10-17 14:15:29', 'Pending', NULL, NULL, '2025-11-08 04:28:16'),
 (2, 98, 'Quien', 'Bendula', 'Bisnar', '09121112124', '2022', 'Student', 'uploads/photos/Bisnar_profile.png', '2025-11-10 04:50:35', 'Pending', NULL, NULL, '2025-11-10 04:50:35'),
-(5, 14, 'Ronaldo', '', 'Repe', '09125124512', '2022', 'Student', 'Uploads/photos/Repe_profile.png', '2025-10-17 23:22:03', 'Pending', NULL, NULL, '2025-11-08 04:28:16'),
 (9, 90, 'Jaafar', '', 'Omar', '09121112121', '2023', 'Self-Employed', 'Uploads/photos/Omar_profile.png', '2025-11-06 08:12:11', 'Pending', NULL, NULL, '2025-11-08 04:28:16'),
 (10, 41, 'Reymark', '', 'Buhian', '09125124512', '2023', 'Employed', 'Uploads/photos/Buhian_profile.jpg', '2025-10-18 02:13:25', 'Rejected', 'No documents were submitted.', '2025-11-10 08:34:42', '2025-11-08 04:28:16'),
 (13, 24, 'Maureen', '', 'Guadalquiver', '09987654321', '2022', 'Student', 'Uploads/photos/Guadalquiver_profile.jpg', '2025-10-17 23:15:45', 'Pending', NULL, NULL, '2025-11-08 04:28:16'),
@@ -43297,7 +43296,7 @@ INSERT INTO `users` (`user_id`, `email`, `password`, `role`, `name`, `created_at
 (2, 'quienbisnar@gmail.com', '$2y$10$iVt2fcpR/Z19c8jTMKyA5OgBFCYb5GK44KCQMXmagMMxDstzdparC', 'alumni', 'Quien Bisnar', '2025-10-13 11:48:34'),
 (3, 'aseneroglaiza@gmail.com', '$2y$10$UHN1b.vJAkh26l4TdpkxT.Zfsvi3DgvgH5m41PRIGAnMefSpfufhO', 'admin', 'Glaiza Aseñero', '2025-10-13 14:01:10'),
 (4, 'glowentanamanmil08@gmail.com', '$2y$10$.X6JG2ZcAC.Oi3RLDciATehWeH1FxfvrB4NBhnT8Eqwy9dkcT1TL.', 'admin', 'Glowen Tanaman', '2025-10-17 08:59:39'),
-(5, 'repe.ronaldojr@gmail.com', '$2y$10$AV5HSa53xpJRPykHLCQhuei9q5Rtk7SMFfs.yS9riewWH/d0hylKC', 'alumni', 'Ronaldo Repe', '2025-10-17 08:59:39'),
+(5, 'repe.ronaldojr@gmail.com', '$2y$10$AV5HSa53xpJRPykHLCQhuei9q5Rtk7SMFfs.yS9riewWH/d0hylKC', 'admin', 'Ronaldo Repe', '2025-10-17 08:59:39'),
 (6, 'davelabadan1@gmail.com', '$2y$10$h6Xx10eFsuv0vhUk9ApM/OmLJ1YHyYRGx.lAb.0iSmuHFZ8NpwjO2', 'alumni', 'China Dave Labadan', '2025-10-17 08:59:39'),
 (7, 'joangracep@gmail.com', '$2y$10$M1kkyVDtSJHEBwXmuEwNmO.IHkK/S5jmHU7Xtx9lTJthD3qOuPZmG', 'alumni', 'Joan Grace Patalinghug', '2025-10-17 08:59:39'),
 (8, 'marchanmayang687@gmail.com', '$2y$10$PvYQQ4DZnVHa8Z5zqYxEEOGq7.5yI2TkUPbIoTVlPzcjCXzwX8OMG', 'alumni', 'Marian Marchan', '2025-10-17 08:59:39'),
@@ -43320,7 +43319,24 @@ INSERT INTO `users` (`user_id`, `email`, `password`, `role`, `name`, `created_at
 (26, 'dexenebliskg@mail.com', '$2y$10$mLuf6qUWB59SVVpsu4fDg.5uVxsWeJ2sOnPHL8.4wOHcl2d.baQ7C', 'alumni', 'Dexene Bliss Kilat', '2025-11-10 13:24:20'),
 (27, 'anjofernandez0705@gmail.com', '$2y$10$mGcZLCHvtbYb0GpPPnq3v.eUFzKx.LxoPEtOBNUIg4dVSOSlt3YqW', 'alumni', 'Anjo Fernandez', '2025-11-10 13:24:20'),
 (28, 'jancarlorabe9@gmail.com', '$2y$10$JjvjQDB5HnysBAaExlAuvekp7UjkvxGJqaJt4FUe/Qr9OuDmiCLLy', 'alumni', 'Jan Carlo Rabe', '2025-11-10 13:24:20'),
-(29, 'catalanvincent222@gmail.com', '$2y$10$EjziH7HJLkjcO/t5w5CXy.a4mmAnYO..nZAbgDXLidU9iomVkcl3m', 'alumni', 'Vincent Catalan', '2025-11-10 13:24:20');
+(29, 'catalanvincent222@gmail.com', '$2y$10$EjziH7HJLkjcO/t5w5CXy.a4mmAnYO..nZAbgDXLidU9iomVkcl3m', 'alumni', 'Vincent Catalan', '2025-11-10 13:24:20'),
+(30, 'keishasoler05@gmail.com', '$2y$10$4l6x1jQnh1fG3hThk/XGI.MjDqcygy44M./ZUC6HbEOd5Z/MaSg8e', 'alumni', 'Keisha Nicole Soler', '2025-11-11 01:57:53'),
+(31, 'reginpunay@gmail.com', '$2y$10$RPk4PT7LMcjzM9qhmqipuedvzOR5.CKxaJmGRZlkY7bbNlJ/FbvpO', 'alumni', 'Regin Angala', '2025-11-11 01:57:53'),
+(32, 'jylsam123@gmail.com', '$2y$10$EtUiAEv/t5icCn/S.0qbie3F2hSzJDmzPBrEW9Hbpj0zYYTvd2hrW', 'alumni', 'Jylsam Quirog', '2025-11-11 01:57:53'),
+(33, 'carlowedeala2020@gmail.com', '$2y$10$izxs4rpeIj7BKtUblvckLehRqyG8vdZ14MF8QK5eMdHTtUmk5hPuy', 'alumni', 'Carlowe Deala', '2025-11-11 01:57:53'),
+(34, 'nathanielpiraman@gmail.com', '$2y$10$HgZbThTHwqouQvhzhBWXGOKaQu/AgjMReSuRUb1gOEdnWegme15zm', 'alumni', 'Nathaniel Piraman', '2025-11-11 01:57:53'),
+(35, 'sebreroaxcylxyron@gmail.com', '$2y$10$Kr.PEnBlDQorPRkskBkGquNaB/cLV4u0Cq/J1NuSL.4zv0PasqJc2', 'alumni', 'Axcyl Xyron Sebrero', '2025-11-11 01:57:53'),
+(36, 'Khristenecruz@gmail.com', '$2y$10$zxAZtG0erkGI2BVIgl7mEuPWVDKUBd/fluIOmZmvJYHkyjM/kXmTm', 'alumni', 'Khristene Suyang', '2025-11-11 01:57:53'),
+(37, 'gaminghr209@gmail.com', '$2y$10$RNGAubZ1zm9LHYxZpbBKsuC.plR0ghVmB4SCYytILRtGwe8KEx5Ru', 'alumni', 'Raymart Upao', '2025-11-11 01:57:53'),
+(38, 'lloydandiason45@gmail.com', '$2y$10$ylZvPSFZyBhvORRKeFR3KOjpXZbZTLghao48NI0qWLZsaEye7vV9K', 'alumni', 'Lloyd Andiason', '2025-11-11 02:08:08'),
+(39, 'andrinairagrace@gmail.com', '$2y$10$ILdyOKViWrV68U5qt84iIe2C40709YneF/FxO.rq0Hwj2XOctTcgi', 'alumni', 'Aira Grace Andrin', '2025-11-11 02:08:08'),
+(40, 'liborwilfred@gmail.com', '$2y$10$mpsuvqiB/uw/aK0bRV5l4eS.IS9XepggwdQ4cx1U5JovWeXfHQB7S', 'alumni', 'Wilfred Libor', '2025-11-11 02:08:08'),
+(41, 'jonalyntabunyag5@gmail.com', '$2y$10$0Bz6kzL/yb7mQuRTR5jxJevKbsxIGJWdPv9bjoy8evLAegELgVib.', 'alumni', 'Jonalyn Tabunyag', '2025-11-11 02:08:08'),
+(42, 'rivenllego@gmail.com', '$2y$10$gFXPvwr4JX2UqZTVdhfNZuDaT/AzNwXbYay8vedvT0hEAErZAVpZG', 'alumni', 'Rizal Ven Llego', '2025-11-11 02:08:08'),
+(43, 'Renchauxtero24@gmail.com', '$2y$10$dHuhcVAve1NDNpgZ4Z9JoO1t6/r4z75kaDl6H47piwXw6Pgyomn2C', 'alumni', 'Rench Auxtero', '2025-11-11 02:08:08'),
+(44, 'ivannjadecmartel@gmail.com', '$2y$10$QiTGkhw4eZPgMOm/dfckQ.10QOwfE.cAFYBILTnXFw1rFyN/vGCc.', 'alumni', 'Ivann Jade Martel', '2025-11-11 02:08:08'),
+(45, 'ngllrosall@gmail.com', '$2y$10$k6yAD3V9isaZ/cO5cqtVzuMfs4pxCkxbmS0Iy4RUq0id.hSfOwZq2', 'alumni', 'Angel Rosal', '2025-11-11 02:08:08'),
+(46, 'johnmira911@gmail.com', '$2y$10$fFq50O9MRFubzmzh8Ad2m.Z7kKCgxfOX2Fx24agrRtnTTjMbnh3Cy', 'alumni', 'John Kristoffer Mira', '2025-11-11 02:08:08');
 
 --
 -- Indexes for dumped tables
@@ -43454,7 +43470,7 @@ ALTER TABLE `update_log`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
+  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=47;
 
 --
 -- Constraints for dumped tables
