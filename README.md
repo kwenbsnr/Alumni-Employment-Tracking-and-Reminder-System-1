@@ -44,11 +44,13 @@ ______________________
 ______________________
 ______________________
 
-**Alumni Module Bug Report**
+**Admin Module Bug Report**
 
 🟢 Low Priority 
 ______________________
 
 1. Sidebar and Header Bar Improvements: Currently, both have a fixed height and are scrollable.
 
-2. General UI refinement.
+2. Update log page refinement.
+  
+3. General UI refinement.
