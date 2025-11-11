@@ -51,6 +51,6 @@ ______________________
 
 1. Sidebar and Header Bar Improvements: Currently, both have a fixed height and are scrollable.
 
-2. Update log page refinement.
+2. Recent Activity Log Page Refinement.
   
-3. General UI refinement.
+3. General UI Refinement.
