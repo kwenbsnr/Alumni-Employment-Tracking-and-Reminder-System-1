@@ -7,16 +7,16 @@ ____________________
 1. Start year vs. graduation year logic:
 If a user is a "Student" or “Employed & Student,” check that start year is later than graduation year. Additionally, the graduation year must be later than the start year.
 
-2. "Employed & Student" submission issue:
-If a user selects "Employed & Student" in the employment status, the form submits successfully but does not store data in the employment_status column of the alumni_profile table and does not add a row in the alumni_documents table. Additionally, no data is displayed in the dashboard cards.
+2. Submission clearing issue:
+When a rejected profile is resubmitted, previously entered details appear in the form, but clicking submit clears all data and reopens the form incorrectly. The form should reset automatically and allow smooth resubmission.
 
 🟠 High Priority
 ______________________
 
-1. Submission clearing issue:
-When a rejected profile is resubmitted, previously entered details appear in the form, but clicking submit clears all data and reopens the form incorrectly. The form should reset automatically and allow smooth resubmission.
+1. "Employed & Student" submission issue:
+If a user selects "Employed & Student" in the employment status, the form submits successfully but does not store data in the employment_status column of the alumni_profile table and does not add a row in the alumni_documents table. Additionally, no data is displayed in the dashboard cards.
 
-2. Yellow rejection card display:
+3. Yellow rejection card display:
 Rejection cards must appear in the dashboard, not only in the proceeding tab. It should match the style of the “Complete Your Profile” card.
 
 🟡 Medium Priority 
