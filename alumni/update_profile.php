@@ -1,7 +1,6 @@
 <?php
 session_start();
 include("../connect.php");
-include_once $_SERVER['DOCUMENT_ROOT'] . '/Alumni-Employment-Tracking-and-Reminder-System/api/notification/notification_helper.php';
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
@@ -10,9 +9,6 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 $user_id = $_SESSION['user_id'];
-
-$notif = new NotificationHelper();
-
 
 // ---- 1. Profile & Permissions ------------------------------------------------
 $stmt = $conn->prepare("SELECT last_profile_update, last_name, user_id, photo_path, address_id, employment_status, submission_status 
@@ -497,70 +493,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             error_log("Successfully processed document: {$code}");
         }
-        
-        // ---- 6.9 COMMIT TRANSACTION ---------------------------------------------
+
         $conn->commit();
-
-        // ---- 7. SEND NOTIFICATIONS -----------------------------------------
-        try {
-            // Initialize notification helper with database connection
-            $notifHelper = new NotificationHelper($conn);
-            
-            // Get alumni details
-            $alumniDetails = $notifHelper->getAlumniDetails($user_id);
-            
-            if ($alumniDetails) {
-                $alumni_email = $alumniDetails['email'];
-                $alumni_fullname = trim(($alumniDetails['first_name'] ?? $first) . ' ' . ($alumniDetails['last_name'] ?? $last));
-                
-                // Prepare parameters
-                $parameters = [
-                    "alumni_name" => $alumni_fullname,
-                    "graduation_year" => $alumniDetails['year_graduated'] ?? $year,
-                    "original_rejection_date" => $alumniDetails['rejected_at'] ?? null,
-                    "submission_date" => $alumniDetails['submitted_at'] ?? date('Y-m-d H:i:s'),
-                    "current_position" => $alumniDetails['job_title'] ?? $job_title ?? 'N/A',
-                    "current_company" => $alumniDetails['company_name'] ?? $company ?? 'N/A',
-                    "alumni_email" => $alumni_email,
-                    "previous_rejection_reason" => $alumniDetails['rejection_reason'] ?? null,
-                    "admin_review_link" => "#",
-                    "employment_status" => $alumniDetails['employment_status'] ?? $status,
-                    "name" => $alumni_fullname,
-                    "rejection_reason" => $alumniDetails['rejection_reason'] ?? null,
-                    "resubmission_link" => "#"
-                ];
-
-                // Get admin emails
-                $admin_emails = $notifHelper->getAdminEmails();
-
-                // Send notifications based on scenario
-                if ($is_profile_rejected) {
-                    // Alumni resubmits after rejection → notify admin(s)
-                    foreach ($admin_emails as $admin_email) {
-                        $notifHelper->sendNotification('alum_resubmit_admin_notif', 'alumni_resubmit_after_rejection', $admin_email, $parameters);
-                    }
-                } elseif ($can_update_yearly) {
-                    // Annual update → notify alumni + admin(s)
-                    if (!empty($alumni_email)) {
-                        $notifHelper->sendNotification('template_one', 'alumni_annual_profile_update', $alumni_email, $parameters);
-                    }
-                    foreach ($admin_emails as $admin_email) {
-                        $notifHelper->sendNotification('alum_submit_update_admin_notif', 'alumni_annual_update_admin_review', $admin_email, $parameters);
-                    }
-                } else {
-                    // Normal submission → notify admin(s)
-                    foreach ($admin_emails as $admin_email) {
-                        $notifHelper->sendNotification('template_admin_notif', 'alumni_new_submission', $admin_email, $parameters);
-                    }
-                }
-            }
-
-        } catch (Exception $e) {
-            // Log the notification failure but DO NOT stop user flow
-            error_log("Notification failed: " . $e->getMessage());
-        }
-
-        // finally redirect after commit and notification attempts
         header("Location: alumni_profile.php?success=Profile updated successfully!");
         exit;
 
