@@ -1,7 +1,7 @@
 <?php
 session_start();
 include("../connect.php");
-include_once $_SERVER['DOCUMENT_ROOT'] . '/Alumni-Employment-Tracking-and-Reminder-System/api/notification/notification_helper.php';
+include_once $_SERVER['DOCUMENT_ROOT'] . '/Alumni-Employment-Tracking-and-Reminder-System/api/notification/notification_functions.php';
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
@@ -10,9 +10,6 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 $user_id = $_SESSION['user_id'];
-
-$notif = new NotificationHelper();
-
 
 // ---- 1. Profile & Permissions ------------------------------------------------
 $stmt = $conn->prepare("SELECT last_profile_update, last_name, user_id, photo_path, address_id, employment_status, submission_status 
@@ -503,11 +500,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // ---- 7. SEND NOTIFICATIONS -----------------------------------------
         try {
-            // Initialize notification helper with database connection
-            $notifHelper = new NotificationHelper($conn);
+            // Include the simple notification helper
+            include_once $_SERVER['DOCUMENT_ROOT'] . '/Alumni-Employment-Tracking-and-Reminder-System/api/notification/notification_simple.php';
             
             // Get alumni details
-            $alumniDetails = $notifHelper->getAlumniDetails($user_id);
+            $alumniDetails = get_alumni_details($conn, $user_id);
             
             if ($alumniDetails) {
                 $alumni_email = $alumniDetails['email'];
@@ -517,40 +514,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $parameters = [
                     "alumni_name" => $alumni_fullname,
                     "graduation_year" => $alumniDetails['year_graduated'] ?? $year,
-                    "original_rejection_date" => $alumniDetails['rejected_at'] ?? null,
+                    "original_rejection_date" => $alumniDetails['rejected_at'] ?? 'N/A',
                     "submission_date" => $alumniDetails['submitted_at'] ?? date('Y-m-d H:i:s'),
                     "current_position" => $alumniDetails['job_title'] ?? $job_title ?? 'N/A',
                     "current_company" => $alumniDetails['company_name'] ?? $company ?? 'N/A',
                     "alumni_email" => $alumni_email,
-                    "previous_rejection_reason" => $alumniDetails['rejection_reason'] ?? null,
-                    "admin_review_link" => "#",
+                    "previous_rejection_reason" => $alumniDetails['rejection_reason'] ?? 'N/A',
                     "employment_status" => $alumniDetails['employment_status'] ?? $status,
                     "name" => $alumni_fullname,
-                    "rejection_reason" => $alumniDetails['rejection_reason'] ?? null,
-                    "resubmission_link" => "#"
+                    "rejection_reason" => $alumniDetails['rejection_reason'] ?? 'N/A'
                 ];
 
                 // Get admin emails
-                $admin_emails = $notifHelper->getAdminEmails();
+                $admin_emails = get_admin_emails($conn);
 
                 // Send notifications based on scenario
                 if ($is_profile_rejected) {
                     // Alumni resubmits after rejection → notify admin(s)
                     foreach ($admin_emails as $admin_email) {
-                        $notifHelper->sendNotification('alum_resubmit_admin_notif', 'alumni_resubmit_after_rejection', $admin_email, $parameters);
+                        send_notification('alum_resubmit_admin_notif', $admin_email, $parameters);
                     }
                 } elseif ($can_update_yearly) {
                     // Annual update → notify alumni + admin(s)
                     if (!empty($alumni_email)) {
-                        $notifHelper->sendNotification('template_one', 'alumni_annual_profile_update', $alumni_email, $parameters);
+                        send_notification('template_one', $alumni_email, $parameters);
                     }
                     foreach ($admin_emails as $admin_email) {
-                        $notifHelper->sendNotification('alum_submit_update_admin_notif', 'alumni_annual_update_admin_review', $admin_email, $parameters);
+                        send_notification('alum_submit_update_admin_notif', $admin_email, $parameters);
                     }
                 } else {
                     // Normal submission → notify admin(s)
                     foreach ($admin_emails as $admin_email) {
-                        $notifHelper->sendNotification('template_admin_notif', 'alumni_new_submission', $admin_email, $parameters);
+                        send_notification('template_admin_notif', $admin_email, $parameters);
                     }
                 }
             }

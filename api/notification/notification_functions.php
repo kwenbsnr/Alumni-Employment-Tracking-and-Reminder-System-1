@@ -1,0 +1,170 @@
+<?php
+// api/notification/notification_functions.php
+
+require_once $_SERVER['DOCUMENT_ROOT'] . '/Alumni-Employment-Tracking-and-Reminder-System/vendor/autoload.php';
+
+use NotificationAPI\NotificationAPI;
+
+// Configuration
+define('NOTIFICATIONAPI_CLIENT_ID', 'ls4kt1i6t2hhh7rxd51k00rjj3');
+define('NOTIFICATIONAPI_CLIENT_SECRET', 'rtdiclclahiqxqr692c86zyk9in81pmlc2kol4j3n9x3gk7dyy3qco19av');
+
+/**
+ * Send notification via NotificationAPI
+ */
+function send_notification($templateId, $recipientEmail, $parameters = []) {
+    try {
+        // Initialize NotificationAPI
+        $notificationapi = new NotificationAPI(
+            NOTIFICATIONAPI_CLIENT_ID,
+            NOTIFICATIONAPI_CLIENT_SECRET
+        );
+
+        // Validate email
+        if (empty($recipientEmail) || !filter_var($recipientEmail, FILTER_VALIDATE_EMAIL)) {
+            throw new Exception("Invalid recipient email: " . $recipientEmail);
+        }
+
+        // Map template IDs to notification types
+        $templateMappings = [
+            'template_one' => 'alumni_employment_tracking_update_your_profile',
+            'template_approved' => 'alumni_employment_tracking_profile_approved',
+            'template_rejected' => 'alumni_employment_tracking_profile_rejected',
+            'alum_resubmit_admin_notif' => 'alumni_employment_tracking_resubmission_admin',
+            'alum_submit_update_admin_notif' => 'alumni_employment_tracking_annual_update_admin',
+            'template_admin_notif' => 'alumni_employment_tracking_new_submission_admin'
+        ];
+
+        $notificationType = $templateMappings[$templateId] ?? $templateId;
+        
+        if (empty($notificationType)) {
+            throw new Exception("Notification type not found for template: " . $templateId);
+        }
+
+        // Prepare safe parameters with defaults
+        $safeParameters = array_merge([
+            "alumni_name" => "Alumni",
+            "graduation_year" => "N/A",
+            "original_rejection_date" => "N/A",
+            "submission_date" => date('Y-m-d H:i:s'),
+            "current_position" => "N/A",
+            "current_company" => "N/A",
+            "alumni_email" => $recipientEmail,
+            "previous_rejection_reason" => "N/A",
+            "admin_review_link" => "#",
+            "employment_status" => "N/A",
+            "name" => "Alumni",
+            "alumni_portal_link" => "#",
+            "rejection_reason" => "N/A",
+            "resubmission_link" => "#"
+        ], $parameters);
+
+        // Ensure all values are strings
+        foreach ($safeParameters as $key => $value) {
+            if ($value === null) {
+                $safeParameters[$key] = "N/A";
+            } else {
+                $safeParameters[$key] = (string)$value;
+            }
+        }
+
+        // Send notification
+        $result = $notificationapi->send([
+            'type' => $notificationType,
+            'to' => [
+                'id' => $recipientEmail,
+                'email' => $recipientEmail
+            ],
+            'parameters' => $safeParameters,
+            'templateId' => $templateId
+        ]);
+
+        error_log("✅ Notification sent successfully: {$templateId} to {$recipientEmail}");
+        return true;
+
+    } catch (Exception $e) {
+        error_log("❌ Notification failed - Template: {$templateId}, Email: {$recipientEmail}, Error: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Get all admin emails from database
+ */
+function get_admin_emails($conn) {
+    try {
+        $admin_emails = [];
+        $stmt = $conn->prepare("SELECT email FROM users WHERE role = 'admin' AND email IS NOT NULL AND email != ''");
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        while ($row = $result->fetch_assoc()) {
+            if (filter_var($row['email'], FILTER_VALIDATE_EMAIL)) {
+                $admin_emails[] = $row['email'];
+            }
+        }
+        $stmt->close();
+
+        return $admin_emails;
+
+    } catch (Exception $e) {
+        error_log("Error fetching admin emails: " . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Get alumni details by user_id
+ */
+function get_alumni_details($conn, $user_id) {
+    try {
+        $stmt = $conn->prepare("
+            SELECT u.email, ap.first_name, ap.last_name, ap.year_graduated, 
+                   ap.employment_status, ap.rejection_reason, ap.rejected_at,
+                   ap.submitted_at, ei.company_name, jt.title as job_title
+            FROM users u 
+            LEFT JOIN alumni_profile ap ON u.user_id = ap.user_id 
+            LEFT JOIN employment_info ei ON u.user_id = ei.user_id 
+            LEFT JOIN job_titles jt ON ei.job_title_id = jt.job_title_id
+            WHERE u.user_id = ?
+        ");
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $alumni = $result->fetch_assoc();
+        $stmt->close();
+
+        return $alumni;
+
+    } catch (Exception $e) {
+        error_log("Error fetching alumni details: " . $e->getMessage());
+        return null;
+    }
+}
+
+// Test function - can be removed in production
+function test_notification() {
+    echo "<h3>Testing NotificationAPI</h3>";
+    
+    $test_params = [
+        "alumni_name" => "John Doe",
+        "graduation_year" => "2020",
+        "employment_status" => "Employed",
+        "current_position" => "Software Developer",
+        "current_company" => "Test Company Inc."
+    ];
+    
+    $result = send_notification('template_one', 'test@example.com', $test_params);
+    
+    if ($result) {
+        echo "✅ Test notification sent successfully!<br>";
+        echo "Check NotificationAPI dashboard for details.";
+    } else {
+        echo "❌ Test notification failed.<br>";
+        echo "Check error logs for details.";
+    }
+}
+
+// Uncomment the line below to test the notification system
+// test_notification();
+?>

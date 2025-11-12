@@ -6,20 +6,6 @@ if (!isset($_SESSION["user_id"]) || $_SESSION["role"] !== "admin") {
 }
 include("../connect.php");
 
-// Fix the path for notification helper
-$notification_helper_path = $_SERVER['DOCUMENT_ROOT'] . '/Alumni-Employment-Tracking-and-Reminder-System/api/notification/notification_helper.php';
-if (file_exists($notification_helper_path)) {
-    include_once $notification_helper_path;
-} else {
-    // Alternative path if the above doesn't work
-    $notification_helper_path = __DIR__ . '/../api/notification/notification_helper.php';
-    if (file_exists($notification_helper_path)) {
-        include_once $notification_helper_path;
-    } else {
-        error_log("Notification helper not found at: " . $notification_helper_path);
-    }
-}
-
 // Sanitize input
 $user_id = intval($_GET['user_id'] ?? 0);
 $status = $_GET['status'] ?? '';
@@ -52,54 +38,56 @@ if ($user_id && in_array($status, ['Approved', 'Rejected'])) {
         $logStmt->execute();
         $logStmt->close();
 
-        // Send Notification (only if NotificationHelper is available)
-        if (class_exists('NotificationHelper')) {
-            try {
-                $notif = new NotificationHelper($conn);
-                
-                // Fetch alumni info
-                $stmt2 = $conn->prepare("
-                    SELECT u.email, ap.first_name, ap.last_name, ap.year_graduated,
-                           ap.employment_status, ei.company_name, jt.title as job_title
-                    FROM users u
-                    JOIN alumni_profile ap ON u.user_id = ap.user_id
-                    LEFT JOIN employment_info ei ON u.user_id = ei.user_id 
-                    LEFT JOIN job_titles jt ON ei.job_title_id = jt.job_title_id
-                    WHERE u.user_id = ?
-                ");
-                $stmt2->bind_param("i", $user_id);
-                $stmt2->execute();
-                $alumni = $stmt2->get_result()->fetch_assoc();
-                $stmt2->close();
-
-                if ($alumni && !empty($alumni['email'])) {
-                    $alumni_email = $alumni['email'];
-                    $alumni_name = trim(($alumni['first_name'] ?? '') . ' ' . ($alumni['last_name'] ?? ''));
-
-                    $parameters = [
-                        "alumni_name" => $alumni_name,
-                        "rejection_reason" => $reason,
-                        "status" => $status,
-                        "graduation_year" => $alumni['year_graduated'] ?? 'N/A',
-                        "current_position" => $alumni['job_title'] ?? 'N/A',
-                        "current_company" => $alumni['company_name'] ?? 'N/A',
-                        "employment_status" => $alumni['employment_status'] ?? 'N/A',
-                        "name" => $alumni_name
-                    ];
-
-                    if ($status === 'Rejected') {
-                        $notif->sendNotification('template_rejected', 'alumni_rejection', $alumni_email, $parameters);
-                    } else {
-                        $notif->sendNotification('template_approved', 'alumni_approval', $alumni_email, $parameters);
-                    }
-                    
-                    error_log("Notification sent for {$status} action to: {$alumni_email}");
-                }
-            } catch (Exception $e) {
-                error_log("Notification failed for user_id $user_id: " . $e->getMessage());
+        // Send Notification
+        try {
+            // Include the notification functions - CORRECTED PATH
+            $notification_path = $_SERVER['DOCUMENT_ROOT'] . '/Alumni-Employment-Tracking-and-Reminder-System/api/notification/notification_functions.php';
+            if (file_exists($notification_path)) {
+                include_once $notification_path;
+            } else {
+                throw new Exception("Notification functions file not found");
             }
-        } else {
-            error_log("NotificationHelper class not available - proceeding without notifications");
+            
+            // Fetch alumni info
+            $stmt2 = $conn->prepare("
+                SELECT u.email, ap.first_name, ap.last_name, ap.year_graduated,
+                       ap.employment_status, ei.company_name, jt.title as job_title
+                FROM users u
+                JOIN alumni_profile ap ON u.user_id = ap.user_id
+                LEFT JOIN employment_info ei ON u.user_id = ei.user_id 
+                LEFT JOIN job_titles jt ON ei.job_title_id = jt.job_title_id
+                WHERE u.user_id = ?
+            ");
+            $stmt2->bind_param("i", $user_id);
+            $stmt2->execute();
+            $alumni = $stmt2->get_result()->fetch_assoc();
+            $stmt2->close();
+
+            if ($alumni && !empty($alumni['email'])) {
+                $alumni_email = $alumni['email'];
+                $alumni_name = trim(($alumni['first_name'] ?? '') . ' ' . ($alumni['last_name'] ?? ''));
+
+                $parameters = [
+                    "alumni_name" => $alumni_name,
+                    "rejection_reason" => $reason,
+                    "status" => $status,
+                    "graduation_year" => $alumni['year_graduated'] ?? 'N/A',
+                    "current_position" => $alumni['job_title'] ?? 'N/A',
+                    "current_company" => $alumni['company_name'] ?? 'N/A',
+                    "employment_status" => $alumni['employment_status'] ?? 'N/A',
+                    "name" => $alumni_name
+                ];
+
+                if ($status === 'Rejected') {
+                    send_notification('template_rejected', $alumni_email, $parameters);
+                } else {
+                    send_notification('template_approved', $alumni_email, $parameters);
+                }
+                
+                error_log("Notification sent for {$status} action to: {$alumni_email}");
+            }
+        } catch (Exception $e) {
+            error_log("Notification failed for user_id $user_id: " . $e->getMessage());
         }
 
         // Redirect success
