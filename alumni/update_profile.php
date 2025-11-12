@@ -1,7 +1,7 @@
 <?php
 session_start();
 include("../connect.php");
-include_once "../api/notification/notification_helper.php";
+include_once $_SERVER['DOCUMENT_ROOT'] . '/Alumni-Employment-Tracking-and-Reminder-System/api/notification/notification_helper.php';
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 

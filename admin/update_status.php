@@ -42,7 +42,7 @@ if ($user_id && in_array($status, ['Approved', 'Rejected'])) {
         $logStmt->close();
 
         // Send Notification
-        include_once "../api/notification/notification_helper.php";
+        include_once $_SERVER['DOCUMENT_ROOT'] . '/Alumni-Employment-Tracking-and-Reminder-System/api/notification/notification_helper.php';
         $notifHelper = new NotificationHelper($conn);
 
         // Fetch alumni info using the helper

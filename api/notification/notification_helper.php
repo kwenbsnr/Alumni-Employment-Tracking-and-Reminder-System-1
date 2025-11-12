@@ -1,8 +1,9 @@
 <?php
 // api/notification/notification_helper.php
 
-require_once '../../vendor/autoload.php';
-require_once '../../config/notification_config.php';
+// Fix the path - use absolute path from document root
+require_once $_SERVER['DOCUMENT_ROOT'] . '/Alumni-Employment-Tracking-and-Reminder-System/vendor/autoload.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/Alumni-Employment-Tracking-and-Reminder-System/config/notification_config.php';
 
 use NotificationAPI\NotificationAPI;
 
