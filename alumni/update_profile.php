@@ -1,6 +1,7 @@
 <?php
 session_start();
 include("../connect.php");
+include_once "../api/notification/notification_helper.php";
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
@@ -9,6 +10,9 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 $user_id = $_SESSION['user_id'];
+
+$notif = new NotificationHelper();
+
 
 // ---- 1. Profile & Permissions ------------------------------------------------
 $stmt = $conn->prepare("SELECT last_profile_update, last_name, user_id, photo_path, address_id, employment_status, submission_status 
@@ -497,6 +501,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $conn->commit();
         header("Location: alumni_profile.php?success=Profile updated successfully!");
         exit;
+
+        // ---- 7. SEND NOTIFICATIONS -----------------------------------------
+        try {
+            // Common parameters
+            $alumni_email = $_SESSION['email'] ?? '';
+            $alumni_fullname = $first . ' ' . $last;
+            $parameters = [
+                "alumni_name" => $alumni_fullname,
+                "graduation_year" => $year,
+                "original_rejection_date" => $profile['rejected_at'] ?? null,
+                "submission_date" => date('Y-m-d H:i:s'),
+                "current_position" => $job_title ?? 'N/A',
+                "current_company" => $company ?? 'N/A',
+                "alumni_email" => $alumni_email,
+                "previous_rejection_reason" => $profile['rejection_reason'] ?? null,
+                "admin_review_link" => "#",
+                "employment_status" => $status,
+                "name" => $alumni_fullname,
+                "rejection_reason" => $profile['rejection_reason'] ?? null,
+                "resubmission_link" => "#"
+            ];
+
+            $admin_emails = ['admin@example.com']; // Replace with your actual admin emails
+
+            if ($is_profile_rejected) {
+                // Alumni resubmits after rejection → notify admin(s)
+                foreach ($admin_emails as $admin_email) {
+                    $notif->sendNotification('alum_resubmit_admin_notif', 'alumni_resubmit_after_rejection', $admin_email, $parameters);
+                }
+            } elseif ($can_update_yearly) {
+                // Annual update → notify alumni + admin(s)
+                $notif->sendNotification('template_one', 'alumni_annual_profile_update', $alumni_email, $parameters);
+                foreach ($admin_emails as $admin_email) {
+                    $notif->sendNotification('alum_submit_update_admin_notif', 'alumni_annual_update_admin_review', $admin_email, $parameters);
+                }
+            } else {
+                // Normal submission → notify admin(s)
+                foreach ($admin_emails as $admin_email) {
+                    $notif->sendNotification('template_admin_notif', 'alumni_new_submission', $admin_email, $parameters);
+                }
+            }
+
+        } catch (Exception $e) {
+            error_log("Notification failed: " . $e->getMessage());
+        }
+
+        header("Location: alumni_profile.php?success=Profile updated successfully!");
+        exit;
+
 
     } catch (Exception $e) {
         $conn->rollback();
