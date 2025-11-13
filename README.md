@@ -63,3 +63,5 @@ ______________________
 2. Recent Activity Log Page Refinement.
   
 3. General UI Refinement.
+
+http://localhost/Alumni-Employment-Tracking-and-Reminder-System/login/login.php
