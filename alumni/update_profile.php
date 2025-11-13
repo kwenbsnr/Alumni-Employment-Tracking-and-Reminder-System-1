@@ -1,4 +1,5 @@
 <?php
+ob_start();
 session_start();
 include("../connect.php");
 include_once $_SERVER['DOCUMENT_ROOT'] . '/Alumni-Employment-Tracking-and-Reminder-System/api/notification/notification_functions.php';
@@ -6,6 +7,8 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/Alumni-Employment-Tracking-and-Remind
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 if (!isset($_SESSION['user_id'])) {
+    // Clean output buffer before redirect
+    ob_end_clean();
     header("Location: ../login/login.php");
     exit();
 }
@@ -557,15 +560,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         // finally redirect after commit and notification attempts
+        ob_end_clean(); // Clean buffer before redirect
         header("Location: alumni_profile.php?success=Profile updated successfully!");
         exit;
 
     } catch (Exception $e) {
         $conn->rollback();
+        ob_end_clean(); // Clean buffer before redirect
         header("Location: alumni_profile.php?error=" . urlencode($e->getMessage()));
         exit;
     }
 }
 
 $conn->close();
+// Clean and flush output buffer if we haven't redirected yet
+ob_end_flush();
 ?>

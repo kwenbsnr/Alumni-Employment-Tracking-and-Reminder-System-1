@@ -14,12 +14,6 @@ define('NOTIFICATIONAPI_CLIENT_SECRET', 'rtdiclclahiqxqr692c86zyk9in81pmlc2kol4j
  */
 function send_notification($templateId, $recipientEmail, $parameters = []) {
     try {
-        // Include logger
-        $logger_path = $_SERVER['DOCUMENT_ROOT'] . '/Alumni-Employment-Tracking-and-Reminder-System/api/notification/notification_logger.php';
-        if (file_exists($logger_path)) {
-            include_once $logger_path;
-        }
-
         // Initialize NotificationAPI
         $notificationapi = new NotificationAPI(
             NOTIFICATIONAPI_CLIENT_ID,
@@ -34,22 +28,6 @@ function send_notification($templateId, $recipientEmail, $parameters = []) {
         $recipientEmail = filter_var($recipientEmail, FILTER_VALIDATE_EMAIL);
         if (!$recipientEmail) {
             throw new Exception("Invalid recipient email format");
-        }
-
-        // Template mappings with fallback
-        $templateMappings = [
-            'template_one' => 'alumni_employment_tracking_update_your_profile',
-            'template_approved' => 'alumni_employment_tracking_profile_approved',
-            'template_rejected' => 'alumni_employment_tracking_profile_rejected',
-            'alum_resubmit_admin_notif' => 'alumni_employment_tracking_resubmission_admin',
-            'alum_submit_update_admin_notif' => 'alumni_employment_tracking_annual_update_admin',
-            'template_admin_notif' => 'alumni_employment_tracking_new_submission_admin'
-        ];
-
-        $notificationType = $templateMappings[$templateId] ?? null;
-        
-        if (empty($notificationType)) {
-            throw new Exception("Notification type not found for template: " . $templateId);
         }
 
         // Enhanced parameter validation with defaults
@@ -82,32 +60,22 @@ function send_notification($templateId, $recipientEmail, $parameters = []) {
             }
         }
 
-        // Send notification
+        // **CORRECTED: Use SAME notification type but different templateId**
         $result = $notificationapi->send([
-            'notificationId' => uniqid('alumni_', true),
-            'user' => [
+            'type' => 'alumni_employment_tracking_update_your_profile', // SAME for all
+            'to' => [
                 'id' => $recipientEmail,
                 'email' => $recipientEmail
             ],
-            'notification' => [
-                'type' => $notificationType,
-                'templateId' => $templateId
-            ],
-            'parameters' => $safeParameters
+            'parameters' => $safeParameters,
+            'templateId' => $templateId // Different for each scenario
         ]);
 
-        // Log successful notification
-        log_notification_attempt($templateId, $recipientEmail, true);
-        error_log("✅ Notification sent successfully: {$templateId} to {$recipientEmail}");
-        
+        error_log("✅ Notification sent successfully - Type: alumni_employment_tracking_update_your_profile, Template: {$templateId}, To: {$recipientEmail}");
         return true;
 
     } catch (Exception $e) {
-        // Log failed notification
-        log_notification_attempt($templateId, $recipientEmail, false, $e->getMessage());
         error_log("❌ Notification failed - Template: {$templateId}, Email: {$recipientEmail}, Error: " . $e->getMessage());
-        
-        //Not throw exception to prevent breaking user flow
         return false;
     }
 }
