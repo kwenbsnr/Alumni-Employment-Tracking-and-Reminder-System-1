@@ -245,7 +245,7 @@ $page_title = $page_title ?? "Alumni Page";
 
     <!-- MAIN CONTENT -->
     <div class="flex-1 flex flex-col">
-        <header class="bg-white shadow-sm border-b p-4">
+        <header class="bg-white shadow-sm border-b p-4 fixed top-0 right-0 left-72 z-40">
             <div class="flex items-center justify-between">
                 <h1 class="text-2xl font-bold text-gray-800"><?php echo htmlspecialchars($page_title); ?></h1>
                 <div class="flex items-center space-x-6">
@@ -281,7 +281,7 @@ $page_title = $page_title ?? "Alumni Page";
                 </div>
             </div>
         </header>
-        <main class="flex-1 p-6 overflow-auto">
+        <main class="flex-1 p-6 overflow-auto mt-16">
             <?php echo $page_content ?? ''; ?>
         </main>
     </div>
