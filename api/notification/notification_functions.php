@@ -141,30 +141,4 @@ function get_alumni_details($conn, $user_id) {
         return null;
     }
 }
-
-// Test function - can be removed in production
-function test_notification() {
-    echo "<h3>Testing NotificationAPI</h3>";
-    
-    $test_params = [
-        "alumni_name" => "John Doe",
-        "graduation_year" => "2020",
-        "employment_status" => "Employed",
-        "current_position" => "Software Developer",
-        "current_company" => "Test Company Inc."
-    ];
-    
-    $result = send_notification('template_one', 'test@example.com', $test_params);
-    
-    if ($result) {
-        echo "✅ Test notification sent successfully!<br>";
-        echo "Check NotificationAPI dashboard for details.";
-    } else {
-        echo "❌ Test notification failed.<br>";
-        echo "Check error logs for details.";
-    }
-}
-
-// Uncomment the line below to test the notification system
-// test_notification();
 ?>
