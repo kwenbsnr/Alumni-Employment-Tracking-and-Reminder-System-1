@@ -40,12 +40,19 @@ if ($user_id && in_array($status, ['Approved', 'Rejected'])) {
 
         // Send Notification
         try {
-            // Include the notification functions - CORRECTED PATH
+            // Include the notification functions with fallback paths
             $notification_path = $_SERVER['DOCUMENT_ROOT'] . '/Alumni-Employment-Tracking-and-Reminder-System/api/notification/notification_functions.php';
             if (file_exists($notification_path)) {
                 include_once $notification_path;
             } else {
-                throw new Exception("Notification functions file not found");
+                // Fallback to relative path
+                $notification_path = '../../api/notification/notification_functions.php';
+                if (file_exists($notification_path)) {
+                    include_once $notification_path;
+                } else {
+                    error_log("Notification functions file not found at any location");
+                    // Don't throw exception - just log and continue without notifications
+                }
             }
             
             // Fetch alumni info
