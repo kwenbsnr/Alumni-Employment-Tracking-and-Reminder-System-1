@@ -27,7 +27,7 @@ After a successful submission, the Employment/Academic Details cards must be dis
 
 🟢 Low Priority 
 ______________________
-
+[DONE]
 1. Successful submission display issue:
 Successful submission must appear on the dashboard like the “Complete Your Profile” card, but the color should be green.
 

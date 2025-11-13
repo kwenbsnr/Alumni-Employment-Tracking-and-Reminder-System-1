@@ -113,28 +113,29 @@ ob_start();
 <?php endif; ?>
 
 <div class="space-y-6">
-    <!-- Update Profile Box -->
-    <div id="updateProfileBtn" class="bg-white p-6 rounded-xl shadow-lg flex flex-col justify-between hover:shadow-xl transition duration-200 border-t-4 <?php echo $can_update ? 'border-green-500 cursor-pointer' : 'border-gray-300 cursor-not-allowed'; ?>">
-        <div class="flex items-center justify-between mb-3">
-            <h3 class="text-lg font-semibold <?php echo $can_update ? 'text-gray-600' : 'text-gray-400'; ?>">
-                <?php echo $can_update ? 'Update Profile' : 'Profile Update Not Available'; ?>
-            </h3>
-            <i class="fas fa-user-edit text-xl <?php echo $can_update ? 'text-green-500' : 'text-gray-400'; ?>"></i>
-        </div>
-        <p class="text-sm <?php echo $can_update ? 'text-gray-500' : 'text-gray-400'; ?>">
-            <?php 
-            if ($can_update) {
-                echo 'Click to edit your personal, employment, and educational details.';
-            } else {
-                if (!empty($profile) && ($profile['submission_status'] ?? '') === 'Approved') {
-                    echo 'Your profile has been approved. You can update again after one year.';
-                } else {
-                    echo 'Profile update is not available at this time.';
-                }
-            }
-            ?>
-        </p>
+  
+<!-- Update Profile Box -->
+<div id="updateProfileBtn" class="bg-white p-6 rounded-xl shadow-lg flex flex-col justify-between hover:shadow-xl transition duration-200 border-t-4 <?php echo $can_update ? 'border-green-500 cursor-pointer' : 'border-[#fb8500] cursor-not-allowed'; ?>">
+    <div class="flex items-center justify-between mb-3">
+        <h3 class="text-lg font-semibold <?php echo $can_update ? 'text-gray-600' : 'text-black'; ?>">
+            <?php echo $can_update ? 'Update Profile' : 'Profile Update Not Available'; ?>
+        </h3>
+        <i class="fas fa-user-edit text-xl <?php echo $can_update ? 'text-green-500' : 'text-[#fb8500]'; ?>"></i>
     </div>
+    <p class="text-sm <?php echo $can_update ? 'text-gray-500' : 'text-black'; ?>">
+        <?php 
+        if ($can_update) {
+            echo 'Click to edit your personal, employment, and educational details.';
+        } else {
+            if (!empty($profile) && ($profile['submission_status'] ?? '') === 'Approved') {
+                echo 'Your profile has been approved. You can update again after one year.';
+            } else {
+                echo 'Profile update is not available at this time.';
+            }
+        }
+        ?>
+    </p>
+</div>
 
     <?php if (!empty($profile) && ($profile['submission_status'] ?? '') !== 'Rejected'): ?>
         <!-- Only show profile cards if not rejected -->
