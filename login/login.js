@@ -130,4 +130,4 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Make function globally available
   window.showCustomAlert = showCustomAlert;
-});S
+});
