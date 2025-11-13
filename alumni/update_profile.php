@@ -494,12 +494,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             error_log("Successfully processed document: {$code}");
         }
 
-        $conn->commit();
-        header("Location: alumni_profile.php?success=Profile updated successfully!");
-        exit;
+                $conn->commit();
+
+        // Set success flag for dashboard
+        $_SESSION['profile_submission_success'] = true;
+
+        // Redirect to dashboard to show success card
+        header("Location: alumni_dashboard.php");
+        exit; // Only one exit needed
 
     } catch (Exception $e) {
         $conn->rollback();
+        error_log("Profile update failed for user $user_id: " . $e->getMessage());
         header("Location: alumni_profile.php?error=" . urlencode($e->getMessage()));
         exit;
     }

@@ -101,27 +101,20 @@ ob_start();
 <!-- Dashboard Section -->
 <div class="space-y-6">
     <?php if ($needs_profile_update): ?>
-        <div class="bg-yellow-100 p-6 rounded-xl shadow-lg border-l-4 border-yellow-600 flex items-center space-x-3">
-            <i class="fas fa-exclamation-circle text-yellow-600 text-xl"></i>
+        <!-- existing warning -->
+    <?php endif; ?>
+
+    <!-- ADD SUCCESS CARD HERE -->
+    <?php if (isset($_SESSION['profile_submission_success'])): ?>
+        <div id="successCard" class="bg-green-100 p-6 rounded-xl shadow-lg border-l-4 border-green-600 flex items-center space-x-3 animate-fade-in">
+            <div class="text-green-600 text-2xl">✅</div>
             <div>
-                <h3 class="text-lg font-semibold text-yellow-800">
-                    <?php
-                    if (empty($profile_info)) echo 'Complete Your Profile';
-                    elseif (!$is_profile_complete) echo 'Profile Incomplete';
-                    else echo 'Annual Profile Update Required';
-                    ?>
-                </h3>
-                <p class="text-yellow-700">
-                    Please
-                    <?php
-                    if (empty($profile_info)) echo 'fill out your profile details';
-                    elseif (!$is_profile_complete) echo 'complete all required profile fields';
-                    else echo 'update your profile details';
-                    ?>
-                    in <a href="alumni_profile.php" class="text-green-600 hover:text-green-800 font-semibold">Profile Management</a>.
-                </p>
+                <h3 class="text-lg font-semibold text-green-800">Submission Successful!</h3>
+                <p class="text-green-700">Your profile has been submitted for review.</p>
             </div>
+            <button id="closeSuccessCard" class="ml-auto text-green-600 hover:text-green-800 text-xl font-bold">×</button>
         </div>
+        <?php unset($_SESSION['profile_submission_success']); ?>
     <?php endif; ?>
 
     <?php if (isset($_SESSION['show_welcome'])): ?>
@@ -276,3 +269,39 @@ document.addEventListener('DOMContentLoaded', () => {
 $page_content = ob_get_clean();
 include("alumni_format.php");
 ?>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const welcomeCard = document.getElementById('welcomeCard');
+    if (welcomeCard) {
+        setTimeout(() => {
+            welcomeCard.style.transition = 'opacity 1s ease-out';
+            welcomeCard.style.opacity = '0';
+            setTimeout(() => welcomeCard.remove(), 1000);
+        }, 5000);
+    }
+
+    // Success Card Auto-Hide & Close Button
+    const successCard = document.getElementById('successCard');
+    const closeSuccessBtn = document.getElementById('closeSuccessCard');
+
+    if (successCard) {
+        // Auto-hide after 4 seconds
+        const autoHide = setTimeout(() => {
+            successCard.style.transition = 'opacity 0.6s ease-out';
+            successCard.style.opacity = '0';
+            setTimeout(() => successCard.remove(), 600);
+        }, 4000);
+
+        // Manual close cancels auto-hide
+        if (closeSuccessBtn) {
+            closeSuccessBtn.addEventListener('click', () => {
+                clearTimeout(autoHide);
+                successCard.style.transition = 'opacity 0.4s ease-out';
+                successCard.style.opacity = '0';
+                setTimeout(() => successCard.remove(), 400);
+            });
+        }
+    }
+});
+</script>
