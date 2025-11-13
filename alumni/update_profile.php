@@ -500,17 +500,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // ---- 7. SEND NOTIFICATIONS -----------------------------------------
         try {
-            // Include the simple notification helper
-            include_once $_SERVER['DOCUMENT_ROOT'] . '/Alumni-Employment-Tracking-and-Reminder-System/api/notification/notification_simple.php';
-            
-            // Get alumni details
+            // Get alumni details with enhanced error handling
             $alumniDetails = get_alumni_details($conn, $user_id);
             
-            if ($alumniDetails) {
+            if ($alumniDetails && !empty($alumniDetails['email'])) {
                 $alumni_email = $alumniDetails['email'];
                 $alumni_fullname = trim(($alumniDetails['first_name'] ?? $first) . ' ' . ($alumniDetails['last_name'] ?? $last));
                 
-                // Prepare parameters
+                // Prepare parameters with all required fields
                 $parameters = [
                     "alumni_name" => $alumni_fullname,
                     "graduation_year" => $alumniDetails['year_graduated'] ?? $year,
@@ -522,37 +519,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     "previous_rejection_reason" => $alumniDetails['rejection_reason'] ?? 'N/A',
                     "employment_status" => $alumniDetails['employment_status'] ?? $status,
                     "name" => $alumni_fullname,
-                    "rejection_reason" => $alumniDetails['rejection_reason'] ?? 'N/A'
+                    "rejection_reason" => $alumniDetails['rejection_reason'] ?? 'N/A',
+                    "status" => "Pending Review"
                 ];
 
                 // Get admin emails
                 $admin_emails = get_admin_emails($conn);
 
-                // Send notifications based on scenario
+                // Determine which notification to send based on scenario
                 if ($is_profile_rejected) {
-                    // Alumni resubmits after rejection → notify admin(s)
+                    // Scenario: Alumni resubmits after rejection → notify admin(s)
                     foreach ($admin_emails as $admin_email) {
                         send_notification('alum_resubmit_admin_notif', $admin_email, $parameters);
                     }
-                } elseif ($can_update_yearly) {
-                    // Annual update → notify alumni + admin(s)
-                    if (!empty($alumni_email)) {
-                        send_notification('template_one', $alumni_email, $parameters);
-                    }
-                    foreach ($admin_emails as $admin_email) {
-                        send_notification('alum_submit_update_admin_notif', $admin_email, $parameters);
-                    }
-                } else {
-                    // Normal submission → notify admin(s)
+                    error_log("Resubmission notification sent to admins for user: " . $user_id);
+                    
+                } elseif (empty($profile)) {
+                    // Scenario: First-time submission → notify admin(s)
                     foreach ($admin_emails as $admin_email) {
                         send_notification('template_admin_notif', $admin_email, $parameters);
                     }
+                    error_log("New submission notification sent to admins for user: " . $user_id);
+                    
+                } else {
+                    // Scenario: Annual update (you mentioned implementing this later)
+                    // For now, just log that this would trigger template_one
+                    error_log("Annual update scenario - template_one would be sent here for user: " . $user_id);
                 }
+
+            } else {
+                error_log("Could not send notification: Alumni details or email not found for user: " . $user_id);
             }
 
         } catch (Exception $e) {
             // Log the notification failure but DO NOT stop user flow
-            error_log("Notification failed: " . $e->getMessage());
+            error_log("Notification system error for user {$user_id}: " . $e->getMessage());
         }
 
         // finally redirect after commit and notification attempts

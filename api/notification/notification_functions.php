@@ -14,18 +14,29 @@ define('NOTIFICATIONAPI_CLIENT_SECRET', 'rtdiclclahiqxqr692c86zyk9in81pmlc2kol4j
  */
 function send_notification($templateId, $recipientEmail, $parameters = []) {
     try {
+        // Include logger
+        $logger_path = $_SERVER['DOCUMENT_ROOT'] . '/Alumni-Employment-Tracking-and-Reminder-System/api/notification/notification_logger.php';
+        if (file_exists($logger_path)) {
+            include_once $logger_path;
+        }
+
         // Initialize NotificationAPI
         $notificationapi = new NotificationAPI(
             NOTIFICATIONAPI_CLIENT_ID,
             NOTIFICATIONAPI_CLIENT_SECRET
         );
 
-        // Validate email
-        if (empty($recipientEmail) || !filter_var($recipientEmail, FILTER_VALIDATE_EMAIL)) {
-            throw new Exception("Invalid recipient email: " . $recipientEmail);
+        // Enhanced email validation
+        if (empty($recipientEmail)) {
+            throw new Exception("Recipient email is empty");
+        }
+        
+        $recipientEmail = filter_var($recipientEmail, FILTER_VALIDATE_EMAIL);
+        if (!$recipientEmail) {
+            throw new Exception("Invalid recipient email format");
         }
 
-        // Map template IDs to notification types
+        // Template mappings with fallback
         $templateMappings = [
             'template_one' => 'alumni_employment_tracking_update_your_profile',
             'template_approved' => 'alumni_employment_tracking_profile_approved',
@@ -35,31 +46,34 @@ function send_notification($templateId, $recipientEmail, $parameters = []) {
             'template_admin_notif' => 'alumni_employment_tracking_new_submission_admin'
         ];
 
-        $notificationType = $templateMappings[$templateId] ?? $templateId;
+        $notificationType = $templateMappings[$templateId] ?? null;
         
         if (empty($notificationType)) {
             throw new Exception("Notification type not found for template: " . $templateId);
         }
 
-        // Prepare safe parameters with defaults
-        $safeParameters = array_merge([
+        // Enhanced parameter validation with defaults
+        $defaultParameters = [
             "alumni_name" => "Alumni",
             "graduation_year" => "N/A",
-            "original_rejection_date" => "N/A",
+            "original_rejection_date" => "N/A", 
             "submission_date" => date('Y-m-d H:i:s'),
             "current_position" => "N/A",
             "current_company" => "N/A",
             "alumni_email" => $recipientEmail,
             "previous_rejection_reason" => "N/A",
-            "admin_review_link" => "#",
+            "admin_review_link" => "http://your-domain.com/admin/alumni_management.php",
             "employment_status" => "N/A",
             "name" => "Alumni",
-            "alumni_portal_link" => "#",
+            "alumni_portal_link" => "http://your-domain.com/alumni/alumni_profile.php",
             "rejection_reason" => "N/A",
-            "resubmission_link" => "#"
-        ], $parameters);
+            "resubmission_link" => "http://your-domain.com/alumni/update_profile.php",
+            "status" => "N/A"
+        ];
 
-        // Ensure all values are strings
+        $safeParameters = array_merge($defaultParameters, $parameters);
+
+        // Convert all values to strings and handle nulls
         foreach ($safeParameters as $key => $value) {
             if ($value === null) {
                 $safeParameters[$key] = "N/A";
@@ -70,20 +84,30 @@ function send_notification($templateId, $recipientEmail, $parameters = []) {
 
         // Send notification
         $result = $notificationapi->send([
-            'type' => $notificationType,
-            'to' => [
+            'notificationId' => uniqid('alumni_', true),
+            'user' => [
                 'id' => $recipientEmail,
                 'email' => $recipientEmail
             ],
-            'parameters' => $safeParameters,
-            'templateId' => $templateId
+            'notification' => [
+                'type' => $notificationType,
+                'templateId' => $templateId
+            ],
+            'parameters' => $safeParameters
         ]);
 
+        // Log successful notification
+        log_notification_attempt($templateId, $recipientEmail, true);
         error_log("✅ Notification sent successfully: {$templateId} to {$recipientEmail}");
+        
         return true;
 
     } catch (Exception $e) {
+        // Log failed notification
+        log_notification_attempt($templateId, $recipientEmail, false, $e->getMessage());
         error_log("❌ Notification failed - Template: {$templateId}, Email: {$recipientEmail}, Error: " . $e->getMessage());
+        
+        //Not throw exception to prevent breaking user flow
         return false;
     }
 }
