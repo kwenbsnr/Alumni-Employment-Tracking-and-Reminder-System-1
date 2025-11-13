@@ -242,46 +242,52 @@ $page_title = $page_title ?? "Alumni Page";
             </div>
         </div>
     </aside>
-
     <!-- MAIN CONTENT -->
     <div class="flex-1 flex flex-col">
-        <header class="bg-white shadow-sm border-b p-4 fixed top-0 right-0 left-72 z-40">
+        <header class="bg-white/95 backdrop-blur-lg border-b border-gray-100 p-4 fixed top-0 right-0 left-72 z-40 shadow-sm">
             <div class="flex items-center justify-between">
-                <h1 class="text-2xl font-bold text-gray-800"><?php echo htmlspecialchars($page_title); ?></h1>
+                <h1 class="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                    <?php echo htmlspecialchars($page_title); ?>
+                </h1>
                 <div class="flex items-center space-x-6">
                     <div class="relative">
-                        <button id="notificationBtn" class="relative text-gray-600 hover:text-blue-600">
-                            <i class="fas fa-bell text-xl"></i>
-                            <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+                        <button id="notificationBtn" class="relative p-3 rounded-xl bg-gray-50 hover:bg-blue-50 text-gray-600 hover:text-blue-600 transition-all duration-300 shadow-sm hover:shadow-md group">
+                            <i class="fas fa-bell text-lg"></i>
+                            <span class="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+                            <div class="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-500/0 to-blue-500/0 group-hover:from-blue-500/5 group-hover:to-blue-500/5 transition-all duration-300"></div>
                         </button>
-                        <div id="notifPopup" class="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl hidden z-50 overflow-hidden">
-                            <div class="p-4 border-b font-bold text-gray-700 flex justify-between items-center sticky top-0 bg-white">
+                        <div id="notifPopup" class="absolute right-0 mt-3 w-80 bg-white/95 backdrop-blur-lg rounded-2xl shadow-xl border border-gray-200 hidden z-50 overflow-hidden">
+                            <div class="p-4 border-b border-gray-100 font-semibold text-gray-800 flex justify-between items-center">
                                 Notifications
-                                <button id="markReadBtn" class="text-xs text-blue-600 hover:underline">Mark all as read</button>
+                                <button id="markReadBtn" class="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors duration-200 px-3 py-1 rounded-lg hover:bg-blue-50">
+                                    Mark all as read
+                                </button>
                             </div>
-                            <div class="p-3 space-y-4">
-                                <div class="border-b pb-3 border-gray-100">
-                                    <h2 class="font-semibold text-gray-800"><i class="fas fa-bell text-blue-500 mr-2"></i> New Job Fair Event</h2>
-                                    <p class="text-sm text-gray-600 pl-6">Join us at the upcoming job fair this Sept 15, 2025 at the University Main Hall.</p>
-                                    <span class="text-xs text-gray-400 pl-6">Posted: Sept 5, 2025</span>
+                            <div class="p-4 space-y-4">
+                                <div class="p-4 rounded-xl border border-gray-100 hover:border-blue-200 hover:bg-blue-50/50 transition-all duration-200 cursor-pointer">
+                                    <h2 class="font-semibold text-gray-800 text-sm mb-2"><i class="fas fa-bell text-blue-500 mr-2"></i> New Job Fair Event</h2>
+                                    <p class="text-gray-600 text-sm leading-relaxed">Join us at the upcoming job fair this Sept 15, 2025 at the University Main Hall.</p>
+                                    <span class="text-xs text-gray-400 mt-2 block">Posted: Sept 5, 2025</span>
                                 </div>
-                                <div class="border-b pb-3 border-gray-100">
-                                    <h2 class="font-semibold text-gray-800"><i class="fas fa-bullhorn text-yellow-500 mr-2"></i> Alumni Gathering</h2>
-                                    <p class="text-sm text-gray-600 pl-6">Reconnect with your batchmates at the Alumni Homecoming on Oct 10, 2025.</p>
-                                    <span class="text-xs text-gray-400 pl-6">Posted: Sept 1, 2025</span>
+                                <div class="p-4 rounded-xl border border-gray-100 hover:border-amber-200 hover:bg-amber-50/50 transition-all duration-200 cursor-pointer">
+                                    <h2 class="font-semibold text-gray-800 text-sm mb-2"><i class="fas fa-bullhorn text-amber-500 mr-2"></i> Alumni Gathering</h2>
+                                    <p class="text-gray-600 text-sm leading-relaxed">Reconnect with your batchmates at the Alumni Homecoming on Oct 10, 2025.</p>
+                                    <span class="text-xs text-gray-400 mt-2 block">Posted: Sept 1, 2025</span>
                                 </div>
-                                <div>
-                                    <h2 class="font-semibold text-gray-800"><i class="fas fa-briefcase text-green-500 mr-2"></i> Job Opportunity</h2>
-                                    <p class="text-sm text-gray-600 pl-6">TechCorp Inc. is hiring Software Engineers. Apply now!</p>
-                                    <span class="text-xs text-gray-400 pl-6">Posted: Aug 25, 2025</span>
+                                <div class="p-4 rounded-xl border border-gray-100 hover:border-green-200 hover:bg-green-50/50 transition-all duration-200 cursor-pointer">
+                                    <h2 class="font-semibold text-gray-800 text-sm mb-2"><i class="fas fa-briefcase text-green-500 mr-2"></i> Job Opportunity</h2>
+                                    <p class="text-gray-600 text-sm leading-relaxed">TechCorp Inc. is hiring Software Engineers. Apply now!</p>
+                                    <span class="text-xs text-gray-400 mt-2 block">Posted: Aug 25, 2025</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+            <!-- Green line at the bottom -->
+            <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-[#3f7d20]"></div>
         </header>
-        <main class="flex-1 p-6 overflow-auto mt-16">
+        <main class="flex-1 p-6 overflow-auto mt-20">
             <?php echo $page_content ?? ''; ?>
         </main>
     </div>
