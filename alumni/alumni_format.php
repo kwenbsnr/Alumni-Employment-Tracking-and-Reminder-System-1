@@ -181,9 +181,11 @@ $page_title = $page_title ?? "Alumni Page";
     <div class="flex-1 flex flex-col">
         <div class="bg-white shadow-sm border-b border-gray-100 py-3 px-6 flex items-center justify-between sticky top-0 z-40">
             <div class="flex-1">
-                <h1 class="text-2xl font-bold text-gray-900">Dashboard Overview</h1>
-                <p class="text-sm text-gray-600 mt-1">
-                    Welcome back, <span class="font-semibold text-green-700"><?php echo htmlspecialchars($full_name); ?></span>!
+                 <h1 class="text-2xl font-bold text-gray-900">
+        <?php echo ($active_page ?? '') === 'profile' ? 'Profile Management' : 'Dashboard Overview'; ?>
+    </h1>
+    <p class="text-sm text-gray-600 mt-1">
+        <?php echo ($active_page ?? '') === 'profile' ? 'Review and update your personal and academic information.' : 'Welcome back, <span class="font-semibold text-green-700">' . htmlspecialchars($full_name) . '</span>!'; ?>
                 </p>
             </div>
             <div class="flex items-center gap-3">
