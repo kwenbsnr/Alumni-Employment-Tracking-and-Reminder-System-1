@@ -113,21 +113,20 @@ ob_start();
 <?php endif; ?>
 
 <div class="space-y-6 mt-4 mb-6">
-    
 <!-- Update Profile Box -->
-<div id="updateProfileBtn" class="bg-white p-6 rounded-xl shadow-lg flex flex-col justify-between hover:shadow-xl transition duration-200 border-t-4 <?php echo $can_update ? 'border-green-500 cursor-pointer' : 'border-yellow-500 cursor-not-allowed'; ?>">
-    <div class="flex items-center justify-between mb-3">
-        <div class="flex items-center space-x-3">
+<div id="updateProfileBtn" class="bg-white p-2 rounded-lg shadow flex flex-col justify-between hover:shadow-md transition duration-200 border-t-4 <?php echo $can_update ? 'border-green-500 cursor-pointer' : 'border-yellow-500 cursor-not-allowed'; ?>">
+    <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-2">
             <?php if (!$can_update): ?>
                
             <?php endif; ?>
-            <h3 class="text-lg font-semibold <?php echo $can_update ? 'text-gray-600' : 'text-yellow-800'; ?>">
+            <h3 class="text-sm font-semibold <?php echo $can_update ? 'text-gray-600' : 'text-yellow-800'; ?>">
                 <?php echo $can_update ? 'Update Profile' : 'Profile Update Not Available'; ?>
             </h3>
         </div>
-        <i class="fas <?php echo $can_update ? 'fa-user-edit text-green-500' : 'fa-info-circle text-yellow-500'; ?> text-xl"></i>
+        <i class="fas <?php echo $can_update ? 'fa-user-edit text-green-500' : 'fa-info-circle text-yellow-500'; ?>"></i>
     </div>
-    <p class="text-sm <?php echo $can_update ? 'text-gray-500' : 'text-yellow-700'; ?>">
+    <p class="text-xs <?php echo $can_update ? 'text-gray-500' : 'text-yellow-700'; ?> leading-tight">
         <?php 
         if ($can_update) {
             echo 'Click to edit your personal, employment, and educational details.';
