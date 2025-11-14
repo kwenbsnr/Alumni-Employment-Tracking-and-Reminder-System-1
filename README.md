@@ -1,4 +1,5 @@
-Annotated Directory Structure
+```
+📁 Annotated Directory Structure
 
 ├─ admin/                                 # Admin module
 │  ├─ admin_dashboard.php          # Admin dashboard
@@ -20,7 +21,7 @@ Annotated Directory Structure
 │  ├─ alumni_profile.php          # Profile management page
 │  ├─ update_profile.php          # Alumni backend logic
 │  └─ alumni_format.css           # Alumni header and sidebar styles
-
+```
 
 
 **Alumni Module Bug Report**
