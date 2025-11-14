@@ -46,6 +46,14 @@ if (!empty($profile_info)) {
         $full_name = 'Alumni';
     }
 }
+// Determine profile completion
+$is_profile_complete = !empty($profile_info) &&
+    !empty($profile_info['first_name']) &&
+    !empty($profile_info['last_name']) &&
+    !empty($profile_info['contact_number']) &&
+    !empty($profile_info['year_graduated']) &&
+    !empty($profile_info['employment_status']) &&
+    !empty($profile_info['address_id']);
 
 // Determine profile completion
 $is_profile_complete = !empty($profile_info) &&
@@ -56,10 +64,39 @@ $is_profile_complete = !empty($profile_info) &&
     !empty($profile_info['employment_status']) &&
     !empty($profile_info['address_id']);
 
+// Calculate dynamic completion percentage
+$completed_fields = 0;
+$total_fields = 7; // Total number of required profile fields
+
+if (!empty($profile_info)) {
+    if (!empty($profile_info['first_name'])) $completed_fields++;
+    if (!empty($profile_info['last_name'])) $completed_fields++;
+    if (!empty($profile_info['contact_number'])) $completed_fields++;
+    if (!empty($profile_info['year_graduated'])) $completed_fields++;
+    if (!empty($profile_info['employment_status'])) $completed_fields++;
+    if (!empty($profile_info['address_id'])) $completed_fields++;
+    
+    // Photo is also required
+    $stmt_photo = $conn->prepare("SELECT photo_path FROM alumni_profile WHERE user_id = ?");
+    $stmt_photo->bind_param("i", $user_id);
+    $stmt_photo->execute();
+    $photo_result = $stmt_photo->get_result();
+    $photo_data = $photo_result->fetch_assoc();
+    $stmt_photo->close();
+    
+    if (!empty($photo_data['photo_path'])) {
+        $completed_fields++;
+    }
+}
+
+$completion_percentage = $total_fields > 0 ? round(($completed_fields / $total_fields) * 100) : 0;
+$is_profile_complete = ($completion_percentage === 100);
 // Annual update check
 $needs_annual_update = !empty($profile_info) &&
     ($profile_info['last_profile_update'] === null ||
      strtotime($profile_info['last_profile_update'] . ' +1 year') <= time());
+
+$needs_profile_update = empty($profile_info) || !$is_profile_complete || $needs_annual_update;
 
 $needs_profile_update = empty($profile_info) || !$is_profile_complete || $needs_annual_update;
 
@@ -160,7 +197,7 @@ ob_start();
                             <div class="mt-4">
                                 <div class="flex justify-between text-xs text-gray-500 mb-1">
                                     <span>Completion Rate</span>
-                                    <span class="font-bold"><?php echo $is_profile_complete ? '100' : '75'; ?>%</span>
+                                   <span class="font-bold"><?php echo $completion_percentage; ?>%</span>
                                 </div>
 
                                 <?php if ($is_profile_complete): ?>
@@ -175,7 +212,7 @@ ob_start();
                                     <!-- Incomplete → Keep progress bar -->
                                     <div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
                                         <div class="h-full rounded-full bg-gradient-to-r from-green-500 to-emerald-600 transition-all duration-1000"
-                                             style="width: 75%"></div>
+     style="width: <?php echo $completion_percentage; ?>%"></div>
                                     </div>
                                 <?php endif; ?>
                             </div>
