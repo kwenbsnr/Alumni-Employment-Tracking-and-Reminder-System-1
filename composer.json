@@ -1,5 +1,0 @@
-{
-    "require": {
-        "notificationapi/notificationapi-php-server-sdk": "^1.0"
-    }
-}
