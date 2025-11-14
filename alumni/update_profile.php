@@ -1,4 +1,5 @@
 <?php
+ob_start();
 session_start();
 include("../connect.php");
 include_once $_SERVER['DOCUMENT_ROOT'] . '/Alumni-Employment-Tracking-and-Reminder-System/api/notification/notification_helper.php';
@@ -6,13 +7,12 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/Alumni-Employment-Tracking-and-Remind
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 if (!isset($_SESSION['user_id'])) {
+    // Clean output buffer before redirect
+    ob_end_clean();
     header("Location: ../login/login.php");
     exit();
 }
 $user_id = $_SESSION['user_id'];
-
-$notif = new NotificationHelper();
-
 
 // ---- 1. Profile & Permissions ------------------------------------------------
 $stmt = $conn->prepare("SELECT last_profile_update, last_name, user_id, photo_path, address_id, employment_status, submission_status 
@@ -497,9 +497,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             error_log("Successfully processed document: {$code}");
         }
-        
-        // ---- 6.9 COMMIT TRANSACTION ---------------------------------------------
-        $conn->commit();
+
+                $conn->commit();
 
         // ---- 7. SEND NOTIFICATIONS -----------------------------------------
         try {
@@ -572,4 +571,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $conn->close();
+// Clean and flush output buffer if we haven't redirected yet
+ob_end_flush();
 ?>
