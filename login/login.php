@@ -155,6 +155,6 @@ include("../connect.php");
         </div>
     </div>
 
-    <script src="login.js"> </script>
+    <script src="login.js"></script>
 </body>
 </html>

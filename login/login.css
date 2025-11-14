@@ -243,13 +243,6 @@ body.admin-selected .login-box input:focus {
     background: linear-gradient(to bottom, #ffffff, #f0f7ff);
 }
 
-/* Input Error State */
-.login-box input.error {
-    border-color: var(--error-red);
-    box-shadow: 0 0 5px rgba(220, 38, 38, 0.3);
-    background: var(--error-bg);
-}
-
 /* Password field with visibility toggle - FIXED POSITIONING */
 .password-field-container {
     position: relative;
@@ -316,66 +309,10 @@ body.admin-selected .login-box #loginButton:enabled:hover {
     transform: translateY(-1px);
 }
 
-/* Custom Alert Styles */
-.custom-alert {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: white;
-    border-left: 4px solid var(--error-red);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    padding: 12px 16px;
-    border-radius: 8px;
-    z-index: 1000;
-    max-width: 350px;
-    animation: slideIn 0.3s ease-out;
-}
-
-.custom-alert.error {
-    border-left-color: var(--error-red);
-}
-
-.custom-alert .alert-content {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.custom-alert .alert-icon {
-    color: var(--error-red);
-    font-size: 18px;
-}
-
-.custom-alert .alert-message {
-    flex: 1;
-    color: var(--dark-text);
-    font-weight: 500;
-}
-
-.custom-alert .alert-close {
-    background: none;
-    border: none;
-    color: #6b7280;
-    cursor: pointer;
-    padding: 4px;
-    border-radius: 4px;
-    transition: all 0.2s;
-}
-
-.custom-alert .alert-close:hover {
-    background: #f3f4f6;
-    color: var(--dark-text);
-}
-
-@keyframes slideIn {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
+/* Error states */
+.input-error {
+    border-color: var(--error-red) !important;
+    box-shadow: 0 0 5px rgba(220, 38, 38, 0.3) !important;
 }
 
 /* Responsive Design */
@@ -429,11 +366,5 @@ body.admin-selected .login-box #loginButton:enabled:hover {
     .error-container {
         padding: 0.5rem 0.75rem;
         font-size: 0.8rem;
-    }
-    
-    .custom-alert {
-        right: 10px;
-        left: 10px;
-        max-width: none;
     }
 }
