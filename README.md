@@ -2,17 +2,17 @@
 📁 Annotated Directory Structure
 
 ├─ admin/                                 # Admin module
-│  ├─ admin_dashboard.php          # Admin dashboard
-│  ├─ alumni_management.php        # Displays only the batch cards
-│  ├─ edit_alumni.php              # Future dev; allows admin to edit alumni details
+│  ├─ admin_dashboard.php          # Admin dashboard: overview and stats
+│  ├─ alumni_management.php        # Batch cards display with search/filter features
+│  ├─ edit_alumni.php              # Future dev; frontend for editing alumni details
 │  ├─ get_documents.php            # For admin document viewing
-│  ├─ update_alumni.php            # Admin backend logic
-│  ├─ update_status.php            # Handles approval/rejection of submissions
+│  ├─ update_alumni.php            # Backend logic for edit_alumni.php — pls do not modify yet
+│  ├─ update_status.php            # Backend logic; handles the approval/rejection and notif
 │  ├─ admin_format.php             # Admin header and sidebar layout
-│  ├─ batch_alumni.php             # Shows batch cards and details with search/filter features
-│  ├─ get_alumni_details.php       # For hover functionality
+│  ├─ batch_alumni.php             # Alumni list for a given batch and management actions
+│  ├─ get_alumni_details.php       # Hover alumni of alumni details
 │  ├─ activity_log.php             # Tracks admin actions and activity history
-│  ├─ check_paths.php              # Temp; debugging utility file
+│  ├─ check_paths.php              # Temp debugging utility 
 │  └─ admin_format.css             # Admin header and sidebar styles
 │
 ├─ alumni/                               # Alumni module
