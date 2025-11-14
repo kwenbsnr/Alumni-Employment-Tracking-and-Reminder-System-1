@@ -157,19 +157,27 @@ ob_start();
                 </div>
 
                 <!-- Employment Status Card -->
-                <div class="bg-white rounded-2xl shadow-md p-6 border-l-5 border-blue-500 hover:shadow-lg transition-all duration-300 dashboard-card">
-                    <div class="flex items-center justify-between mb-3">
-                        <div class="p-3 rounded-full bg-blue-100 text-blue-600">
-                            <i class="fas fa-briefcase text-xl"></i>
-                        </div>
-                        <span class="text-xs font-bold px-3 py-1 rounded-full bg-blue-100 text-blue-700">Current</span>
-                    </div>
-                    <h3 class="text-lg font-bold text-gray-800 mb-1">Employment</h3>
-                    <p class="text-sm text-gray-600 font-medium"><?php echo htmlspecialchars($profile['employment_status']); ?></p>
-                    <p class="text-xs text-gray-500 mt-3 flex items-center">
-                        <i class="fas fa-sync-alt mr-1"></i> Updated recently
-                    </p>
-                </div>
+<div class="bg-white rounded-2xl shadow-md p-6 border-l-5 border-blue-500 hover:shadow-lg transition-all duration-300 dashboard-card">
+    <div class="flex items-center justify-between mb-3">
+        <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+            <i class="fas fa-briefcase text-xl"></i>
+        </div>
+        <span class="text-xs font-bold px-3 py-1 rounded-full bg-blue-100 text-blue-700">Current</span>
+    </div>
+    <h3 class="text-lg font-bold text-gray-800 mb-1">Employment</h3>
+    <p class="text-sm text-gray-600 font-medium">
+        <?php 
+        // Display actual job title and company if available, otherwise placeholder
+        echo !empty($profile_info['employment_status']) && $profile_info['employment_status'] !== 'Not Set' 
+            ? htmlspecialchars($profile_info['employment_status']) 
+            : 'Add your current role';
+        ?>
+    </p>
+    <p class="text-xs text-gray-500 mt-3 flex items-center">
+        <i class="fas fa-sync-alt mr-1"></i> 
+        <?php echo !empty($profile_info['last_profile_update']) ? 'Updated: ' . date('Y-m-d', strtotime($profile_info['last_profile_update'])) : 'Profile not updated'; ?>
+    </p>
+</div>
 
                 <!-- Document Status Card -->
                 <div class="bg-white rounded-2xl shadow-md p-6 border-l-5 border-purple-500 hover:shadow-lg transition-all duration-300 dashboard-card">

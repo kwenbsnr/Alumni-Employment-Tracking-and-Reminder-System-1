@@ -107,21 +107,22 @@ $page_title = $page_title ?? "Alumni Page";
             border-bottom: 1px solid rgba(255, 255, 255, 0.2);
             margin-bottom: 1rem;
         }
-        .sidebar-profile-avatar {
-            width: 102px;
-            height: 102px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 36px;
-            color: white;
-            background: linear-gradient(135deg, var(--lime-green) 0%, var(--sea-green) 100%);
-            text-transform: uppercase;
-        }
+      .sidebar-profile-avatar {
+    width: 128px;
+    height: 128px;
+    border: 4px solid rgba(255, 255, 255, 0.4);
+    border-radius: 50%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 42px;
+    color: white;
+    background: linear-gradient(135deg, var(--lime-green) 0%, var(--sea-green) 100%);
+    text-transform: uppercase;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
 
         /* Enhanced Dashboard Styles */
         .dashboard-card {
