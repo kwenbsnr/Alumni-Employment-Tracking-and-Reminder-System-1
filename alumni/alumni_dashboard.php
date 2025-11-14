@@ -46,14 +46,6 @@ if (!empty($profile_info)) {
         $full_name = 'Alumni';
     }
 }
-// Determine profile completion
-$is_profile_complete = !empty($profile_info) &&
-    !empty($profile_info['first_name']) &&
-    !empty($profile_info['last_name']) &&
-    !empty($profile_info['contact_number']) &&
-    !empty($profile_info['year_graduated']) &&
-    !empty($profile_info['employment_status']) &&
-    !empty($profile_info['address_id']);
 
 // Determine profile completion
 $is_profile_complete = !empty($profile_info) &&
@@ -391,31 +383,30 @@ ob_start();
         <!-- RIGHT: Quick Actions Column -->
         <div class="space-y-5">
             
-            <!-- Quick Actions Card -->
-            <div class="bg-white rounded-xl shadow-md border border-gray-100 p-5">
-                <h3 class="text-lg font-bold text-gray-800 mb-4">Quick Actions</h3>
-                <div class="space-y-3">
-                    <a href="alumni_profile.php" class="flex items-center p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors duration-200">
-                        <div class="bg-green-100 p-2 rounded-lg mr-3">
-                            <i class="fas fa-user-edit text-green-600"></i>
-                        </div>
-                        <div>
-                            <p class="font-medium text-gray-800">Update Profile</p>
-                            <p class="text-xs text-gray-600">Keep your information current</p>
-                        </div>
-                    </a>
-                    <a href="alumni_profile.php#documents" class="flex items-center p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors duration-200">
-                        <div class="bg-blue-100 p-2 rounded-lg mr-3">
-                            <i class="fas fa-upload text-blue-600"></i>
-                        </div>
-                        <div>
-                            <p class="font-medium text-gray-800">Upload Documents</p>
-                            <p class="text-xs text-gray-600">Submit required files</p>
-                        </div>
-                    </a>
-                    
-                </div>
+           <!-- Quick Actions Card -->
+<div class="bg-white rounded-xl shadow-md border border-gray-100 p-5">
+    <h3 class="text-lg font-bold text-gray-800 mb-4">Quick Actions</h3>
+    <div class="space-y-2">
+        <a href="alumni_profile.php" class="flex items-center p-4 bg-gray-100/50 hover:bg-green-100 rounded-xl transition-all duration-300 group">
+            <div class="bg-green-100/70 p-3 rounded-xl mr-4 group-hover:bg-green-500 transition-colors duration-300">
+                <i class="fas fa-user-edit text-green-700 text-xl group-hover:text-white"></i>
             </div>
+            <div>
+                <p class="font-bold text-gray-800">Update Profile</p>
+                <p class="text-xs text-gray-600">Keep your information current</p>
+            </div>
+        </a>
+        <a href="alumni_profile.php#documents" class="flex items-center p-4 bg-gray-100/50 hover:bg-blue-100 rounded-xl transition-all duration-300 group">
+            <div class="bg-blue-100/70 p-3 rounded-xl mr-4 group-hover:bg-blue-500 transition-colors duration-300">
+                <i class="fas fa-upload text-blue-700 text-xl group-hover:text-white"></i>
+            </div>
+            <div>
+                <p class="font-bold text-gray-800">Upload Documents</p>
+                <p class="text-xs text-gray-600">Submit required files</p>
+            </div>
+        </a>
+    </div>
+</div>
 
             <!-- Recent Activity Card -->
             <div class="bg-white rounded-xl shadow-md border border-gray-100 p-5">

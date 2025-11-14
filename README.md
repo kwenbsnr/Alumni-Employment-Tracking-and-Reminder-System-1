@@ -91,3 +91,12 @@ ______________________
 3. General UI Refinement.
 
 http://localhost/Alumni-Employment-Tracking-and-Reminder-System/login/login.php
+
+
+
+ALUMNI ISSUES
+1. Layout is Cluttered and Unbalanced: The main screen uses too many large boxes, making it look dense. We should arrange the most important items (Profile, Job, Documents) across the top and combine any redundant sections to make the dashboard easier to scan quickly.
+2. Profile Status is Confusing: The system says your profile is $100\%$ complete, but then calls it INCOMPLETE. This is contradictory. If it's $100\%$, the status should be changed to COMPLETE, and the button should allow you to view or edit the profile, not complete it.
+3. Document Sections are Redundant: There are two separate boxes for documents that essentially repeat the same information (the file count and the "Under Review" status). These two boxes should be combined into one clear Document Management section to save space and reduce confusion.
+4. Activity Log is Not an Activity Log: The "Recent Activity" panel just lists static information (like your graduation year) instead of showing what you or the admin actually did. This panel needs to be changed to show a real, chronological list of actions taken, like "Updated employment" or "Admin started review."
+5. Design Needs Modernization: The current look is functional but relies on large, blocky cards and heavy colors, making it look a bit old. Updating the design with a lighter feel, softer colors, and more contemporary icons would make the portal more pleasant to use.
