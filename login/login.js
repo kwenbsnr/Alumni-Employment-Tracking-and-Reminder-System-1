@@ -8,6 +8,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const loginEmail    = document.getElementById("loginEmail");
   const loginPassword = document.getElementById("loginPassword");
   const togglePassword = document.getElementById("togglePassword");
+  const emailError    = document.getElementById("emailError");
+  const passwordError = document.getElementById("passwordError");
   const body          = document.body;
 
   if (!roleSelectors.length || !roleInput || !loginButton || !loginForm || !loginEmail || !loginPassword || !togglePassword) {
@@ -15,6 +17,67 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
+  // Validation functions
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validatePassword = (password) => {
+    return password.length >= 6; // Minimum 6 characters
+  };
+
+  const showFieldError = (field, errorElement, message) => {
+    field.classList.add('error');
+    errorElement.textContent = message;
+    errorElement.classList.remove('hidden');
+  };
+
+  const clearFieldError = (field, errorElement) => {
+    field.classList.remove('error');
+    errorElement.classList.add('hidden');
+  };
+
+  // Email validation
+  loginEmail.addEventListener('blur', () => {
+    const email = loginEmail.value.trim();
+    
+    if (email === '') {
+      showFieldError(loginEmail, emailError, 'Email is required');
+    } else if (!validateEmail(email)) {
+      showFieldError(loginEmail, emailError, 'Please enter a valid email address');
+    } else {
+      clearFieldError(loginEmail, emailError);
+    }
+  });
+
+  // Password validation
+  loginPassword.addEventListener('blur', () => {
+    const password = loginPassword.value;
+    
+    if (password === '') {
+      showFieldError(loginPassword, passwordError, 'Password is required');
+    } else if (!validatePassword(password)) {
+      showFieldError(loginPassword, passwordError, 'Password must be at least 6 characters');
+    } else {
+      clearFieldError(loginPassword, passwordError);
+    }
+  });
+
+  // Real-time validation for better UX
+  loginEmail.addEventListener('input', () => {
+    const email = loginEmail.value.trim();
+    if (email && validateEmail(email)) {
+      clearFieldError(loginEmail, emailError);
+    }
+  });
+
+  loginPassword.addEventListener('input', () => {
+    const password = loginPassword.value;
+    if (password && validatePassword(password)) {
+      clearFieldError(loginPassword, passwordError);
+    }
+  });
 
   // ---------- Password visibility toggle ----------
   togglePassword.addEventListener("click", () => {
@@ -23,7 +86,6 @@ document.addEventListener("DOMContentLoaded", () => {
       showCustomAlert("Please enter a valid password");
       return;
     }
-    
     
     // Toggle password visibility
     const type = loginPassword.getAttribute("type") === "password" ? "text" : "password";
@@ -82,9 +144,47 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ---------- Form submit validation ----------
   loginForm.addEventListener("submit", e => {
+    // Clear previous errors
+    clearFieldError(loginEmail, emailError);
+    clearFieldError(loginPassword, passwordError);
+
+    let isValid = true;
+    
+    // Check role
     if (!roleInput.value) {
       e.preventDefault();
       showCustomAlert("Please select a role before signing in.");
+      isValid = false;
+    }
+    
+    // Validate email
+    const email = loginEmail.value.trim();
+    if (!email) {
+      showFieldError(loginEmail, emailError, 'Email is required');
+      isValid = false;
+    } else if (!validateEmail(email)) {
+      showFieldError(loginEmail, emailError, 'Please enter a valid email address');
+      isValid = false;
+    }
+    
+    // Validate password
+    const password = loginPassword.value;
+    if (!password) {
+      showFieldError(loginPassword, passwordError, 'Password is required');
+      isValid = false;
+    } else if (!validatePassword(password)) {
+      showFieldError(loginPassword, passwordError, 'Password must be at least 6 characters');
+      isValid = false;
+    }
+    
+    if (!isValid) {
+      e.preventDefault();
+      // Focus on first error field
+      if (!email || !validateEmail(email)) {
+        loginEmail.focus();
+      } else if (!password || !validatePassword(password)) {
+        loginPassword.focus();
+      }
     }
   });
 
@@ -100,7 +200,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ---------- Custom alert function ----------
-  function showCustomAlert(message) {
+  function showCustomAlert(message, type = 'error') {
     // Remove existing alert if any
     const existingAlert = document.querySelector('.custom-alert');
     if (existingAlert) {
@@ -108,12 +208,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const alertDiv = document.createElement('div');
-    alertDiv.className = 'custom-alert fixed top-20 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg shadow-lg z-50 max-w-sm';
+    alertDiv.className = `custom-alert ${type}`;
     alertDiv.innerHTML = `
-      <div class="flex items-center">
-        <i class="fas fa-exclamation-circle mr-2"></i>
-        <span class="font-medium">${message}</span>
-        <button class="ml-auto text-red-500 hover:text-red-700" onclick="this.parentElement.parentElement.remove()">
+      <div class="alert-content">
+        <i class="fas ${type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'} alert-icon"></i>
+        <span class="alert-message">${message}</span>
+        <button class="alert-close" onclick="this.parentElement.parentElement.remove()">
           <i class="fas fa-times"></i>
         </button>
       </div>
@@ -128,7 +228,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }, 5000);
   }
-  
 
   // Make function globally available
   window.showCustomAlert = showCustomAlert;

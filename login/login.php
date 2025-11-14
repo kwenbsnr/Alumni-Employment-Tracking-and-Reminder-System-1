@@ -44,7 +44,8 @@ include("../connect.php");
         </div>
     </header>
 
-    <!-- Login Page Content --><div id="loginPage" class="login-container">
+    <!-- Login Page Content -->
+    <div id="loginPage" class="login-container">
         <!-- Left Side - School Branding (Now uses the building image with black overlay) -->
          <div class="school-branding flex items-center justify-center p-8">
             <img src="images/jh-building.png" alt="JHCSC Building" class="absolute inset-0 w-full h-full object-cover opacity-30">
@@ -92,7 +93,8 @@ include("../connect.php");
         </div>
                 
 
-        <!-- Right Side - Login Form --><div class="login-right">
+        <!-- Right Side - Login Form -->
+        <div class="login-right">
             <div class="login-box">
                 <div class="text-center mb-8">
                     <h2 class="text-3xl font-bold text-gray-800 mb-2">Welcome Back</h2>
@@ -125,6 +127,7 @@ include("../connect.php");
                     <div>
                         <label for="loginEmail" class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
                         <input type="email" id="loginEmail" name="email" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all" placeholder="Enter your email" autocomplete="email">
+                        <div id="emailError" class="text-red-500 text-sm mt-1 hidden"></div>
                     </div>
 
                     <div class="relative">
@@ -135,6 +138,7 @@ include("../connect.php");
                                 <i class="fas fa-eye"></i>
                             </button>
                         </div>
+                        <div id="passwordError" class="text-red-500 text-sm mt-1 hidden"></div>
                     </div>
 
                     <button type="submit" id="loginButton" class="w-full py-3 font-medium" disabled>
