@@ -144,55 +144,57 @@ ob_start();
 
     <?php if (!empty($profile) && ($profile['submission_status'] ?? '') !== 'Rejected'): ?>
         <!-- Only show profile cards if not rejected -->
- <!-- Personal Information Card -->
-<div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-blue-500">
-    <div class="flex items-center space-x-3 mb-4 pb-2 border-b border-gray-100">
-        <h3 class="text-xl font-bold text-gray-800">Personal Information</h3>
-    </div>
-    <dl class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="flex flex-col">
-            <dt class="font-medium text-gray-500 text-sm mb-1" style="font-size: 13px;">Full Name</dt>
-            <dd class="font-semibold text-gray-700" style="font-size: 15px;"><?php echo htmlspecialchars($full_name); ?></dd>
-        </div>
-        <div class="flex flex-col">
-            <dt class="font-medium text-gray-500 text-sm mb-1" style="font-size: 13px;">Email</dt>
-            <dd class="font-semibold text-gray-700" style="font-size: 15px;"><?php echo htmlspecialchars($profile['email'] ?? 'N/A'); ?></dd>
-        </div>
-        <div class="flex flex-col">
-            <dt class="font-medium text-gray-500 text-sm mb-1" style="font-size: 13px;">Contact Number</dt>
-            <dd class="font-semibold text-gray-700" style="font-size: 15px;"><?php echo htmlspecialchars($profile['contact_number'] ?? 'N/A'); ?></dd>
-        </div>
-        <div class="flex flex-col">
-            <dt class="font-medium text-gray-500 text-sm mb-1" style="font-size: 13px;">Year Graduated</dt>
-            <dd class="font-semibold text-gray-700" style="font-size: 15px;"><?php echo htmlspecialchars($profile['year_graduated'] ?? 'N/A'); ?></dd>
-        </div>
-    </dl>
-</div>
 
-<!-- Address Card -->
-<div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-green-500">
-    <div class="flex items-center space-x-3 mb-4 pb-2 border-b border-gray-100">
-        <h3 class="text-xl font-bold text-gray-800">Address</h3>
-    </div>
-    <dl class="grid grid-cols-1 gap-4">
-        <div class="flex flex-col">
-            <dt class="font-medium text-gray-500 text-sm mb-1" style="font-size: 13px;">Complete Address</dt>
-            <dd class="font-semibold text-gray-700 leading-relaxed" style="font-size: 15px;">
-                <?php 
-                $address_parts = [
-                    $profile['barangay_name'] ?? '',
-                    $profile['municipality_name'] ?? '',
-                    $profile['province_name'] ?? '',
-                    $profile['region_name'] ?? ''
-                ];
-                $address_parts = array_filter($address_parts);
-                echo htmlspecialchars(implode(' , ', $address_parts));
-                ?>
-            </dd>
+   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+     <!-- Personal Information Card -->
+    <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-blue-500">
+        <div class="flex items-center space-x-3 mb-4 pb-2 border-b border-gray-100">
+            <h3 class="text-xl font-bold text-gray-800">Personal Information</h3>
         </div>
-    </dl>
+        <dl class="grid grid-cols-2 gap-4">
+            <div class="flex flex-col">
+                <dt class="font-medium text-gray-500 text-sm mb-1" style="font-size: 13px;">Full Name</dt>
+                <dd class="font-semibold text-gray-700" style="font-size: 15px;"><?php echo htmlspecialchars($full_name); ?></dd>
+            </div>
+            <div class="flex flex-col">
+                <dt class="font-medium text-gray-500 text-sm mb-1" style="font-size: 13px;">Email</dt>
+                <dd class="font-semibold text-gray-700" style="font-size: 15px;"><?php echo htmlspecialchars($profile['email'] ?? 'N/A'); ?></dd>
+            </div>
+            <div class="flex flex-col">
+                <dt class="font-medium text-gray-500 text-sm mb-1" style="font-size: 13px;">Contact Number</dt>
+                <dd class="font-semibold text-gray-700" style="font-size: 15px;"><?php echo htmlspecialchars($profile['contact_number'] ?? 'N/A'); ?></dd>
+            </div>
+            <div class="flex flex-col">
+                <dt class="font-medium text-gray-500 text-sm mb-1" style="font-size: 13px;">Year Graduated</dt>
+                <dd class="font-semibold text-gray-700" style="font-size: 15px;"><?php echo htmlspecialchars($profile['year_graduated'] ?? 'N/A'); ?></dd>
+            </div>
+        </dl>
+    </div>
+    <!-- Address Card -->
+    <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-green-500">
+        <div class="flex items-center space-x-3 mb-4 pb-2 border-b border-gray-100">
+            <h3 class="text-xl font-bold text-gray-800">Address</h3>
+        </div>
+        <dl class="grid grid-cols-2 gap-4">
+            <div class="flex flex-col">
+                <dt class="font-medium text-gray-500 text-sm mb-1" style="font-size: 13px;">Barangay</dt>
+                <dd class="font-semibold text-gray-700" style="font-size: 15px;"><?php echo htmlspecialchars($profile['barangay_name'] ?? 'N/A'); ?></dd>
+            </div>
+            <div class="flex flex-col">
+                <dt class="font-medium text-gray-500 text-sm mb-1" style="font-size: 13px;">Municipality/City</dt>
+                <dd class="font-semibold text-gray-700" style="font-size: 15px;"><?php echo htmlspecialchars($profile['municipality_name'] ?? 'N/A'); ?></dd>
+            </div>
+            <div class="flex flex-col">
+                <dt class="font-medium text-gray-500 text-sm mb-1" style="font-size: 13px;">Province</dt>
+                <dd class="font-semibold text-gray-700" style="font-size: 15px;"><?php echo htmlspecialchars($profile['province_name'] ?? 'N/A'); ?></dd>
+            </div>
+            <div class="flex flex-col">
+                <dt class="font-medium text-gray-500 text-sm mb-1" style="font-size: 13px;">Region</dt>
+                <dd class="font-semibold text-gray-700" style="font-size: 15px;"><?php echo htmlspecialchars($profile['region_name'] ?? 'N/A'); ?></dd>
+            </div>
+        </dl>
+    </div>
 </div>
-
 <!-- Employment/Academic Details Card -->
 <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-purple-500">
     <div class="flex items-center space-x-3 mb-4 pb-2 border-b border-gray-100">
