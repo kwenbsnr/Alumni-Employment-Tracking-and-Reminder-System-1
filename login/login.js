@@ -15,6 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
+  
   // ---------- Password visibility toggle ----------
   togglePassword.addEventListener("click", () => {
     // Check if password field is empty
