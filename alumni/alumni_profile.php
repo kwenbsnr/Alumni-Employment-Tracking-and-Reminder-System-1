@@ -195,89 +195,92 @@ ob_start();
         </dl>
     </div>
 </div>
-<!-- Employment/Academic Details Card -->
-<div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-purple-500">
-    <div class="flex items-center space-x-3 mb-4 pb-2 border-b border-gray-100">
-        <h3 class="text-xl font-bold text-gray-800">Employment/Academic Details</h3>
-    </div>
-    <dl class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="flex flex-col">
-            <dt class="font-medium text-gray-500 text-sm mb-1" style="font-size: 13px;">Employment Status</dt>
-            <dd class="font-semibold text-gray-700" style="font-size: 15px;"><?php echo htmlspecialchars($profile['employment_status'] ?? 'Not Set'); ?></dd>
+<!-- Container for Employment/Academic Details and Documents -->
+<div class="flex flex-col md:flex-row md:space-x-6">
+    <!-- Employment/Academic Details Card -->
+    <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-purple-500 flex-1">
+        <div class="flex items-center space-x-3 mb-4 pb-2 border-b border-gray-100">
+            <h3 class="text-xl font-bold text-gray-800">Employment/Academic Details</h3>
         </div>
-        <?php if (in_array($profile['employment_status'] ?? '', ['Employed', 'Self-Employed', 'Employed & Student'])): ?>
-            <?php if (($profile['employment_status'] ?? '') !== 'Self-Employed'): ?>
+        <dl class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="flex flex-col">
+                <dt class="font-medium text-gray-500 text-sm mb-1" style="font-size: 13px;">Employment Status</dt>
+                <dd class="font-semibold text-gray-700" style="font-size: 15px;"><?php echo htmlspecialchars($profile['employment_status'] ?? 'Not Set'); ?></dd>
+            </div>
+            <?php if (in_array($profile['employment_status'] ?? '', ['Employed', 'Self-Employed', 'Employed & Student'])): ?>
+                <?php if (($profile['employment_status'] ?? '') !== 'Self-Employed'): ?>
+                    <div class="flex flex-col">
+                        <dt class="font-medium text-gray-500 text-sm mb-1" style="font-size: 13px;">Job Title</dt>
+                        <dd class="font-semibold text-gray-700" style="font-size: 15px;"><?php echo htmlspecialchars($employment['job_title'] ?? 'N/A'); ?></dd>
+                    </div>
+                    <div class="flex flex-col">
+                        <dt class="font-medium text-gray-500 text-sm mb-1" style="font-size: 13px;">Company Name</dt>
+                        <dd class="font-semibold text-gray-700" style="font-size: 15px;"><?php echo htmlspecialchars($employment['company_name'] ?? 'N/A'); ?></dd>
+                    </div>
+                    <div class="flex flex-col md:col-span-2">
+                        <dt class="font-medium text-gray-500 text-sm mb-1" style="font-size: 13px;">Company Address</dt>
+                        <dd class="font-semibold text-gray-700" style="font-size: 15px;"><?php echo htmlspecialchars($employment['company_address'] ?? 'N/A'); ?></dd>
+                    </div>
+                <?php endif; ?>
+                <?php if (($profile['employment_status'] ?? '') === 'Self-Employed'): ?>
+                    <div class="flex flex-col">
+                        <dt class="font-medium text-gray-500 text-sm mb-1" style="font-size: 13px;">Business Type</dt>
+                        <dd class="font-semibold text-gray-700" style="font-size: 15px;"><?php
+                            $display_business_type = $employment['business_type'] ?? 'N/A';
+                            if (strpos($display_business_type, 'Others: ') === 0) {
+                                $display_business_type = 'Others: ' . substr($display_business_type, 8);
+                            }
+                            echo htmlspecialchars($display_business_type);
+                        ?></dd>
+                    </div>
+                <?php endif; ?>
                 <div class="flex flex-col">
-                    <dt class="font-medium text-gray-500 text-sm mb-1" style="font-size: 13px;">Job Title</dt>
-                    <dd class="font-semibold text-gray-700" style="font-size: 15px;"><?php echo htmlspecialchars($employment['job_title'] ?? 'N/A'); ?></dd>
+                    <dt class="font-medium text-gray-500 text-sm mb-1" style="font-size: 13px;"><?php echo (($profile['employment_status'] ?? '') === 'Self-Employed') ? 'Monthly Income Range' : 'Salary Range'; ?></dt>
+                    <dd class="font-semibold text-gray-700" style="font-size: 15px;"><?php echo htmlspecialchars($employment['salary_range'] ?? 'N/A'); ?></dd>
+                </div>
+            <?php endif; ?>
+            <?php if (in_array($profile['employment_status'] ?? '', ['Student', 'Employed & Student'])): ?>
+                <div class="flex flex-col">
+                    <dt class="font-medium text-gray-500 text-sm mb-1" style="font-size: 13px;">School Name</dt>
+                    <dd class="font-semibold text-gray-700" style="font-size: 15px;"><?php echo htmlspecialchars($education['school_name'] ?? 'N/A'); ?></dd>
                 </div>
                 <div class="flex flex-col">
-                    <dt class="font-medium text-gray-500 text-sm mb-1" style="font-size: 13px;">Company Name</dt>
-                    <dd class="font-semibold text-gray-700" style="font-size: 15px;"><?php echo htmlspecialchars($employment['company_name'] ?? 'N/A'); ?></dd>
+                    <dt class="font-medium text-gray-500 text-sm mb-1" style="font-size: 13px;">Degree Pursued</dt>
+                    <dd class="font-semibold text-gray-700" style="font-size: 15px;"><?php echo htmlspecialchars($education['degree_pursued'] ?? 'N/A'); ?></dd>
                 </div>
+            <?php endif; ?>
+            <?php if (($profile['employment_status'] ?? '') === 'Unemployed'): ?>
                 <div class="flex flex-col md:col-span-2">
-                    <dt class="font-medium text-gray-500 text-sm mb-1" style="font-size: 13px;">Company Address</dt>
-                    <dd class="font-semibold text-gray-700" style="font-size: 15px;"><?php echo htmlspecialchars($employment['company_address'] ?? 'N/A'); ?></dd>
+                    <dd class="font-semibold text-gray-700" style="font-size: 15px;">Currently Unemployed</dd>
                 </div>
             <?php endif; ?>
-            <?php if (($profile['employment_status'] ?? '') === 'Self-Employed'): ?>
-                <div class="flex flex-col">
-                    <dt class="font-medium text-gray-500 text-sm mb-1" style="font-size: 13px;">Business Type</dt>
-                    <dd class="font-semibold text-gray-700" style="font-size: 15px;"><?php 
-                        $display_business_type = $employment['business_type'] ?? 'N/A';
-                        if (strpos($display_business_type, 'Others: ') === 0) {
-                            $display_business_type = 'Others: ' . substr($display_business_type, 8);
-                        }
-                        echo htmlspecialchars($display_business_type); 
-                    ?></dd>
-                </div>
-            <?php endif; ?>
-            <div class="flex flex-col">
-                <dt class="font-medium text-gray-500 text-sm mb-1" style="font-size: 13px;"><?php echo (($profile['employment_status'] ?? '') === 'Self-Employed') ? 'Monthly Income Range' : 'Salary Range'; ?></dt>
-                <dd class="font-semibold text-gray-700" style="font-size: 15px;"><?php echo htmlspecialchars($employment['salary_range'] ?? 'N/A'); ?></dd>
+        </dl>
+    </div>
+    <!-- Documents Card -->
+    <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-orange-500 flex-1">
+        <div class="flex items-center space-x-3 mb-4 pb-2 border-b border-gray-100">
+            <h3 class="text-xl font-bold text-gray-800">Documents</h3>
+        </div>
+        <?php if (empty($docs)): ?>
+            <p class="text-sm text-gray-500" style="font-size: 13px;">No documents uploaded.</p>
+        <?php else: ?>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <?php
+                foreach ($docs as $doc):
+                    $doc_type_name = $doc['document_type'] === 'COE' ? 'Certificate of Employment' :
+                                ($doc['document_type'] === 'B_CERT' ? 'Business Certificate' :
+                                ($doc['document_type'] === 'COR' ? 'Certificate of Registration' : $doc['document_type']));
+                ?>
+                    <div class="flex flex-col">
+                        <span class="font-medium text-gray-500 text-sm mb-1" style="font-size: 13px;"><?php echo htmlspecialchars($doc_type_name); ?></span>
+                        <a href="../<?php echo htmlspecialchars($doc['file_path']); ?>" target="_blank" class="text-blue-600 hover:underline font-semibold" style="font-size: 15px;">View Document</a>
+                    </div>
+                <?php endforeach; ?>
             </div>
         <?php endif; ?>
-        <?php if (in_array($profile['employment_status'] ?? '', ['Student', 'Employed & Student'])): ?>
-            <div class="flex flex-col">
-                <dt class="font-medium text-gray-500 text-sm mb-1" style="font-size: 13px;">School Name</dt>
-                <dd class="font-semibold text-gray-700" style="font-size: 15px;"><?php echo htmlspecialchars($education['school_name'] ?? 'N/A'); ?></dd>
-            </div>
-            <div class="flex flex-col">
-                <dt class="font-medium text-gray-500 text-sm mb-1" style="font-size: 13px;">Degree Pursued</dt>
-                <dd class="font-semibold text-gray-700" style="font-size: 15px;"><?php echo htmlspecialchars($education['degree_pursued'] ?? 'N/A'); ?></dd>
-            </div>
-        <?php endif; ?>
-        <?php if (($profile['employment_status'] ?? '') === 'Unemployed'): ?>
-            <div class="flex flex-col md:col-span-2">
-                <dd class="font-semibold text-gray-700" style="font-size: 15px;">Currently Unemployed</dd>
-            </div>
-        <?php endif; ?>
-    </dl>
+    </div>
 </div>
 
-<!-- Documents Card -->
-<div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-orange-500">
-    <div class="flex items-center space-x-3 mb-4 pb-2 border-b border-gray-100">
-        <h3 class="text-xl font-bold text-gray-800">Documents</h3>
-    </div>
-    <?php if (empty($docs)): ?>
-        <p class="text-sm text-gray-500" style="font-size: 13px;">No documents uploaded.</p>
-    <?php else: ?>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <?php 
-            foreach ($docs as $doc): 
-                $doc_type_name = $doc['document_type'] === 'COE' ? 'Certificate of Employment' : 
-                            ($doc['document_type'] === 'B_CERT' ? 'Business Certificate' : 
-                            ($doc['document_type'] === 'COR' ? 'Certificate of Registration' : $doc['document_type']));
-            ?>
-                <div class="flex flex-col">
-                    <span class="font-medium text-gray-500 text-sm mb-1" style="font-size: 13px;"><?php echo htmlspecialchars($doc_type_name); ?></span>
-                    <a href="../<?php echo htmlspecialchars($doc['file_path']); ?>" target="_blank" class="text-blue-600 hover:underline font-semibold" style="font-size: 15px;">View Document</a>
-                </div>
-            <?php endforeach; ?>
-        </div>
-    <?php endif; ?>
-</div>
 
     <?php endif; ?>
     <?php if (!empty($profile) && ($profile['submission_status'] ?? '') === 'Rejected'): ?>
