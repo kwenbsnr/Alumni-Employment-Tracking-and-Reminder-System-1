@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  
+
   // ---------- Password visibility toggle ----------
   togglePassword.addEventListener("click", () => {
     // Check if password field is empty
@@ -23,6 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
       showCustomAlert("Please enter a valid password");
       return;
     }
+    
     
     // Toggle password visibility
     const type = loginPassword.getAttribute("type") === "password" ? "text" : "password";
