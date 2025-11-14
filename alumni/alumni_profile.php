@@ -116,17 +116,17 @@ ob_start();
 <!-- Update Profile Box -->
 <div id="updateProfileBtn" class="bg-white p-2 rounded-lg shadow flex flex-col justify-between hover:shadow-md transition duration-200 border-t-4 <?php echo $can_update ? 'border-green-500 cursor-pointer' : 'border-yellow-500 cursor-not-allowed'; ?>">
     <div class="flex items-center justify-between">
-        <div class="flex items-center space-x-2">
+        <div class="flex items-center space-x-1">
             <?php if (!$can_update): ?>
-               
+                
             <?php endif; ?>
-            <h3 class="text-sm font-semibold <?php echo $can_update ? 'text-gray-600' : 'text-yellow-800'; ?>">
+            <h3 class="text-sm font-semibold mb-1 <?php echo $can_update ? 'text-gray-600' : 'text-yellow-800'; ?>">
                 <?php echo $can_update ? 'Update Profile' : 'Profile Update Not Available'; ?>
             </h3>
         </div>
-        <i class="fas <?php echo $can_update ? 'fa-user-edit text-green-500' : 'fa-info-circle text-yellow-500'; ?>"></i>
+        <i class="fas <?php echo $can_update ? 'fa-user-edit text-green-500' : 'fa-info-circle text-yellow-500'; ?> text-base"></i>
     </div>
-    <p class="text-xs <?php echo $can_update ? 'text-gray-500' : 'text-yellow-700'; ?> leading-tight">
+    <p class="text-xs <?php echo $can_update ? 'text-gray-500' : 'text-yellow-700'; ?> leading-snug">
         <?php 
         if ($can_update) {
             echo 'Click to edit your personal, employment, and educational details.';
