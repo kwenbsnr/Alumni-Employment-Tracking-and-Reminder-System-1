@@ -90,7 +90,7 @@ if ($auto_open_modal) {
     unset($_SESSION['profile_rejected']); // Clear the flag after use
 }
 
-$full_name = 'Alumni';
+$full_name = 'N/A';
 if (!empty($profile)) {
     $full_name = trim(
         ($profile['first_name'] ?? '') . ' ' .
@@ -98,7 +98,7 @@ if (!empty($profile)) {
         ($profile['last_name'] ?? '')
     );
     if (empty($full_name)) {
-        $full_name = 'Alumni';
+        $full_name = 'N/A';
     }
 }
 
@@ -112,21 +112,22 @@ ob_start();
     <div class="bg-red-100 p-4 rounded mb-4"><?php echo htmlspecialchars($_GET['error']); ?></div>
 <?php endif; ?>
 
-<div class="space-y-6 mt-4 mb-6">
+<div class="space-y-6 mt-3 mb-5">
+
 <!-- Update Profile Box -->
-<div id="updateProfileBtn" class="bg-white p-2 rounded-lg shadow flex flex-col justify-between hover:shadow-md transition duration-200 border-t-4 <?php echo $can_update ? 'border-green-500 cursor-pointer' : 'border-yellow-500 cursor-not-allowed'; ?>">
+<div id="updateProfileBtn" class="bg-white p-3 rounded-lg shadow flex flex-col justify-start hover:shadow-md transition duration-200 border-t-4 h-27 <?php echo $can_update ? 'border-green-500 cursor-pointer' : 'border-yellow-500 cursor-not-allowed'; ?>">
     <div class="flex items-center justify-between">
         <div class="flex items-center space-x-1">
             <?php if (!$can_update): ?>
                 
             <?php endif; ?>
-            <h3 class="text-sm font-semibold mb-1 <?php echo $can_update ? 'text-gray-600' : 'text-yellow-800'; ?>">
+            <h3 class="text-sm font-semibold <?php echo $can_update ? 'text-gray-600' : 'text-yellow-800'; ?>">
                 <?php echo $can_update ? 'Update Profile' : 'Profile Update Not Available'; ?>
             </h3>
         </div>
         <i class="fas <?php echo $can_update ? 'fa-user-edit text-green-500' : 'fa-info-circle text-yellow-500'; ?> text-base"></i>
     </div>
-    <p class="text-xs <?php echo $can_update ? 'text-gray-500' : 'text-yellow-700'; ?> leading-snug">
+    <p class="text-xs <?php echo $can_update ? 'text-gray-500' : 'text-yellow-700'; ?> leading-snug mt-1">
         <?php 
         if ($can_update) {
             echo 'Click to edit your personal, employment, and educational details.';
@@ -141,8 +142,8 @@ ob_start();
     </p>
 </div>
 
-    <?php if (!empty($profile) && ($profile['submission_status'] ?? '') !== 'Rejected'): ?>
-        <!-- Only show profile cards if not rejected -->
+      <?php if (!empty($profile) || true): ?>
+        <!-- Always show profile cards -->
 
    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
      <!-- Personal Information Card -->
