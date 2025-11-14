@@ -115,7 +115,7 @@ ob_start();
 <div class="space-y-6">
   
 <!-- Update Profile Box -->
-<div id="updateProfileBtn" class="bg-white p-6 rounded-xl shadow-lg flex flex-col justify-between hover:shadow-xl transition duration-200 border-t-4 <?php echo $can_update ? 'border-green-500 cursor-pointer' : 'border-[#fb8500] cursor-not-allowed'; ?>">
+<div id="updateProfileBtn" class="bg-white p-6 rounded-xl shadow-lg flex flex-col justify-between hover:shadow-xl transition duration-200 border-t-4 <?php echo $can_update ? 'border-green-500 cursor-pointer' : 'border-[#ff5714] cursor-not-allowed'; ?>">
     <div class="flex items-center justify-between mb-3">
         <h3 class="text-lg font-semibold <?php echo $can_update ? 'text-gray-600' : 'text-black'; ?>">
             <?php echo $can_update ? 'Update Profile' : 'Profile Update Not Available'; ?>
