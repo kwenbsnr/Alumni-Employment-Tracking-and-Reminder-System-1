@@ -416,7 +416,7 @@ ob_start();
                 </button>
             </div>
         </div>
-        <div class="p-6 space-y-4">
+       <div class="space-y-6 min-h-0">
             <div class="flex items-start space-x-3">
                 <div class="bg-green-100 p-2 rounded-lg mt-1">
                     <i class="fas fa-envelope text-green-600"></i>

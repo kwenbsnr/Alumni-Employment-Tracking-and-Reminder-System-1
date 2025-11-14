@@ -176,3 +176,7 @@
 .animate-fade-in {
     animation: fadeIn 0.5s ease-out;
 }
+/* Ultra-thin green line under the main header – add this to your <style> or CSS file */
+.bg-white.shadow-sm.border-b.border-gray-100 {
+    border-bottom: 3px solid var(--lime-green) !important;
+}

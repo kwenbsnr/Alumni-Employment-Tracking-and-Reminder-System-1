@@ -6,7 +6,6 @@ if (!isset($_SESSION["user_id"]) || $_SESSION["role"] !== "alumni") {
 }
 include("../connect.php");
 $user_id = $_SESSION["user_id"];
-
 // Fetch profile data
 $stmt = $conn->prepare("
     SELECT ap.first_name, ap.last_name, u.email, u.name as user_name, ap.photo_path
@@ -19,7 +18,6 @@ $stmt->execute();
 $result = $stmt->get_result();
 $profile = $result->fetch_assoc() ?: [];
 $stmt->close();
-
 // Build full name
 $full_name = 'Alumni';
 if (!empty($profile)) {
@@ -31,7 +29,6 @@ if (!empty($profile)) {
 }
 $user_email = $profile['email'] ?? '';
 $photo_path = $profile['photo_path'] ?? null;
-
 // Page title fallback
 $page_title = $page_title ?? "Alumni Page";
 ?>
@@ -41,7 +38,6 @@ $page_title = $page_title ?? "Alumni Page";
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($page_title); ?></title>
-    <!-- Tailwind CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="alumni_format.css">
@@ -107,7 +103,7 @@ $page_title = $page_title ?? "Alumni Page";
             border-bottom: 1px solid rgba(255, 255, 255, 0.2);
             margin-bottom: 1rem;
         }
-      .sidebar-profile-avatar {
+        .sidebar-profile-avatar {
     width: 128px;
     height: 128px;
     border: 4px solid rgba(255, 255, 255, 0.4);
@@ -123,71 +119,10 @@ $page_title = $page_title ?? "Alumni Page";
     text-transform: uppercase;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
 }
-
-        /* Enhanced Dashboard Styles */
-        .dashboard-card {
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            line-height: 1.5;
-        }
-        .dashboard-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-        }
-        .dashboard-card h3 {
-            font-size: 1.125rem;
-            line-height: 1.3;
-        }
-        .dashboard-card p {
-            font-size: 0.875rem;
-            line-height: 1.5;
-        }
-        .progress-bar {
-            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .quick-action-card {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .quick-action-card:hover {
-            transform: translateY(-2px);
-            border-color: currentColor;
-        }
-        .status-badge {
-            font-weight: 700;
-            letter-spacing: 0.5px;
-        }
-
-        /* Card entrance animations */
-        @keyframes cardEntrance {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .dashboard-card {
-            animation: cardEntrance 0.5s ease-out;
-        }
-        .dashboard-card:nth-child(1) { animation-delay: 0.1s; }
-        .dashboard-card:nth-child(2) { animation-delay: 0.2s; }
-        .dashboard-card:nth-child(3) { animation-delay: 0.3s; }
-        .dashboard-card:nth-child(4) { animation-delay: 0.4s; }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .grid-cols-1.sm\:grid-cols-2 > div { padding: 1.5rem !important; }
-            .dashboard-card { padding: 1.25rem !important; }
-            .text-4xl { font-size: 2rem; }
-            .quick-action-card { padding: 1rem !important; }
-        }
-        @media (max-width: 640px) {
-            .grid-cols-1.sm\:grid-cols-2 {
-                grid-template-columns: 1fr;
-            }
-            .dashboard-card { margin-bottom: 1rem; }
-        }
+    
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen flex">
-    <!-- SIDEBAR -->
     <aside class="w-72 gradient-bg text-white flex-shrink-0">
         <div class="sidebar-wrapper flex flex-col justify-between">
             <div class="p-6">
@@ -243,62 +178,47 @@ $page_title = $page_title ?? "Alumni Page";
             </div>
         </div>
     </aside>
-    <!-- MAIN CONTENT -->
     <div class="flex-1 flex flex-col">
-    <!-- UPDATED HEADER - Reduced Height -->
-<header class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 fixed top-4 left-72 right-4 z-40">
-    <div class="flex items-center justify-between gap-6">
-        <!-- Left: Welcome Text -->
-        <div class="flex-1">
-            <h1 class="text-2xl font-bold text-gray-900">Dashboard Overview</h1>
-            <p class="text-sm text-gray-600 mt-1">
-                Welcome back, <span class="font-semibold text-green-700"><?php echo htmlspecialchars($full_name); ?></span>!
-            </p>
-        </div>
-
-        <!-- Right: Actions -->
-        <div class="flex items-center gap-3">
-            <!-- Notifications -->
-            <div class="relative">
-                <button id="notificationBtn" class="relative p-2.5 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors">
-                    <i class="fas fa-bell text-lg text-gray-700"></i>
-                    <span class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>
-                </button>
-
-                <div id="notifPopup" class="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-200 hidden z-50">
-                    <div class="p-4 border-b font-semibold text-gray-800 flex justify-between items-center text-sm">
-                        Notifications
-                        <button id="markReadBtn" class="text-xs text-blue-600 hover:underline">Mark all as read</button>
-                    </div>
-                    <div class="max-h-96 overflow-y-auto text-sm">
-                        <div class="p-4 hover:bg-gray-50 border-b">
-                            <p class="font-medium">New Job Fair Event</p>
-                            <p class="text-xs text-gray-600">Join us on Sept 15, 2025</p>
+        <div class="bg-white shadow-sm border-b border-gray-100 py-3 px-6 flex items-center justify-between sticky top-0 z-40">
+            <div class="flex-1">
+                <h1 class="text-2xl font-bold text-gray-900">Dashboard Overview</h1>
+                <p class="text-sm text-gray-600 mt-1">
+                    Welcome back, <span class="font-semibold text-green-700"><?php echo htmlspecialchars($full_name); ?></span>!
+                </p>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="relative">
+                    <button id="notificationBtn" class="relative p-2.5 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors">
+                        <i class="fas fa-bell text-lg text-gray-700"></i>
+                        <span class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>
+                    </button>
+                    <div id="notifPopup" class="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-200 hidden z-50">
+                        <div class="p-4 border-b font-semibold text-gray-800 flex justify-between items-center text-sm">
+                            Notifications
+                            <button id="markReadBtn" class="text-xs text-blue-600 hover:underline">Mark all as read</button>
                         </div>
-                        <div class="p-4 hover:bg-gray-50 border-b">
-                            <p class="font-medium">Alumni Homecoming</p>
-                            <p class="text-xs text-gray-600">Oct 10, 2025 – Save the date!</p>
+                        <div class="max-h-96 overflow-y-auto text-sm">
+                            <div class="p-4 hover:bg-gray-50 border-b">
+                                <p class="font-medium">New Job Fair Event</p>
+                                <p class="text-xs text-gray-600">Join us on Sept 15, 2025</p>
+                            </div>
+                            <div class="p-4 hover:bg-gray-50 border-b">
+                                <p class="font-medium">Alumni Homecoming</p>
+                                <p class="text-xs text-gray-600">Oct 10, 2025 – Save the date!</p>
+                            </div>
                         </div>
                     </div>
                 </div>
+                <button id="helpButton" class="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-700 hover:to-emerald-800 text-white font-medium text-sm rounded-lg shadow-md hover:shadow-lg transition-all">
+                    <i class="fas fa-question-circle text-sm"></i>
+                    <span>Help</span>
+                </button>
             </div>
-
-            <!-- Help Button (Compact) -->
-            <button id="helpButton" class="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-700 hover:to-emerald-800 text-white font-medium text-sm rounded-lg shadow-md hover:shadow-lg transition-all">
-                <i class="fas fa-question-circle text-sm"></i>
-                <span>Help</span>
-            </button>
         </div>
+       <main class="flex-1 p-5 overflow-hidden">
+    <?php echo $page_content ?? ''; ?>
+</main>
     </div>
-
-    <!-- Thin Green Line -->
-    <div class="absolute bottom-0 left-4 right-4 h-0.5 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full"></div>
-</header>
-       <main class="flex-1 p-6 overflow-auto mt-24">
-            <?php echo $page_content ?? ''; ?>
-        </main>
-    </div>
-
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const notifButton = document.getElementById('notificationBtn');
@@ -313,7 +233,10 @@ $page_title = $page_title ?? "Alumni Page";
                 }
             });
             document.getElementById('markReadBtn').addEventListener('click', () => {
-                notifButton.querySelector('span').classList.add('hidden');
+                const notifBadge = notifButton.querySelector('span');
+                if (notifBadge) {
+                    notifBadge.classList.add('hidden');
+                }
             });
         });
     </script>
