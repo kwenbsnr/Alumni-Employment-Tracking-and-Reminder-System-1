@@ -1,3 +1,4 @@
+// login.js
 document.addEventListener("DOMContentLoaded", () => {
   console.log("JS Loaded");
 
@@ -7,36 +8,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const loginForm     = document.getElementById("loginForm");
   const loginEmail    = document.getElementById("loginEmail");
   const loginPassword = document.getElementById("loginPassword");
-  const togglePassword = document.getElementById("togglePassword");
   const body          = document.body;
 
-  if (!roleSelectors.length || !roleInput || !loginButton || !loginForm || !loginEmail || !loginPassword || !togglePassword) {
+  if (!roleSelectors.length || !roleInput || !loginButton || !loginForm || !loginEmail || !loginPassword) {
     console.error("Missing required DOM elements");
     return;
   }
-
-  // ---------- Password visibility toggle ----------
-  togglePassword.addEventListener("click", () => {
-    // Check if password field is empty
-    if (!loginPassword.value.trim()) {
-      showCustomAlert("Please enter a valid password");
-      return;
-    }
-    
-    // Toggle password visibility
-    const type = loginPassword.getAttribute("type") === "password" ? "text" : "password";
-    loginPassword.setAttribute("type", type);
-    
-    // Toggle eye icon
-    const icon = togglePassword.querySelector("i");
-    if (type === "text") {
-      icon.classList.remove("fa-eye");
-      icon.classList.add("fa-eye-slash");
-    } else {
-      icon.classList.remove("fa-eye-slash");
-      icon.classList.add("fa-eye");
-    }
-  });
 
   // ---------- Role selection ----------
   roleSelectors.forEach(selector => {

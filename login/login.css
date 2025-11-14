@@ -1,3 +1,4 @@
+/* login.css */
 html, body {
     height: 100%;
     margin: 0;
@@ -241,42 +242,6 @@ body.admin-selected .login-box input:focus {
     border-color: var(--light-blue);
     box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
     background: linear-gradient(to bottom, #ffffff, #f0f7ff);
-}
-
-/* Password field with visibility toggle - FIXED POSITIONING */
-.password-field-container {
-    position: relative;
-}
-
-.password-field-container input {
-    padding-right: 3rem !important; /* Ensure space for the icon */
-}
-
-#togglePassword {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    color: #6b7280;
-    transition: color 0.3s ease;
-    padding: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: auto;
-    height: auto;
-}
-
-#togglePassword:hover {
-    color: #374151;
-}
-
-/* Ensure the password input container maintains proper positioning */
-.relative .relative {
-    position: relative;
 }
 
 /* Sign In Button */
