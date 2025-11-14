@@ -180,3 +180,31 @@
 .bg-white.shadow-sm.border-b.border-gray-100 {
     border-bottom: 3px solid var(--lime-green) !important;
 }
+/* Profile Cards Visual Hierarchy Improvements */
+.bg-white.rounded-xl.shadow-lg h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1f2937; /* gray-800 */
+    margin-bottom: 1rem;
+    border-bottom: 2px solid #f3f4f6; /* gray-100 */
+    padding-bottom: 0.5rem;
+}
+
+.bg-white.rounded-xl.shadow-lg dl dt {
+    font-weight: 500;
+    color: #6b7280; /* gray-500 */
+    font-size: 0.875rem; /* text-sm */
+}
+
+.bg-white.rounded-xl.shadow-lg dl dd {
+    font-weight: 600;
+    color: #374151; /* gray-700 */
+    font-size: 0.875rem; /* text-sm */
+}
+
+/* Update Profile Box - Keep existing styles but enhance title */
+#updateProfileBtn h3 {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #1f2937; /* gray-800 */
+}

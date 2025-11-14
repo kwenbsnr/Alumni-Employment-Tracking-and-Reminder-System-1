@@ -141,7 +141,7 @@ ob_start();
         <!-- Only show profile cards if not rejected -->
         <!-- Personal Information Card -->
         <div class="bg-white p-6 rounded-xl shadow-lg">
-            <h3 class="text-lg font-semibold text-gray-600 mb-4">Personal Information</h3>
+            <h3 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b border-gray-100">Personal Information</h3>
             <dl class="grid grid-cols-1 gap-4">
                 <div class="flex justify-between">
                     <dt class="font-medium">Full Name</dt>
@@ -164,7 +164,7 @@ ob_start();
 
         <!-- Address Card -->
         <div class="bg-white p-6 rounded-xl shadow-lg">
-            <h3 class="text-lg font-semibold text-gray-600 mb-4">Address</h3>
+        <h3 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b border-gray-100">Address</h3>
             <dl class="grid grid-cols-1 gap-4">
                 <div class="flex justify-between">
                     <dt class="font-medium">Address</dt>
@@ -180,7 +180,7 @@ ob_start();
 
         <!-- Employment/Academic Details Card -->
         <div class="bg-white p-6 rounded-xl shadow-lg">
-            <h3 class="text-lg font-semibold text-gray-600 mb-4">Employment/Academic Details</h3>
+            <h3 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b border-gray-100">Employment/Academic Details</h3>
             <dl class="grid grid-cols-1 gap-4">
                 <div class="flex justify-between">
                     <dt class="font-medium">Employment Status</dt>
@@ -237,7 +237,7 @@ ob_start();
 
         <!-- Documents Card -->
         <div class="bg-white p-6 rounded-xl shadow-lg">
-            <h3 class="text-lg font-semibold text-gray-600 mb-4">Documents</h3>
+            <h3 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b border-gray-100">Documents</h3>
             <?php if (empty($docs)): ?>
                 <p class="text-sm text-gray-500">No documents uploaded.</p>
             <?php else: ?>
