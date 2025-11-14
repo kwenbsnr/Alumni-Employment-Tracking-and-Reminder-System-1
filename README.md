@@ -2,17 +2,17 @@
 📁 Annotated Directory Structure
 
 ├─ admin/                                 # Admin module
-│  ├─ admin_dashboard.php          # Admin dashboard
-│  ├─ alumni_management.php        # Displays only the batch cards
-│  ├─ edit_alumni.php              # Future dev; allows admin to edit alumni details
+│  ├─ admin_dashboard.php          # Admin dashboard: overview and stats
+│  ├─ alumni_management.php        # Batch cards display with search/filter features
+│  ├─ edit_alumni.php              # Future dev; frontend for editing alumni details
 │  ├─ get_documents.php            # For admin document viewing
-│  ├─ update_alumni.php            # Admin backend logic
-│  ├─ update_status.php            # Handles approval/rejection of submissions
+│  ├─ update_alumni.php            # Backend logic for edit_alumni.php — pls do not modify yet
+│  ├─ update_status.php            # Backend logic; handles the approval/rejection and notif
 │  ├─ admin_format.php             # Admin header and sidebar layout
-│  ├─ batch_alumni.php             # Shows batch cards and details with search/filter features
-│  ├─ get_alumni_details.php       # For hover functionality
+│  ├─ batch_alumni.php             # Alumni list for a given batch and management actions
+│  ├─ get_alumni_details.php       # Hover alumni of alumni details
 │  ├─ activity_log.php             # Tracks admin actions and activity history
-│  ├─ check_paths.php              # Temp; debugging utility file
+│  ├─ check_paths.php              # Temp debugging utility 
 │  └─ admin_format.css             # Admin header and sidebar styles
 │
 ├─ alumni/                               # Alumni module
@@ -91,12 +91,3 @@ ______________________
 3. General UI Refinement.
 
 http://localhost/Alumni-Employment-Tracking-and-Reminder-System/login/login.php
-
-
-
-ALUMNI ISSUES
-1. Layout is Cluttered and Unbalanced: The main screen uses too many large boxes, making it look dense. We should arrange the most important items (Profile, Job, Documents) across the top and combine any redundant sections to make the dashboard easier to scan quickly.
-2. Profile Status is Confusing: The system says your profile is $100\%$ complete, but then calls it INCOMPLETE. This is contradictory. If it's $100\%$, the status should be changed to COMPLETE, and the button should allow you to view or edit the profile, not complete it.
-3. Document Sections are Redundant: There are two separate boxes for documents that essentially repeat the same information (the file count and the "Under Review" status). These two boxes should be combined into one clear Document Management section to save space and reduce confusion.
-4. Activity Log is Not an Activity Log: The "Recent Activity" panel just lists static information (like your graduation year) instead of showing what you or the admin actually did. This panel needs to be changed to show a real, chronological list of actions taken, like "Updated employment" or "Admin started review."
-5. Design Needs Modernization: The current look is functional but relies on large, blocky cards and heavy colors, making it look a bit old. Updating the design with a lighter feel, softer colors, and more contemporary icons would make the portal more pleasant to use.
