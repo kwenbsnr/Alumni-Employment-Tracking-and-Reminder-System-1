@@ -262,20 +262,20 @@ ob_start();
     </dl>
 </div>
 
- <!-- Documents Card -->
-<div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-orange-500 flex-1">
+<!-- Documents Card -->
+<div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-orange-500 flex-1 flex flex-col">
     <div class="flex items-center space-x-3 mb-4 pb-2 border-b border-gray-100">
         <h3 class="text-xl font-bold text-gray-800">Documents</h3>
     </div>
     
     <?php if (empty($docs)): ?>
-        <div class="text-center py-6">
-            <i class="fas fa-folder-open text-gray-300 text-4xl mb-3"></i>
+        <div class="flex-1 flex flex-col items-center justify-center py-8">
+            <i class="fas fa-folder-open text-gray-300 text-5xl mb-4"></i>
             <p class="text-sm text-gray-500" style="font-size: 13px;">No documents uploaded.</p>
         </div>
     <?php else: ?>
-        <!-- Uploaded Documents List -->
-        <div class="space-y-3">
+        <!-- Uploaded Documents List - Takes full available height -->
+        <div class="flex-1 space-y-4">
             <?php
             foreach ($docs as $doc):
                 $doc_type_name = $doc['document_type'] === 'COE' ? 'Certificate of Employment' :
@@ -291,43 +291,49 @@ ob_start();
                 $file_name = basename($doc['file_path']);
                 $file_size = file_exists($file_path) ? round(filesize($file_path) / 1024, 1) . ' KB' : 'Unknown size';
             ?>
-            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
-                <div class="flex items-center space-x-3">
-                    <div class="flex-shrink-0">
-                        <i class="fas <?php echo $doc_icon; ?> <?php echo $doc_color; ?> text-xl"></i>
+            <div class="bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition duration-150">
+                <!-- Top Section: Document Info -->
+                <div class="flex items-center justify-between p-4">
+                    <div class="flex items-center space-x-4 flex-1">
+                        <div class="flex-shrink-0">
+                            <i class="fas <?php echo $doc_icon; ?> <?php echo $doc_color; ?> text-2xl"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <span class="font-semibold text-gray-800 text-base"><?php echo htmlspecialchars($doc_type_name); ?></span>
+                        </div>
                     </div>
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center space-x-2">
-                            <span class="font-medium text-gray-700 text-sm"><?php echo htmlspecialchars($doc_type_name); ?></span>
-                        </div>
-                        <div class="flex items-center space-x-4 mt-1">
-                            <span class="text-gray-400 text-xs">
-                                <i class="fas fa-file-alt mr-1"></i><?php echo htmlspecialchars($file_name); ?>
-                            </span>
-                            <span class="text-gray-400 text-xs">
-                                <i class="fas fa-weight-hanging mr-1"></i><?php echo $file_size; ?>
-                            </span>
-                        </div>
+                    
+                    <!-- File Details - Right Side -->
+                    <div class="flex flex-col items-end space-y-1">
+                        <span class="text-gray-500 text-sm flex items-center">
+                            <i class="fas fa-file-alt mr-2"></i><?php echo htmlspecialchars($file_name); ?>
+                        </span>
+                        <span class="text-gray-500 text-sm flex items-center">
+                            <i class="fas fa-weight-hanging mr-2"></i><?php echo $file_size; ?>
+                        </span>
                     </div>
                 </div>
-                <div class="flex items-center space-x-2">
-                    <a href="<?php echo $file_path; ?>" target="_blank" 
-                       class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-xs font-medium transition duration-150 flex items-center space-x-1">
-                        <i class="fas fa-eye"></i>
-                        <span>View</span>
-                    </a>
-                    <a href="<?php echo $file_path; ?>" download 
-                       class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg text-xs font-medium transition duration-150 flex items-center space-x-1">
-                        <i class="fas fa-download"></i>
-                        <span>Download</span>
-                    </a>
+                
+                <!-- Bottom Section: Action Buttons - Centered -->
+                <div class="border-t border-gray-200 px-4 py-3 bg-white rounded-b-lg">
+                    <div class="flex justify-center space-x-3">
+                        <a href="<?php echo $file_path; ?>" target="_blank" 
+                           class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-150 flex items-center space-x-2 shadow-sm">
+                            <i class="fas fa-eye"></i>
+                            <span>View</span>
+                        </a>
+                        <a href="<?php echo $file_path; ?>" download 
+                           class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-150 flex items-center space-x-2 shadow-sm">
+                            <i class="fas fa-download"></i>
+                            <span>Download</span>
+                        </a>
+                    </div>
                 </div>
             </div>
             <?php endforeach; ?>
         </div>
     <?php endif; ?>
 </div>
-
 
     <?php endif; ?>
     <?php if (!empty($profile) && ($profile['submission_status'] ?? '') === 'Rejected'): ?>
