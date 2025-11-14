@@ -142,6 +142,22 @@ ob_start();
     </p>
 </div>
 
+<!-- Rejection Notification Card - MOVED HERE -->
+<?php if (!empty($profile) && ($profile['submission_status'] ?? '') === 'Rejected'): ?>
+    <div class="bg-yellow-100 p-6 rounded-xl shadow-lg border-l-4 border-yellow-600">
+        <div class="flex items-center space-x-3">
+            <i class="fas fa-exclamation-triangle text-yellow-600 text-xl"></i>
+            <div>
+                <h3 class="text-lg font-semibold text-yellow-800">Profile Submission Rejected</h3>
+                <p class="text-yellow-700">Your previous submission was rejected. Please update your profile and resubmit using the "Update Profile" button above.</p>
+                <?php if (!empty($profile['rejection_reason'])): ?>
+                    <p class="text-yellow-700 mt-2"><strong>Reason:</strong> <?php echo htmlspecialchars($profile['rejection_reason']); ?></p>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+<?php endif; ?>
+
       <?php if (!empty($profile) || true): ?>
         <!-- Always show profile cards -->
 
@@ -336,21 +352,7 @@ ob_start();
     <?php endif; ?>
 </div>
 
-    <?php endif; ?>
-    <?php if (!empty($profile) && ($profile['submission_status'] ?? '') === 'Rejected'): ?>
-        <div class="bg-yellow-100 p-6 rounded-xl shadow-lg border-l-4 border-yellow-600">
-            <div class="flex items-center space-x-3">
-                <i class="fas fa-exclamation-triangle text-yellow-600 text-xl"></i>
-                <div>
-                    <h3 class="text-lg font-semibold text-yellow-800">Profile Submission Rejected</h3>
-                    <p class="text-yellow-700">Your previous submission was rejected. Please update your profile and resubmit using the "Update Profile" button above.</p>
-                    <?php if (!empty($profile['rejection_reason'])): ?>
-                        <p class="text-yellow-700 mt-2"><strong>Reason:</strong> <?php echo htmlspecialchars($profile['rejection_reason']); ?></p>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-    <?php endif; ?>
+        <?php endif; ?>
 </div>
 
 <!-- Profile Update Modal (Hidden by default) -->
