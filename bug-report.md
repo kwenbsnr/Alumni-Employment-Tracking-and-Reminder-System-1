@@ -27,7 +27,7 @@ After a successful submission, the Employment/Academic Details cards must be dis
 
 🟢 Low Priority 
 ______________________
-[DONE]
+
 1. Successful submission display issue:
 Successful submission must appear on the dashboard like the “Complete Your Profile” card, but the color should be green.
 
@@ -40,15 +40,6 @@ Employment/Academic Details display cards after successful submission have issue
 4. Header bar scroll issue: The header bar must remain fixed and not be scrollable.
 
 
-ALUMNI SUGGESTIONS FEATURES
-
-* Include a **“Data Completeness Indicator”** such as a progress bar (e.g., “Profile 75% Complete”) to guide users in filling out missing information and ensure more complete records.
-
-* Integrate an **address verification tool** (e.g., Google Maps API) to enable auto-filling and confirmation of addresses, minimizing typos and ensuring accurate geographic data. (ONLY IF NAAY EXTRA TIME)
-
-* Use **pre-populated forms** to automatically fill fields like name, student ID, and graduation year based on existing records, so alumni only need to confirm rather than re-enter their data.
-
-* Add **“Help” or “Info” icons** beside complex fields (e.g., “Employment Status”) to display brief explanations or tooltips when hovered over, ensuring users understand what information is required and improving data accuracy.
 ______________________
 ______________________
 ______________________
@@ -63,5 +54,3 @@ ______________________
 2. Recent Activity Log Page Refinement.
   
 3. General UI Refinement.
-
-http://localhost/Alumni-Employment-Tracking-and-Reminder-System/login/login.php
