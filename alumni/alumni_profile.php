@@ -146,8 +146,9 @@ ob_start();
         <!-- Always show profile cards -->
 
    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-     <!-- Personal Information Card -->
-    <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-blue-500">
+    
+   <!-- Personal Information Card -->
+    <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-blue-500 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:bg-blue-50">
         <div class="flex items-center space-x-3 mb-4 pb-2 border-b border-gray-100">
             <h3 class="text-xl font-bold text-gray-800">Personal Information</h3>
         </div>
@@ -171,7 +172,7 @@ ob_start();
         </dl>
     </div>
     <!-- Address Card -->
-    <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-green-500">
+    <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-green-500 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:bg-green-50">
         <div class="flex items-center space-x-3 mb-4 pb-2 border-b border-gray-100">
             <h3 class="text-xl font-bold text-gray-800">Address</h3>
         </div>
@@ -199,7 +200,7 @@ ob_start();
 <!-- Container for Employment/Academic Details and Documents -->
 <div class="flex flex-col md:flex-row md:space-x-6">
   <!-- Employment/Academic Details Card -->
-<div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-purple-500 flex-1">
+<div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-purple-500 flex-1 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:bg-purple-50">
     <div class="flex items-center space-x-3 mb-4 pb-2 border-b border-gray-100">
         <h3 class="text-xl font-bold text-gray-800">Employment/Academic Details</h3>
     </div>
@@ -263,7 +264,7 @@ ob_start();
 </div>
 
 <!-- Documents Card -->
-<div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-orange-500 flex-1 flex flex-col">
+<div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-orange-500 flex-1 flex flex-col transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:bg-orange-50">
     <div class="flex items-center space-x-3 mb-4 pb-2 border-b border-gray-100">
         <h3 class="text-xl font-bold text-gray-800">Documents</h3>
     </div>
