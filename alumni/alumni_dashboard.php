@@ -223,106 +223,137 @@ ob_start();
                         </a>
                     </div>
 
-                    <!-- CARD 3: Document Review -->
-                    <div class="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden flex flex-col h-full hover:shadow-lg transition-all duration-300">
-                        <div class="p-5 flex-1 flex flex-col">
-                            <div class="flex items-start justify-between mb-4">
-                                <div class="p-3 rounded-xl text-white shadow-md <?php 
-                                    echo match($document['submission_status']) {
-                                        'Approved' => 'bg-gradient-to-br from-green-500 to-emerald-600',
-                                        'Rejected' => 'bg-gradient-to-br from-red-500 to-rose-600',
-                                        'Under Review' => 'bg-gradient-to-br from-amber-500 to-orange-600',
-                                        'Draft' => 'bg-gradient-to-br from-blue-500 to-indigo-600',
-                                        default => 'bg-gradient-to-br from-gray-500 to-gray-600'
-                                    };
-                                ?>">
-                                    <i class="fas fa-file-alt text-xl"></i>
-                                </div>
-                                <span class="px-3 py-1 text-xs font-bold tracking-wider uppercase rounded-full 
-                                    <?php echo $document['submission_status'] === 'Approved' ? 'bg-green-100 text-green-700' :
-                                           ($document['submission_status'] === 'Rejected' ? 'bg-red-100 text-red-700' :
-                                           ($document['submission_status'] === 'Under Review' ? 'bg-amber-100 text-amber-700' :
-                                           ($document['submission_status'] === 'Draft' ? 'bg-blue-100 text-blue-700' :
-                                           'bg-gray-100 text-gray-600'))); ?>">
-                                    <?php echo htmlspecialchars($document['submission_status']); ?>
-                                </span>
-                            </div>
-                            <h3 class="text-lg font-bold text-gray-800 mb-2">Document Review</h3>
-                            <p class="text-gray-600 text-xs leading-relaxed flex-1">
-                                <?php echo htmlspecialchars($document['message']); ?>
-                            </p>
-                            <div class="mt-4 text-center">
-                                <div class="text-4xl font-extrabold text-gray-800">
-                                    <?php echo $document['document_count']; ?>
-                                </div>
-                                <p class="text-xs text-gray-500">Document<?php echo $document['document_count'] != 1 ? 's' : ''; ?> Uploaded</p>
-                            </div>
-                        </div>
-                        <a href="alumni_profile.php#documents" class="block text-center py-3 px-5 text-white font-semibold text-base
-                            <?php echo match($document['submission_status']) {
-                                'Approved' => 'bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-700 hover:to-emerald-800',
-                                'Rejected' => 'bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-700 hover:to-rose-800',
-                                'Under Review' => 'bg-gradient-to-r from-amber-600 to-orange-700 hover:from-amber-700 hover:to-orange-800',
-                                default => 'bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800'
-                            }; ?> transition-all duration-300">
-                            <?php echo $document['submission_status'] === 'Approved' ? 'View Documents' : 'Manage Documents'; ?> →
-                        </a>
-                    </div>
+                 <!-- CARD 3: Document Review - Status Focused -->
+<div class="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden flex flex-col h-full hover:shadow-lg transition-all duration-300">
+    <div class="p-5 flex-1 flex flex-col">
+        <div class="flex items-start justify-between mb-4">
+            <div class="p-3 rounded-xl text-white shadow-md <?php 
+                echo match($document['submission_status']) {
+                    'Approved' => 'bg-gradient-to-br from-green-500 to-emerald-600',
+                    'Rejected' => 'bg-gradient-to-br from-red-500 to-rose-600',
+                    'Under Review' => 'bg-gradient-to-br from-amber-500 to-orange-600',
+                    'Draft' => 'bg-gradient-to-br from-blue-500 to-indigo-600',
+                    default => 'bg-gradient-to-br from-gray-500 to-gray-600'
+                };
+            ?>">
+                <i class="fas fa-clipboard-check text-xl"></i>
+            </div>
+            <span class="px-3 py-1 text-xs font-bold tracking-wider uppercase rounded-full 
+                <?php echo $document['submission_status'] === 'Approved' ? 'bg-green-100 text-green-700' :
+                       ($document['submission_status'] === 'Rejected' ? 'bg-red-100 text-red-700' :
+                       ($document['submission_status'] === 'Under Review' ? 'bg-amber-100 text-amber-700' :
+                       ($document['submission_status'] === 'Draft' ? 'bg-blue-100 text-blue-700' :
+                       'bg-gray-100 text-gray-600'))); ?>">
+                <?php echo htmlspecialchars($document['submission_status']); ?>
+            </span>
+        </div>
+        <h3 class="text-lg font-bold text-gray-800 mb-2">Document Review</h3>
+        <p class="text-gray-600 text-xs leading-relaxed mb-4">
+            <?php echo htmlspecialchars($document['message']); ?>
+        </p>
+        
+        <!-- Review Details -->
+        <div class="space-y-2 mt-auto">
+            <div class="flex justify-between text-xs">
+                <span class="text-gray-500">Reviewer Status:</span>
+                <span class="font-medium text-gray-700">
+                    <?php echo $document['submission_status'] === 'Draft' ? 'Not Submitted' : htmlspecialchars($document['submission_status']); ?>
+                </span>
+            </div>
+            <div class="flex justify-between text-xs">
+                <span class="text-gray-500">Last Updated:</span>
+                <span class="font-medium text-gray-700">
+                    <?php echo !empty($profile_info['last_profile_update']) 
+                        ? date('M d, Y', strtotime($profile_info['last_profile_update']))
+                        : 'Never'; ?>
+                </span>
+            </div>
+            <div class="flex justify-between text-xs">
+                <span class="text-gray-500">Documents in Review:</span>
+                <span class="font-medium text-gray-700">
+                    <?php echo $document['document_count']; ?> file<?php echo $document['document_count'] != 1 ? 's' : ''; ?>
+                </span>
+            </div>
+        </div>
+    </div>
+    <a href="alumni_profile.php#documents" class="block text-center py-3 px-5 text-white font-semibold text-base
+        <?php echo match($document['submission_status']) {
+            'Approved' => 'bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-700 hover:to-emerald-800',
+            'Rejected' => 'bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-700 hover:to-rose-800',
+            'Under Review' => 'bg-gradient-to-r from-amber-600 to-orange-700 hover:from-amber-700 hover:to-orange-800',
+            default => 'bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800'
+        }; ?> transition-all duration-300">
+        <?php echo $document['submission_status'] === 'Approved' ? 'View Documents' : 'Manage Documents'; ?> →
+    </a>
+</div>
 
-                    <!-- CARD 4: Uploaded Documents -->
-                    <div class="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden flex flex-col h-full hover:shadow-lg transition-all duration-300">
-                        <div class="p-5 flex-1 flex flex-col">
-                            <div class="flex items-start justify-between mb-4">
-                                <div class="p-3 <?php echo $document['document_count'] > 0
-                                    ? 'bg-gradient-to-br from-teal-500 to-cyan-600'
-                                    : 'bg-gradient-to-br from-gray-400 to-gray-600'; ?> rounded-xl text-white shadow-md">
-                                    <i class="fas fa-paperclip text-xl"></i>
-                                </div>
-                                <div class="text-right">
-                                    <div class="text-3xl font-extrabold text-gray-800">
-                                        <?php echo $document['document_count']; ?>
-                                    </div>
-                                    <div class="text-xs text-gray-500 uppercase tracking-wider">
-                                        File<?php echo $document['document_count'] != 1 ? 's' : ''; ?> Uploaded
-                                    </div>
-                                </div>
-                            </div>
-                            <h3 class="text-lg font-bold text-gray-800 mb-2">Uploaded Documents</h3>
-                            <p class="text-gray-600 text-xs leading-relaxed flex-1">
-                                <?php echo $document['document_count'] > 0
-                                    ? 'You have uploaded <strong>' . $document['document_count'] . '</strong> document' . ($document['document_count'] != 1 ? 's' : '') . ' so far.'
-                                    : 'No documents uploaded yet. Start adding your diploma, TOR, resume, etc.'; ?>
-                            </p>
+<!-- CARD 4: Uploaded Documents - File Count Focused -->
+<div class="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden flex flex-col h-full hover:shadow-lg transition-all duration-300">
+    <div class="p-5 flex-1 flex flex-col">
+        <div class="flex items-start justify-between mb-4">
+            <div class="p-3 <?php echo $document['document_count'] > 0
+                ? 'bg-gradient-to-br from-teal-500 to-cyan-600'
+                : 'bg-gradient-to-br from-gray-400 to-gray-600'; ?> rounded-xl text-white shadow-md">
+                <i class="fas fa-cloud-upload-alt text-xl"></i>
+            </div>
+            <div class="text-right">
+                <div class="text-3xl font-extrabold text-gray-800">
+                    <?php echo $document['document_count']; ?>
+                </div>
+                <div class="text-xs text-gray-500 uppercase tracking-wider">
+                    Total Files
+                </div>
+            </div>
+        </div>
+        <h3 class="text-lg font-bold text-gray-800 mb-2">Uploaded Documents</h3>
+        <p class="text-gray-600 text-xs leading-relaxed mb-4">
+            <?php echo $document['document_count'] > 0
+                ? 'You have uploaded <strong>' . $document['document_count'] . '</strong> document' . ($document['document_count'] != 1 ? 's' : '') . ' for review.'
+                : 'No documents uploaded yet. Start adding your diploma, TOR, resume, etc.'; ?>
+        </p>
 
-                            <!-- Clear status indicator instead of fake progress bar -->
-                            <div class="mt-4 flex items-center justify-center gap-3 text-sm">
-                                <span class="font-medium text-gray-700">
-                                    Status:
-                                </span>
-                                <span class="px-3 py-1 rounded-full text-xs font-bold
-                                    <?php echo $document['submission_status'] === 'Approved' ? 'bg-green-100 text-green-700' :
-                                       ($document['submission_status'] === 'Rejected' ? 'bg-red-100 text-red-700' :
-                                       ($document['submission_status'] === 'Under Review' ? 'bg-amber-100 text-amber-700' :
-                                       ($document['submission_status'] === 'Draft' ? 'bg-blue-100 text-blue-700' :
-                                       'bg-gray-100 text-gray-600'))); ?>">
-                                    <?php echo htmlspecialchars($document['submission_status']); ?>
-                                </span>
-                            </div>
-                        </div>
-                        <a href="alumni_profile.php#documents" class="block text-center py-3 px-5 text-white font-semibold text-base
-                            <?php echo $document['document_count'] > 0
-                                ? 'bg-gradient-to-r from-teal-600 to-cyan-700 hover:from-teal-700 hover:to-cyan-800'
-                                : 'bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800'; ?>
-                            transition-all duration-300">
-                            <?php echo $document['document_count'] > 0 ? 'View All Files' : 'Upload Documents'; ?> →
-                        </a>
-                    </div>
+        <!-- File Details -->
+       <div class="space-y-2 mt-auto">
+    <div class="flex justify-between text-xs">
+        <span class="text-gray-500">Total Files Uploaded:</span>
+        <span class="font-medium text-gray-700">
+            <?php echo $document['document_count']; ?> file<?php echo $document['document_count'] != 1 ? 's' : ''; ?>
+        </span>
+    </div>
+            <div class="flex justify-between text-xs">
+                <span class="text-gray-500">Upload Status:</span>
+                <span class="font-medium text-xs px-2 py-1 rounded-full 
+                    <?php echo $document['submission_status'] === 'Approved' ? 'bg-green-100 text-green-700' :
+                           ($document['submission_status'] === 'Rejected' ? 'bg-red-100 text-red-700' :
+                           ($document['submission_status'] === 'Under Review' ? 'bg-amber-100 text-amber-700' :
+                           ($document['submission_status'] === 'Draft' ? 'bg-blue-100 text-blue-700' :
+                           'bg-gray-100 text-gray-600'))); ?>">
+                    <?php echo htmlspecialchars($document['submission_status']); ?>
+                </span>
+            </div>
+            <div class="flex justify-between text-xs">
+                <span class="text-gray-500">Ready for Submission:</span>
+                <span class="font-medium <?php echo $document['document_count'] > 0 ? 'text-green-600' : 'text-gray-600'; ?>">
+                    <?php echo $document['document_count'] > 0 ? 'Yes' : 'No'; ?>
+                </span>
+            </div>
+        </div>
+    </div>
+    <a href="alumni_profile.php#documents" class="block text-center py-3 px-5 text-white font-semibold text-base
+        <?php echo $document['document_count'] > 0
+            ? 'bg-gradient-to-r from-teal-600 to-cyan-700 hover:from-teal-700 hover:to-cyan-800'
+            : 'bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800'; ?>
+        transition-all duration-300">
+        <?php echo $document['document_count'] > 0 ? 'View All Files' : 'Upload Documents'; ?> →
+    </a>
+</div>
                 </div>
             </div>
         </div>
         
         <!-- RIGHT: Quick Actions Column -->
         <div class="space-y-5">
+            
             <!-- Quick Actions Card -->
             <div class="bg-white rounded-xl shadow-md border border-gray-100 p-5">
                 <h3 class="text-lg font-bold text-gray-800 mb-4">Quick Actions</h3>
@@ -345,15 +376,7 @@ ob_start();
                             <p class="text-xs text-gray-600">Submit required files</p>
                         </div>
                     </a>
-                    <a href="events.php" class="flex items-center p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors duration-200">
-                        <div class="bg-purple-100 p-2 rounded-lg mr-3">
-                            <i class="fas fa-calendar-alt text-purple-600"></i>
-                        </div>
-                        <div>
-                            <p class="font-medium text-gray-800">View Events</p>
-                            <p class="text-xs text-gray-600">Upcoming alumni activities</p>
-                        </div>
-                    </a>
+                    
                 </div>
             </div>
 
@@ -399,6 +422,7 @@ ob_start();
                 </div>
             </div>
         </div>
+        
     </div>
 </div>
 
