@@ -245,50 +245,56 @@ $page_title = $page_title ?? "Alumni Page";
     </aside>
     <!-- MAIN CONTENT -->
     <div class="flex-1 flex flex-col">
-        <header class="bg-white/95 backdrop-blur-lg border-b border-gray-100 p-4 fixed top-0 right-0 left-72 z-40 shadow-sm">
-            <div class="flex items-center justify-between">
-                <h1 class="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                    <?php echo htmlspecialchars($page_title); ?>
-                </h1>
-                <div class="flex items-center space-x-6">
-                    <div class="relative">
-                        <button id="notificationBtn" class="relative p-3 rounded-xl bg-gray-50 hover:bg-blue-50 text-gray-600 hover:text-blue-600 transition-all duration-300 shadow-sm hover:shadow-md group">
-                            <i class="fas fa-bell text-lg"></i>
-                            <span class="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
-                            <div class="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-500/0 to-blue-500/0 group-hover:from-blue-500/5 group-hover:to-blue-500/5 transition-all duration-300"></div>
-                        </button>
-                        <div id="notifPopup" class="absolute right-0 mt-3 w-80 bg-white/95 backdrop-blur-lg rounded-2xl shadow-xl border border-gray-200 hidden z-50 overflow-hidden">
-                            <div class="p-4 border-b border-gray-100 font-semibold text-gray-800 flex justify-between items-center">
-                                Notifications
-                                <button id="markReadBtn" class="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors duration-200 px-3 py-1 rounded-lg hover:bg-blue-50">
-                                    Mark all as read
-                                </button>
-                            </div>
-                            <div class="p-4 space-y-4">
-                                <div class="p-4 rounded-xl border border-gray-100 hover:border-blue-200 hover:bg-blue-50/50 transition-all duration-200 cursor-pointer">
-                                    <h2 class="font-semibold text-gray-800 text-sm mb-2"><i class="fas fa-bell text-blue-500 mr-2"></i> New Job Fair Event</h2>
-                                    <p class="text-gray-600 text-sm leading-relaxed">Join us at the upcoming job fair this Sept 15, 2025 at the University Main Hall.</p>
-                                    <span class="text-xs text-gray-400 mt-2 block">Posted: Sept 5, 2025</span>
-                                </div>
-                                <div class="p-4 rounded-xl border border-gray-100 hover:border-amber-200 hover:bg-amber-50/50 transition-all duration-200 cursor-pointer">
-                                    <h2 class="font-semibold text-gray-800 text-sm mb-2"><i class="fas fa-bullhorn text-amber-500 mr-2"></i> Alumni Gathering</h2>
-                                    <p class="text-gray-600 text-sm leading-relaxed">Reconnect with your batchmates at the Alumni Homecoming on Oct 10, 2025.</p>
-                                    <span class="text-xs text-gray-400 mt-2 block">Posted: Sept 1, 2025</span>
-                                </div>
-                                <div class="p-4 rounded-xl border border-gray-100 hover:border-green-200 hover:bg-green-50/50 transition-all duration-200 cursor-pointer">
-                                    <h2 class="font-semibold text-gray-800 text-sm mb-2"><i class="fas fa-briefcase text-green-500 mr-2"></i> Job Opportunity</h2>
-                                    <p class="text-gray-600 text-sm leading-relaxed">TechCorp Inc. is hiring Software Engineers. Apply now!</p>
-                                    <span class="text-xs text-gray-400 mt-2 block">Posted: Aug 25, 2025</span>
-                                </div>
-                            </div>
+    <!-- UPDATED HEADER - Reduced Height -->
+<header class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 fixed top-4 left-72 right-4 z-40">
+    <div class="flex items-center justify-between gap-6">
+        <!-- Left: Welcome Text -->
+        <div class="flex-1">
+            <h1 class="text-2xl font-bold text-gray-900">Dashboard Overview</h1>
+            <p class="text-sm text-gray-600 mt-1">
+                Welcome back, <span class="font-semibold text-green-700"><?php echo htmlspecialchars($full_name); ?></span>!
+            </p>
+        </div>
+
+        <!-- Right: Actions -->
+        <div class="flex items-center gap-3">
+            <!-- Notifications -->
+            <div class="relative">
+                <button id="notificationBtn" class="relative p-2.5 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors">
+                    <i class="fas fa-bell text-lg text-gray-700"></i>
+                    <span class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>
+                </button>
+
+                <div id="notifPopup" class="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-200 hidden z-50">
+                    <div class="p-4 border-b font-semibold text-gray-800 flex justify-between items-center text-sm">
+                        Notifications
+                        <button id="markReadBtn" class="text-xs text-blue-600 hover:underline">Mark all as read</button>
+                    </div>
+                    <div class="max-h-96 overflow-y-auto text-sm">
+                        <div class="p-4 hover:bg-gray-50 border-b">
+                            <p class="font-medium">New Job Fair Event</p>
+                            <p class="text-xs text-gray-600">Join us on Sept 15, 2025</p>
+                        </div>
+                        <div class="p-4 hover:bg-gray-50 border-b">
+                            <p class="font-medium">Alumni Homecoming</p>
+                            <p class="text-xs text-gray-600">Oct 10, 2025 – Save the date!</p>
                         </div>
                     </div>
                 </div>
             </div>
-            <!-- Green line at the bottom -->
-            <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-[#3f7d20]"></div>
-        </header>
-        <main class="flex-1 p-6 overflow-auto mt-20">
+
+            <!-- Help Button (Compact) -->
+            <button id="helpButton" class="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-700 hover:to-emerald-800 text-white font-medium text-sm rounded-lg shadow-md hover:shadow-lg transition-all">
+                <i class="fas fa-question-circle text-sm"></i>
+                <span>Help</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Thin Green Line -->
+    <div class="absolute bottom-0 left-4 right-4 h-0.5 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full"></div>
+</header>
+       <main class="flex-1 p-6 overflow-auto mt-24">
             <?php echo $page_content ?? ''; ?>
         </main>
     </div>

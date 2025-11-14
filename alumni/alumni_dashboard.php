@@ -127,31 +127,7 @@ ob_start();
         <?php unset($_SESSION['show_welcome']); ?>
     <?php endif; ?>
 
-    <!-- Dashboard Header with Thin Bottom Line -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6 relative">
-        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-            <div class="mb-4 lg:mb-0">
-                <h1 class="text-3xl font-bold text-gray-900">Dashboard Overview</h1>
-                <p class="text-gray-600 mt-2">Welcome back, <span class="font-semibold text-green-700"><?php echo htmlspecialchars($full_name); ?></span>! Here's your current status.</p>
-            </div>
-            <div class="flex items-center space-x-4">
-                <div class="text-right hidden sm:block">
-                    <p class="text-sm text-gray-600">Last Activity</p>
-                    <p class="text-sm font-medium text-gray-900">
-                        <?php echo !empty($profile_info['last_profile_update']) 
-                            ? date('M d, Y', strtotime($profile_info['last_profile_update']))
-                            : 'No recent activity'; ?>
-                    </p>
-                </div>
-                <div class="w-px h-8 bg-gray-300 hidden sm:block"></div>
-                <button class="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200" title="Help & Support">
-                    <i class="fas fa-question-circle text-gray-600 text-xl"></i>
-                </button>
-            </div>
-        </div>
-        <!-- Thin Green Line at Bottom -->
-        <div class="absolute bottom-0 left-6 right-6 h-0.5 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full"></div>
-    </div>
+   
 
     <!-- TWO-COLUMN LAYOUT: Stats (60%) + Quick Actions (40%) -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
@@ -426,6 +402,69 @@ ob_start();
     </div>
 </div>
 
+<!-- Help & Support Modal -->
+<div id="helpModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300 scale-95 opacity-0">
+        <div class="bg-gradient-to-r from-green-600 to-emerald-700 p-6 rounded-t-2xl text-white">
+            <div class="flex items-center justify-between">
+                <h3 class="text-xl font-bold flex items-center">
+                    <i class="fas fa-question-circle mr-3"></i>
+                    Help & Support
+                </h3>
+                <button id="closeHelpModal" class="text-white hover:text-gray-200 text-xl font-bold transition-colors duration-200">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        <div class="p-6 space-y-4">
+            <div class="flex items-start space-x-3">
+                <div class="bg-green-100 p-2 rounded-lg mt-1">
+                    <i class="fas fa-envelope text-green-600"></i>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-gray-800">Email Support</h4>
+                    <p class="text-sm text-gray-600">support@alumniportal.edu</p>
+                </div>
+            </div>
+            <div class="flex items-start space-x-3">
+                <div class="bg-blue-100 p-2 rounded-lg mt-1">
+                    <i class="fas fa-phone text-blue-600"></i>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-gray-800">Phone Support</h4>
+                    <p class="text-sm text-gray-600">+1 (555) 123-ALUM</p>
+                </div>
+            </div>
+            <div class="flex items-start space-x-3">
+                <div class="bg-purple-100 p-2 rounded-lg mt-1">
+                    <i class="fas fa-clock text-purple-600"></i>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-gray-800">Support Hours</h4>
+                    <p class="text-sm text-gray-600">Mon-Fri: 9AM-6PM EST</p>
+                </div>
+            </div>
+            <div class="flex items-start space-x-3">
+                <div class="bg-amber-100 p-2 rounded-lg mt-1">
+                    <i class="fas fa-life-ring text-amber-600"></i>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-gray-800">FAQs & Guides</h4>
+                    <p class="text-sm text-gray-600">Visit our knowledge base</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-gray-50 px-6 py-4 rounded-b-2xl flex justify-end space-x-3">
+            <button id="cancelHelp" class="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors duration-200">
+                Close
+            </button>
+            <a href="mailto:support@alumniportal.edu" class="px-6 py-2 bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-700 hover:to-emerald-800 text-white font-semibold rounded-lg transition-all duration-300 shadow-md hover:shadow-lg">
+                Contact Now
+            </a>
+        </div>
+    </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const welcomeCard = document.getElementById('welcomeCard');
@@ -460,12 +499,68 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Help button functionality
-    const helpButton = document.querySelector('button[title="Help & Support"]');
+    // Help & Support Modal Functionality
+    const helpButton = document.getElementById('helpButton');
+    const helpModal = document.getElementById('helpModal');
+    const closeHelpModal = document.getElementById('closeHelpModal');
+    const cancelHelp = document.getElementById('cancelHelp');
+    const modalContent = helpModal.querySelector('.bg-white');
+
+    function showHelpModal() {
+        helpModal.classList.remove('hidden');
+        setTimeout(() => {
+            modalContent.classList.remove('scale-95', 'opacity-0');
+            modalContent.classList.add('scale-100', 'opacity-100');
+        }, 10);
+    }
+
+    function hideHelpModal() {
+        modalContent.classList.remove('scale-100', 'opacity-100');
+        modalContent.classList.add('scale-95', 'opacity-0');
+        setTimeout(() => {
+            helpModal.classList.add('hidden');
+        }, 300);
+    }
+
     if (helpButton) {
-        helpButton.addEventListener('click', () => {
-            // Simple alert for demo - replace with modal or help page redirect
-            alert('Help & Support: Contact alumni support at support@alumniportal.edu');
+        helpButton.addEventListener('click', showHelpModal);
+    }
+    if (closeHelpModal) {
+        closeHelpModal.addEventListener('click', hideHelpModal);
+    }
+    if (cancelHelp) {
+        cancelHelp.addEventListener('click', hideHelpModal);
+    }
+
+    // Close modal when clicking outside
+    helpModal.addEventListener('click', (e) => {
+        if (e.target === helpModal) {
+            hideHelpModal();
+        }
+    });
+
+    // Close modal with Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !helpModal.classList.contains('hidden')) {
+            hideHelpModal();
+        }
+    });
+
+    // Existing notification functionality (preserved)
+    const notifButton = document.getElementById('notificationBtn');
+    const notifPopup = document.getElementById('notifPopup');
+    if (notifButton && notifPopup) {
+        notifButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            notifPopup.classList.toggle('hidden');
+        });
+        document.addEventListener('click', (e) => {
+            if (!notifPopup.classList.contains('hidden') && !notifPopup.contains(e.target) && e.target !== notifButton) {
+                notifPopup.classList.add('hidden');
+            }
+        });
+        document.getElementById('markReadBtn').addEventListener('click', () => {
+            notifButton.querySelector('span').classList.add('hidden');
         });
     }
 });
