@@ -113,20 +113,21 @@ ob_start();
 <?php endif; ?>
 
 <div class="space-y-6 mt-4 mb-6">
+    
 <!-- Update Profile Box -->
-<div id="updateProfileBtn" class="bg-white p-6 rounded-xl shadow-lg flex flex-col justify-between hover:shadow-xl transition duration-200 border-t-4 <?php echo $can_update ? 'border-green-500 cursor-pointer' : 'border-blue-500 cursor-not-allowed'; ?>">
+<div id="updateProfileBtn" class="bg-white p-6 rounded-xl shadow-lg flex flex-col justify-between hover:shadow-xl transition duration-200 border-t-4 <?php echo $can_update ? 'border-green-500 cursor-pointer' : 'border-yellow-500 cursor-not-allowed'; ?>">
     <div class="flex items-center justify-between mb-3">
         <div class="flex items-center space-x-3">
             <?php if (!$can_update): ?>
-                <i class="fas fa-info-circle text-blue-500 text-xl"></i>
+               
             <?php endif; ?>
-            <h3 class="text-lg font-semibold <?php echo $can_update ? 'text-gray-600' : 'text-blue-800'; ?>">
+            <h3 class="text-lg font-semibold <?php echo $can_update ? 'text-gray-600' : 'text-yellow-800'; ?>">
                 <?php echo $can_update ? 'Update Profile' : 'Profile Update Not Available'; ?>
             </h3>
         </div>
-        <i class="fas <?php echo $can_update ? 'fa-user-edit text-green-500' : 'fa-info-circle text-blue-500'; ?> text-xl"></i>
+        <i class="fas <?php echo $can_update ? 'fa-user-edit text-green-500' : 'fa-info-circle text-yellow-500'; ?> text-xl"></i>
     </div>
-    <p class="text-sm <?php echo $can_update ? 'text-gray-500' : 'text-blue-700'; ?>">
+    <p class="text-sm <?php echo $can_update ? 'text-gray-500' : 'text-yellow-700'; ?>">
         <?php 
         if ($can_update) {
             echo 'Click to edit your personal, employment, and educational details.';
@@ -140,13 +141,13 @@ ob_start();
         ?>
     </p>
 </div>
+
     <?php if (!empty($profile) && ($profile['submission_status'] ?? '') !== 'Rejected'): ?>
         <!-- Only show profile cards if not rejected -->
         
       <!-- Personal Information Card -->
 <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-blue-500">
     <div class="flex items-center space-x-3 mb-4 pb-2 border-b border-gray-100">
-        <i class="fas fa-user-circle text-blue-500 text-xl"></i>
         <h3 class="text-xl font-bold text-gray-800">Personal Information</h3>
     </div>
     <dl class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -171,7 +172,6 @@ ob_start();
 <!-- Address Card -->
 <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-green-500">
     <div class="flex items-center space-x-3 mb-4 pb-2 border-b border-gray-100">
-        <i class="fas fa-map-marker-alt text-green-500 text-xl"></i>
         <h3 class="text-xl font-bold text-gray-800">Address</h3>
     </div>
     <dl class="grid grid-cols-1 gap-4">
@@ -195,7 +195,6 @@ ob_start();
 <!-- Employment/Academic Details Card -->
 <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-purple-500">
     <div class="flex items-center space-x-3 mb-4 pb-2 border-b border-gray-100">
-        <i class="fas fa-briefcase text-purple-500 text-xl"></i>
         <h3 class="text-xl font-bold text-gray-800">Employment/Academic Details</h3>
     </div>
     <dl class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -256,7 +255,6 @@ ob_start();
    <!-- Documents Card -->
 <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-orange-500">
     <div class="flex items-center space-x-3 mb-4 pb-2 border-b border-gray-100">
-        <i class="fas fa-file-alt text-orange-500 text-xl"></i>
         <h3 class="text-xl font-bold text-gray-800">Documents</h3>
     </div>
     <?php if (empty($docs)): ?>
