@@ -416,55 +416,51 @@ ob_start();
                 </button>
             </div>
         </div>
-       <div class="space-y-6 min-h-0">
-            <div class="flex items-start space-x-3">
-                <div class="bg-green-100 p-2 rounded-lg mt-1">
-                    <i class="fas fa-envelope text-green-600"></i>
-                </div>
-                <div>
-                    <h4 class="font-semibold text-gray-800">Email Support</h4>
-                    <p class="text-sm text-gray-600">support@alumniportal.edu</p>
-                </div>
+<div class="space-y-6 min-h-0 p-6 bg-white rounded-2xl shadow-xl">
+    <div class="grid grid-cols-2 gap-4">
+        <div class="flex flex-col items-center p-3 bg-green-50 rounded-lg text-center border border-green-200 hover:shadow-md transition-shadow duration-300">
+            <div class="bg-green-100 p-2 rounded-full mb-1">
+                <i class="fas fa-envelope text-green-600 text-lg"></i>
             </div>
-            <div class="flex items-start space-x-3">
-                <div class="bg-blue-100 p-2 rounded-lg mt-1">
-                    <i class="fas fa-phone text-blue-600"></i>
-                </div>
-                <div>
-                    <h4 class="font-semibold text-gray-800">Phone Support</h4>
-                    <p class="text-sm text-gray-600">+1 (555) 123-ALUM</p>
-                </div>
-            </div>
-            <div class="flex items-start space-x-3">
-                <div class="bg-purple-100 p-2 rounded-lg mt-1">
-                    <i class="fas fa-clock text-purple-600"></i>
-                </div>
-                <div>
-                    <h4 class="font-semibold text-gray-800">Support Hours</h4>
-                    <p class="text-sm text-gray-600">Mon-Fri: 9AM-6PM EST</p>
-                </div>
-            </div>
-            <div class="flex items-start space-x-3">
-                <div class="bg-amber-100 p-2 rounded-lg mt-1">
-                    <i class="fas fa-life-ring text-amber-600"></i>
-                </div>
-                <div>
-                    <h4 class="font-semibold text-gray-800">FAQs & Guides</h4>
-                    <p class="text-sm text-gray-600">Visit our knowledge base</p>
-                </div>
-            </div>
+            <h4 class="font-semibold text-gray-800 text-sm whitespace-nowrap">Email Support</h4>
+            <p class="text-xs text-gray-600 truncate max-w-full">main@jhcsc.edu.ph</p>
         </div>
-        <div class="bg-gray-50 px-6 py-4 rounded-b-2xl flex justify-end space-x-3">
-            <button id="cancelHelp" class="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors duration-200">
-                Close
-            </button>
-            <a href="mailto:support@alumniportal.edu" class="px-6 py-2 bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-700 hover:to-emerald-800 text-white font-semibold rounded-lg transition-all duration-300 shadow-md hover:shadow-lg">
-                Contact Now
-            </a>
+
+        <div class="flex flex-col items-center p-3 bg-blue-50 rounded-lg text-center border border-blue-200 hover:shadow-md transition-shadow duration-300">
+            <div class="bg-blue-100 p-2 rounded-full mb-1">
+                <i class="fas fa-phone text-blue-600 text-lg"></i>
+            </div>
+            <h4 class="font-semibold text-gray-800 text-sm whitespace-nowrap">Phone Support</h4>
+            <p class="text-xs text-gray-600 truncate max-w-full">0948 954 7078 - BSIT Faculty</p>
+        </div>
+
+        <div class="flex flex-col items-center p-3 bg-purple-50 rounded-lg text-center border border-purple-200 hover:shadow-md transition-shadow duration-300">
+            <div class="bg-purple-100 p-2 rounded-full mb-1">
+                <i class="fas fa-clock text-purple-600 text-lg"></i>
+            </div>
+            <h4 class="font-semibold text-gray-800 text-sm whitespace-nowrap">Support Hours</h4>
+            <p class="text-xs text-gray-600 truncate max-w-full">Mon - Fri: 9AM - 5PM EST</p>
+        </div>
+
+        <div class="flex flex-col items-center p-3 bg-amber-50 rounded-lg text-center border border-amber-200 hover:shadow-md transition-shadow duration-300">
+            <div class="bg-amber-100 p-2 rounded-full mb-1">
+                <i class="fas fa-life-ring text-amber-600 text-lg"></i>
+            </div>
+            <h4 class="font-semibold text-gray-800 text-sm whitespace-nowrap">FAQs & Guides</h4>
+            <p class="text-xs text-gray-600 truncate max-w-full">Visit our knowledge base</p>
         </div>
     </div>
-</div>
 
+    <div class="bg-gray-50 px-6 py-4 rounded-b-2xl flex justify-end space-x-3 -mx-6 -mb-6 mt-6 border-t">
+        <button id="cancelHelp" class="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors duration-200">
+            Close
+        </button>
+        <a href="mailto:support@alumniportal.edu" class="px-6 py-2 bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-700 hover:to-emerald-800 text-white font-semibold rounded-lg transition-all duration-300 shadow-md hover:shadow-lg">
+            Contact Now
+        </a>
+    </div>
+</div>
+</div>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const welcomeCard = document.getElementById('welcomeCard');
