@@ -10,7 +10,7 @@ $page_title = "Dashboard";
 $active_page = "dashboard";
 $user_id = $_SESSION["user_id"];
 
-// Fetch comprehensive alumni profile data
+// ---- 1. UPDATE THE SQL QUERY (only the fields that really exist) ----
 $stmt = $conn->prepare("
     SELECT
         ap.first_name,
@@ -311,9 +311,7 @@ ob_start();
             <i class="fas fa-arrow-right text-sm transform group-hover:translate-x-1 transition-transform"></i>
         </a>
     </div>
-</div>
-
-<!-- CARD 2: Employment -->
+</div><!-- CARD 2: Employment -->
 <div class="h-full flex flex-col">
     <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border <?php
         echo !empty($profile_info['employment_status']) && $profile_info['employment_status'] !== 'Not Set'
@@ -321,14 +319,12 @@ ob_start();
             : 'border-gray-300 ring-2 ring-gray-100';
     ?> overflow-hidden flex flex-col h-full hover:shadow-xl transition-all duration-400 group relative">
 
-        <!-- ALERT: Not Set (Upper-right inside card - NO ANIMATION, PROPERLY CENTERED) -->
         <?php if (empty($profile_info['employment_status']) || $profile_info['employment_status'] === 'Not Set'): ?>
             <div class="absolute top-3 right-3 w-9 h-9 bg-gradient-to-br from-gray-500 to-gray-700 rounded-full flex items-center justify-center text-white shadow-lg z-20">
                 <i class="fas fa-question text-sm"></i>
             </div>
         <?php endif; ?>
 
-        <!-- Main Content -->
         <div class="p-6 pb-4 flex-1 flex flex-col justify-between space-y-4">
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-3">
@@ -374,10 +370,37 @@ ob_start();
                 </p>
             </div>
 
-            <?php if (!empty($profile_info['employment_status']) && $profile_info['employment_status'] !== 'Not Set'): ?>
+            <?php
+            // ---- DYNAMIC “Visible on Network” MESSAGE (WITH REAL NAMES) ----
+            $msg = '';
+            $status = $profile_info['employment_status'] ?? 'Not Set';
+            $company = trim($profile_info['company_name'] ?? '');
+            $school  = trim($profile_info['school_name'] ?? '');
+
+            if ($status === 'Unemployed') {
+                $msg = 'No documents required — you are currently unemployed.';
+            }
+            elseif ($status === 'Employed' && $company !== '') {
+                $msg = "Works at <strong>" . htmlspecialchars($company) . "</strong>.";
+            }
+            elseif ($status === 'Student' && $school !== '') {
+                $msg = "Studies at <strong>" . htmlspecialchars($school) . "</strong>.";
+            }
+            elseif ($status === 'Employed,Student' && $company !== '' && $school !== '') {
+                $msg = "Works at <strong>" . htmlspecialchars($company) . "</strong> and studies at <strong>" . htmlspecialchars($school) . "</strong>.";
+            }
+            elseif ($status === 'Employed' && $company === '') {
+                $msg = 'Employed — no company name provided.';
+            }
+            elseif ($status === 'Student' && $school === '') {
+                $msg = 'Student — no school name provided.';
+            }
+
+            if ($msg !== '' && $status !== 'Not Set'):
+            ?>
                 <div class="flex items-center space-x-1 text-xs text-blue-600 font-medium">
                     <i class="fas fa-check-circle"></i>
-                    <span>Visible to network</span>
+                    <span><?php echo $msg; ?></span>
                 </div>
             <?php endif; ?>
         </div>
