@@ -17,14 +17,13 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
+  // Check if we're returning from a failed login attempt
+  const hasPreviousAttempt = loginPassword.classList.contains('password-retry-field');
+  
   // Validation functions
   function validateEmail(email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
-  }
-
-  function validatePassword(password) {
-    return password.length >= 6;
   }
 
   function showError(element, message) {
@@ -40,8 +39,12 @@ document.addEventListener("DOMContentLoaded", () => {
   function markInputError(input, hasError) {
     if (hasError) {
       input.classList.add('input-error');
+      if (input === loginPassword) {
+        input.classList.add('password-error-highlight');
+      }
     } else {
       input.classList.remove('input-error');
+      input.classList.remove('password-error-highlight');
     }
   }
 
@@ -61,15 +64,35 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // ---------- Password validation ----------
+  // ---------- Password validation (MODIFIED: Removed length check) ----------
   loginPassword.addEventListener('blur', () => {
     const password = loginPassword.value;
     
     if (password === '') {
       showError(passwordError, 'Password is required');
       markInputError(loginPassword, true);
-    } else if (!validatePassword(password)) {
-      showError(passwordError, 'Password must be at least 6 characters long');
+    } else {
+      // REMOVED: Password length validation
+      hideError(passwordError);
+      markInputError(loginPassword, false);
+    }
+  });
+
+  // ---------- Enhanced password validation for retry attempts ----------
+  loginPassword.addEventListener('input', () => {
+    const password = loginPassword.value;
+    
+    if (hasPreviousAttempt && password.length > 0) {
+      // Clear any previous error styling when user starts typing
+      hideError(passwordError);
+      markInputError(loginPassword, false);
+      
+      // Remove the retry field styling as user is correcting
+      loginPassword.classList.remove('password-retry-field');
+    }
+    
+    if (password === '') {
+      showError(passwordError, 'Password is required');
       markInputError(loginPassword, true);
     } else {
       hideError(passwordError);
@@ -81,7 +104,7 @@ document.addEventListener("DOMContentLoaded", () => {
   togglePassword.addEventListener("click", () => {
     // Check if password field is empty
     if (!loginPassword.value.trim()) {
-      showCustomAlert("Please enter a valid password");
+      showCustomAlert("Please enter a password");
       return;
     }
     
@@ -131,46 +154,91 @@ document.addEventListener("DOMContentLoaded", () => {
       // Add base enabled styles
       loginButton.classList.add("cursor-pointer", "text-white");
       
-      // Focus email field
-      loginEmail.focus();
+      // Focus password field if returning from failed attempt, otherwise email
+      if (hasPreviousAttempt) {
+        loginPassword.focus();
+      } else {
+        loginEmail.focus();
+      }
     });
   });
 
-  // Auto-select Alumni on load (UX)
-  const alumni = document.querySelector('[data-role="alumni"]');
-  if (alumni && !roleInput.value) alumni.click();
+  // Auto-select role if returning from failed attempt
+  if (roleInput.value) {
+    const selectedRole = document.querySelector(`[data-role="${roleInput.value}"]`);
+    if (selectedRole) {
+      selectedRole.click();
+    }
+  } else {
+    // Auto-select Alumni on load (UX)
+    const alumni = document.querySelector('[data-role="alumni"]');
+    if (alumni) alumni.click();
+  }
 
-  // ---------- Form submit validation ----------
-  loginForm.addEventListener("submit", e => {
+  // Focus password field if returning from failed attempt
+  if (hasPreviousAttempt) {
+    setTimeout(() => {
+      loginPassword.focus();
+      loginPassword.select(); // Select all text for easy re-entry
+    }, 100);
+  }
+
+  // ---------- Form submit validation (MODIFIED: Removed password length check) ----------
+  loginForm.addEventListener("submit", function(e) {
+    console.log("Form submission triggered");
+    
+    let hasErrors = false;
+
     // Validate role
     if (!roleInput.value) {
-      e.preventDefault();
       showCustomAlert("Please select a role before signing in.");
+      hasErrors = true;
+      e.preventDefault();
       return;
     }
 
     // Validate email
     const email = loginEmail.value.trim();
-    if (email === '' || !validateEmail(email)) {
-      e.preventDefault();
-      showError(emailError, email === '' ? 'Email is required' : 'Please enter a valid email address');
+    if (email === '') {
+      showError(emailError, 'Email is required');
       markInputError(loginEmail, true);
-      loginEmail.focus();
-      return;
+      hasErrors = true;
+    } else if (!validateEmail(email)) {
+      showError(emailError, 'Please enter a valid email address');
+      markInputError(loginEmail, true);
+      hasErrors = true;
     }
 
-    // Validate password
+    // Validate password (MODIFIED: Only check if password is empty, not length)
     const password = loginPassword.value;
-    if (password === '' || !validatePassword(password)) {
-      e.preventDefault();
-      showError(passwordError, password === '' ? 'Password is required' : 'Password must be at least 6 characters long');
+    if (password === '') {
+      showError(passwordError, 'Password is required');
       markInputError(loginPassword, true);
-      loginPassword.focus();
+      hasErrors = true;
+    }
+
+    if (hasErrors) {
+      e.preventDefault();
+      showCustomAlert("Please fix the errors above before submitting.");
       return;
     }
 
-    // If all validations pass, form will submit normally
-    console.log("Form submitted successfully");
+    // Show loading state for retry attempts
+    if (hasPreviousAttempt) {
+      const originalText = loginButton.innerHTML;
+      loginButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Verifying...';
+      loginButton.disabled = true;
+      
+      // Restore button text after 3 seconds if still on page
+      setTimeout(() => {
+        if (loginButton.innerHTML.includes('fa-spinner')) {
+          loginButton.innerHTML = originalText;
+          loginButton.disabled = false;
+        }
+      }, 3000);
+    }
+
+    console.log("Form validation passed, submitting to database...");
   });
 
   // ---------- Enter key on inputs ----------
@@ -178,8 +246,11 @@ document.addEventListener("DOMContentLoaded", () => {
     input.addEventListener("keydown", ev => {
       if (ev.key === "Enter") {
         ev.preventDefault();
-        if (!loginButton.disabled) loginButton.click();
-        else showCustomAlert("Please select a role first.");
+        if (!loginButton.disabled) {
+          loginForm.dispatchEvent(new Event('submit'));
+        } else {
+          showCustomAlert("Please select a role first.");
+        }
       }
     });
   });
@@ -213,7 +284,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }, 5000);
   }
-  
 
   // Make function globally available
   window.showCustomAlert = showCustomAlert;

@@ -252,6 +252,7 @@ body.admin-selected .login-box input:focus {
     padding-right: 3rem !important; /* Ensure space for the icon */
 }
 
+
 #togglePassword {
     position: absolute;
     right: 12px;
@@ -272,6 +273,29 @@ body.admin-selected .login-box input:focus {
 
 #togglePassword:hover {
     color: #374151;
+}
+
+/* Additional styles for password retry feature */
+.login-error-message {
+    animation: shake 0.5s ease-in-out;
+}
+
+.password-retry-field {
+    border-color: #f59e0b !important;
+    background: linear-gradient(to bottom, #fffbf0, #fef3c7) !important;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+/* Enhanced error states for password fields */
+.password-error-highlight {
+    border-color: var(--error-red) !important;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
+    background: linear-gradient(to bottom, #fef2f2, #fecaca) !important;
 }
 
 /* Ensure the password input container maintains proper positioning */
