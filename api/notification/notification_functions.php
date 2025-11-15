@@ -40,12 +40,12 @@ function send_notification($templateId, $recipientEmail, $parameters = []) {
             "current_company" => "N/A",
             "alumni_email" => $recipientEmail,
             "previous_rejection_reason" => "N/A",
-            "admin_review_link" => "http://your-domain.com/admin/alumni_management.php",
+            "admin_review_link" => "#",
             "employment_status" => "N/A",
             "name" => "Alumni",
-            "alumni_portal_link" => "http://your-domain.com/alumni/alumni_profile.php",
+            "alumni_portal_link" => "#",
             "rejection_reason" => "N/A",
-            "resubmission_link" => "http://your-domain.com/alumni/update_profile.php",
+            "resubmission_link" => "#",
             "status" => "N/A"
         ];
 
@@ -60,9 +60,8 @@ function send_notification($templateId, $recipientEmail, $parameters = []) {
             }
         }
 
-        // **CORRECTED: Use SAME notification type but different templateId**
         $result = $notificationapi->send([
-            'type' => 'alumni_employment_tracking_update_your_profile', // SAME for all
+            'type' => 'alumni_employment_tracking_update_your_profile',
             'to' => [
                 'id' => $recipientEmail,
                 'email' => $recipientEmail
