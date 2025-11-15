@@ -13,7 +13,7 @@ $user_id = $_SESSION['user_id'];
 $page_title = "Profile Management";
 $active_page = "profile";
 
-// Fetch profile data
+// Fetch profile data - WITH REJECTION REFRESH
 $stmt = $conn->prepare("
     SELECT ap.*, u.email, 
            tb.barangay_name, tm.municipality_name, tp.province_name, tr.region_name,
@@ -32,6 +32,25 @@ $stmt->execute();
 $result = $stmt->get_result();
 $profile = $result->fetch_assoc() ?: [];
 $stmt->close();
+
+// CRITICAL FIX: If profile was rejected and data is cleared, reset all related arrays
+$is_profile_rejected = !empty($profile) && ($profile['submission_status'] ?? '') === 'Rejected';
+if ($is_profile_rejected) {
+    // Check if personal data was actually cleared (NULL values)
+    $personal_data_cleared = empty($profile['first_name']) && empty($profile['last_name']);
+    
+    if ($personal_data_cleared) {
+        // Reset all related data arrays to empty since DB data was cleared
+        $profile = []; // This ensures form shows empty
+        $employment = [];
+        $education = [];
+        $docs = [];
+        
+        // Force the modal to show as empty form
+        $auto_open_modal = true;
+        $_SESSION['profile_rejected'] = true;
+    }
+}
 
 // Fetch employment info
 $stmt = $conn->prepare("SELECT ei.*, jt.title AS job_title, ei.business_type FROM employment_info ei LEFT JOIN job_titles jt ON ei.job_title_id = jt.job_title_id WHERE ei.user_id = ?");
@@ -65,21 +84,42 @@ $result = $stmt->get_result();
 $docs = $result->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
-// Update permissions logic
-$is_profile_rejected = !empty($profile) && ($profile['submission_status'] ?? '') === 'Rejected';
-$can_update_yearly = empty($profile) || 
-                     ($profile && ($profile['last_profile_update'] === null || 
-                      strtotime($profile['last_profile_update'] . ' +1 year') <= time()));
-$can_reupload = $is_profile_rejected;
-$can_update = empty($profile) || $can_update_yearly || $can_reupload;
+// Update permissions logic - ENHANCED
+$submission_status = $profile['submission_status'] ?? null;
+$last_profile_update = $profile['last_profile_update'] ?? null;
 
-// Debug permission logic
-error_log("=== PROFILE PERMISSIONS DEBUG ===");
+// Enhanced permission logic
+$is_profile_new = empty($profile) || $submission_status === null;
+$is_profile_rejected = !empty($profile) && $submission_status === 'Rejected';
+$is_profile_approved = !empty($profile) && $submission_status === 'Approved';
+$is_profile_pending = !empty($profile) && $submission_status === 'Pending';
+
+// CRITICAL FIX: If profile was rejected and personal data is cleared, treat as new profile
+if ($is_profile_rejected && empty($profile['first_name']) && empty($profile['last_name'])) {
+    $is_profile_new = true;
+    $is_profile_rejected = false; // Don't show rejection message since data is cleared
+}
+
+// Yearly update logic - only if profile was previously approved
+$can_update_yearly = $is_profile_new || 
+                    ($is_profile_approved && ($last_profile_update === null || 
+                     strtotime($last_profile_update . ' +1 year') <= time()));
+
+$can_reupload = $is_profile_rejected;
+
+// User can update if: new profile, yearly update allowed, or profile was rejected
+$can_update = $is_profile_new || $can_update_yearly || $can_reupload;
+
+// Enhanced debug permission logic
+error_log("=== ALUMNI_PROFILE PERMISSIONS DEBUG ===");
 error_log("User ID: " . $user_id);
 error_log("Profile exists: " . (!empty($profile) ? 'YES' : 'NO'));
-error_log("Submission Status: " . ($profile['submission_status'] ?? 'NONE'));
-error_log("Last Profile Update: " . ($profile['last_profile_update'] ?? 'NEVER'));
+error_log("Submission Status: " . ($submission_status ?? 'NULL/EMPTY'));
+error_log("Last Profile Update: " . ($last_profile_update ?? 'NEVER'));
+error_log("Is Profile New: " . ($is_profile_new ? 'YES' : 'NO'));
 error_log("Is Profile Rejected: " . ($is_profile_rejected ? 'YES' : 'NO'));
+error_log("Is Profile Approved: " . ($is_profile_approved ? 'YES' : 'NO'));
+error_log("Is Profile Pending: " . ($is_profile_pending ? 'YES' : 'NO'));
 error_log("Can Update Yearly: " . ($can_update_yearly ? 'YES' : 'NO'));
 error_log("Can Reupload: " . ($can_reupload ? 'YES' : 'NO'));
 error_log("Can Update: " . ($can_update ? 'YES' : 'NO'));
@@ -130,10 +170,18 @@ ob_start();
     <p class="text-xs <?php echo $can_update ? 'text-gray-500' : 'text-yellow-700'; ?> leading-snug mt-1">
         <?php 
         if ($can_update) {
-            echo 'Click to edit your personal, employment, and educational details.';
+            if ($is_profile_rejected) {
+                echo 'Your profile was rejected. Please update and resubmit for approval.';
+            } elseif ($is_profile_new) {
+                echo 'Click to create your alumni profile and submit for approval.';
+            } else {
+                echo 'Click to edit your personal, employment, and educational details.';
+            }
         } else {
-            if (!empty($profile) && ($profile['submission_status'] ?? '') === 'Approved') {
-                echo 'Your profile has been approved. You can update again after one year.';
+            if ($is_profile_approved) {
+                echo 'Your profile has been approved. You can update again after one year from your last update.';
+            } elseif ($is_profile_pending) {
+                echo 'Your profile is currently under review. Please wait for administrator approval.';
             } else {
                 echo 'Profile update is not available at this time.';
             }
@@ -143,7 +191,7 @@ ob_start();
 </div>
 
 <!-- Rejection Notification Card - MOVED HERE -->
-<?php if (!empty($profile) && ($profile['submission_status'] ?? '') === 'Rejected'): ?>
+<?php if (!empty($profile) && ($profile['submission_status'] ?? '') === 'Rejected' && !empty($profile['first_name'])): ?>
     <div class="bg-yellow-100 p-6 rounded-xl shadow-lg border-l-4 border-yellow-600">
         <div class="flex items-center space-x-3">
             <i class="fas fa-exclamation-triangle text-yellow-600 text-xl"></i>
@@ -385,22 +433,22 @@ ob_start();
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700">First Name
-                                <input type="text" name="first_name" autocomplete="given-name" value="<?php echo htmlspecialchars($profile['first_name'] ?? ''); ?>" class="w-full border rounded-lg p-2" required <?php echo $can_update ? '' : 'disabled'; ?>>
+                                <input type="text" name="first_name" autocomplete="given-name" value="<?php echo !empty($profile['first_name']) ? htmlspecialchars($profile['first_name']) : ''; ?>" class="w-full border rounded-lg p-2" required <?php echo $can_update ? '' : 'disabled'; ?>>
                             </label>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Middle Name
-                                <input type="text" name="middle_name" autocomplete="additional-name" value="<?php echo htmlspecialchars($profile['middle_name'] ?? ''); ?>" class="w-full border rounded-lg p-2" <?php echo $can_update ? '' : 'disabled'; ?>>
+                                <input type="text" name="middle_name" autocomplete="additional-name" value="<?php echo !empty($profile['middle_name']) ? htmlspecialchars($profile['middle_name']) : ''; ?>" class="w-full border rounded-lg p-2" <?php echo $can_update ? '' : 'disabled'; ?>>
                             </label>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Last Name
-                                <input type="text" name="last_name" autocomplete="family-name" value="<?php echo htmlspecialchars($profile['last_name'] ?? ''); ?>" class="w-full border rounded-lg p-2" required <?php echo $can_update ? '' : 'disabled'; ?>>
+                                <input type="text" name="last_name" autocomplete="family-name" value="<?php echo !empty($profile['last_name']) ? htmlspecialchars($profile['last_name']) : ''; ?>" class="w-full border rounded-lg p-2" required <?php echo $can_update ? '' : 'disabled'; ?>>
                             </label>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Contact Number
-                                <input type="tel" name="contact_number" autocomplete="tel" value="<?php echo htmlspecialchars($profile['contact_number'] ?? ''); ?>" class="w-full border rounded-lg p-2" required pattern="[0-9]{10,11}" title="Contact number must be 11 digits" <?php echo $can_update ? '' : 'disabled'; ?>>
+                                <input type="tel" name="contact_number" autocomplete="tel" value="<?php echo !empty($profile['contact_number']) ? htmlspecialchars($profile['contact_number']) : ''; ?>" class="w-full border rounded-lg p-2" required pattern="[0-9]{10,11}" title="Contact number must be 11 digits" <?php echo $can_update ? '' : 'disabled'; ?>>
                             </label>
                         </div>
                         <div>
@@ -502,12 +550,12 @@ ob_start();
                         </div>
                         <div id="companyField" class="hidden">
                             <label class="block text-sm font-medium text-gray-700">Company Name
-                                <input type="text" name="company_name" value="<?php echo htmlspecialchars($employment['company_name'] ?? ''); ?>" class="w-full border rounded-lg p-2" autocomplete="organization">
+                                <input type="text" name="company_name" value="<?php echo !empty($employment['company_name']) ? htmlspecialchars($employment['company_name']) : ''; ?>" class="w-full border rounded-lg p-2" autocomplete="organization">
                             </label>
                         </div>
                         <div id="companyAddressField" class="hidden">
                             <label class="block text-sm font-medium text-gray-700">Company Address
-                                <input type="text" name="company_address" value="<?php echo htmlspecialchars($employment['company_address'] ?? ''); ?>" class="w-full border rounded-lg p-2" autocomplete="street-address">
+                                <input type="text" name="company_address" value="<?php echo !empty($employment['company_address']) ? htmlspecialchars($employment['company_address']) : ''; ?>" class="w-full border rounded-lg p-2" autocomplete="street-address">
                             </label>
                         </div>
                         <div id="businessTypeField" class="hidden">
@@ -557,12 +605,12 @@ ob_start();
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700">School Name
-                                <input type="text" name="school_name" value="<?php echo htmlspecialchars($education['school_name'] ?? ''); ?>" class="w-full border rounded-lg p-2" autocomplete="organization">
+                                <input type="text" name="school_name" value="<?php echo !empty($education['school_name']) ? htmlspecialchars($education['school_name']) : ''; ?>" class="w-full border rounded-lg p-2" autocomplete="organization">
                             </label>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Degree Pursued
-                                <input type="text" name="degree_pursued" value="<?php echo htmlspecialchars($education['degree_pursued'] ?? ''); ?>" class="w-full border rounded-lg p-2" autocomplete="off">
+                                <input type="text" name="degree_pursued" value="<?php echo !empty($education['degree_pursued']) ? htmlspecialchars($education['degree_pursued']) : ''; ?>" class="w-full border rounded-lg p-2" autocomplete="off">
                             </label>
                         </div>
                         <div>
@@ -644,6 +692,17 @@ ob_start();
 </div>
 
 <script>
+
+// Auto-close modal if form was just submitted
+<?php if (isset($_SESSION['form_submitted']) && $_SESSION['form_submitted']): ?>
+    <?php unset($_SESSION['form_submitted']); // Clear the flag ?>
+    const modal = document.getElementById('profileUpdateModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('show', 'flex');
+    }
+<?php endif; ?>
+
 document.addEventListener('DOMContentLoaded', () => {
 
     <?php if ($auto_open_modal): ?>
@@ -1024,7 +1083,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // Profile photo validation - FIXED
             const profilePhotoInput = document.getElementById('profilePictureInput');
             const hasExistingPhoto = '<?php echo !empty($profile['photo_path']) ? 'true' : 'false'; ?>';
-            
+
+            // Only require photo if no existing photo
             if (!profilePhotoInput.files.length && hasExistingPhoto === 'false') {
                 alert('Please upload your profile picture before submitting.');
                 event.preventDefault();
@@ -1154,6 +1214,62 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('Form validation passed, submitting...');
         });
     }
+
+    // Handle empty form state after rejection
+    function initializeFormState() {
+        const firstName = document.querySelector('[name="first_name"]');
+        const lastName = document.querySelector('[name="last_name"]');
+        
+        // If both first and last name are empty, this is a fresh form after rejection
+        if (firstName && lastName && !firstName.value && !lastName.value) {
+            console.log('Fresh form detected after rejection - resetting all fields');
+            
+            // Reset employment status to default
+            if (employmentStatusSelect) {
+                employmentStatusSelect.value = '';
+                toggleEmploymentSections('');
+            }
+            
+            // Reset address fields
+            if (regionSelect) regionSelect.value = '';
+            if (provinceSelect) provinceSelect.innerHTML = '<option value="">Select Province</option>';
+            if (municipalitySelect) municipalitySelect.innerHTML = '<option value="">Select Municipality</option>';
+            if (barangaySelect) barangaySelect.innerHTML = '<option value="">Select Barangay</option>';
+            
+            // Reset photo preview to default - FORCE reset for rejected profiles
+            if (previewImg) {
+                previewImg.src = 'https://placehold.co/128x128/eeeeee/333333?text=Profile';
+            }
+            
+            // Clear file input
+            if (fileInput) {
+                fileInput.value = '';
+            }
+        }
+    }
+
+    // Call this when modal opens
+    if (updateProfileBtn) {
+        const canUpdate = <?php echo $can_update ? 'true' : 'false'; ?>;
+        
+        if (canUpdate) {
+            updateProfileBtn.addEventListener('click', () => {
+                if (updateProfileModal) {
+                    updateProfileModal.classList.remove('hidden');
+                    updateProfileModal.classList.add('show', 'flex');
+                    loadAddressData();
+                    initializeFormState(); // Initialize form state
+                }
+            });
+        }
+    }
+
+    // Also call when auto-opening modal
+    <?php if ($auto_open_modal): ?>
+    setTimeout(() => {
+        initializeFormState();
+    }, 200);
+    <?php endif; ?>
 });
 </script>
 

@@ -6,74 +6,114 @@ if (!isset($_SESSION["user_id"]) || $_SESSION["role"] !== "admin") {
 }
 include("../connect.php");
 
+// Enhanced cleanup function for rejected alumni
+function cleanup_alumni_data($user_id, $conn) {
+    // Delete all related data
+    $tables = ['employment_info', 'education_info', 'alumni_documents'];
+    
+    foreach ($tables as $table) {
+        $stmt = $conn->prepare("DELETE FROM $table WHERE user_id = ?");
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $stmt->close();
+    }
+    
+    // Delete address record if exists
+    $stmt = $conn->prepare("DELETE a FROM address a 
+                        INNER JOIN alumni_profile ap ON a.address_id = ap.address_id 
+                        WHERE ap.user_id = ?");
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $stmt->close();
+    
+    // Delete photo file if exists
+    $stmt = $conn->prepare("SELECT photo_path FROM alumni_profile WHERE user_id = ?");
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($row = $result->fetch_assoc()) {
+        if (!empty($row['photo_path']) && file_exists("../" . $row['photo_path'])) {
+            unlink("../" . $row['photo_path']);
+        }
+    }
+    $stmt->close();
+    
+    // Delete document files if exist
+    $stmt = $conn->prepare("SELECT file_path FROM alumni_documents WHERE user_id = ?");
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    while ($row = $result->fetch_assoc()) {
+        if (!empty($row['file_path']) && file_exists("../" . $row['file_path'])) {
+            unlink("../" . $row['file_path']);
+        }
+    }
+    $stmt->close();
+}
+
 $user_id = $_GET['user_id'] ?? 0;
 $status = $_GET['status'] ?? '';
 $reason = $_GET['reason'] ?? '';
 
 if ($user_id && in_array($status, ['Approved', 'Rejected'])) {
-
-    // Update alumni profile based on admin action
-    if ($status === 'Rejected') {
-        $updateQuery = "UPDATE alumni_profile 
-                        SET submission_status = ?, rejection_reason = ?, rejected_at = NOW() 
-                        WHERE user_id = ?";
-        $stmt = $conn->prepare($updateQuery);
-        $stmt->bind_param('ssi', $status, $reason, $user_id);
-    } else {
-        $updateQuery = "UPDATE alumni_profile SET submission_status = ?, rejection_reason = NULL, rejected_at = NULL WHERE user_id = ?";
-        $stmt = $conn->prepare($updateQuery);
-        $stmt->bind_param('si', $status, $user_id);
-    }
     
-    if ($stmt->execute()) {
+    // Start transaction for data consistency
+    $conn->begin_transaction();
+    
+    try {
+        // Update alumni profile based on admin action
+        if ($status === 'Rejected') {
+            // Clean up alumni data when rejecting - THIS HAPPENS IMMEDIATELY
+            cleanup_alumni_data($user_id, $conn);
+            
+            $updateQuery = "UPDATE alumni_profile 
+                            SET submission_status = ?, rejection_reason = ?, rejected_at = NOW(),
+                            first_name = NULL, middle_name = NULL, last_name = NULL,
+                            contact_number = NULL, year_graduated = NULL, employment_status = NULL,
+                            photo_path = NULL, address_id = NULL, last_profile_update = NULL,
+                            submitted_at = NULL
+                            WHERE user_id = ?";
+            $stmt = $conn->prepare($updateQuery);
+            $stmt->bind_param('ssi', $status, $reason, $user_id);
+        } else {
+            $updateQuery = "UPDATE alumni_profile SET submission_status = ?, rejection_reason = NULL, rejected_at = NULL WHERE user_id = ?";
+            $stmt = $conn->prepare($updateQuery);
+            $stmt->bind_param('si', $status, $user_id);
+        }
+        
+        if (!$stmt->execute()) {
+            throw new Exception("Failed to update alumni profile");
+        }
+        $stmt->close();
 
         // Log the action correctly
         $update_type = ($status === 'Approved') ? 'approve' : 'reject';
         $logQuery = "INSERT INTO update_log (updated_by, updated_id, update_type) VALUES (?, ?, ?)";
         $logStmt = $conn->prepare($logQuery);
-        $logStmt->bind_param('ii', $_SESSION['user_id'], $user_id);
-        $logStmt->execute();
+        $logStmt->bind_param('iis', $_SESSION['user_id'], $user_id, $update_type);
+        
+        if (!$logStmt->execute()) {
+            throw new Exception("Failed to log admin action");
+        }
         $logStmt->close();
 
-        // Send Notification
-        include_once $_SERVER['DOCUMENT_ROOT'] . '/Alumni-Employment-Tracking-and-Reminder-System/api/notification/notification_helper.php';
-        $notifHelper = new NotificationHelper($conn);
-
-        // Fetch alumni info using the helper
-        $alumniDetails = $notifHelper->getAlumniDetails($user_id);
-
-        if ($alumniDetails && !empty($alumniDetails['email'])) {
-            $alumni_email = $alumniDetails['email'];
-            $alumni_name = trim(($alumniDetails['first_name'] ?? '') . ' ' . ($alumniDetails['last_name'] ?? ''));
-
-            $parameters = [
-                "alumni_name" => $alumni_name,
-                "rejection_reason" => $reason,
-                "status" => $status,
-                "graduation_year" => $alumniDetails['year_graduated'] ?? 'N/A',
-                "current_position" => $alumniDetails['job_title'] ?? 'N/A',
-                "current_company" => $alumniDetails['company_name'] ?? 'N/A',
-                "employment_status" => $alumniDetails['employment_status'] ?? 'N/A'
-            ];
-
-            try {
-                if ($status === 'Rejected') {
-                    $notifHelper->sendNotification('template_rejected', 'alumni_rejection', $alumni_email, $parameters);
-                } else {
-                    $notifHelper->sendNotification('template_approved', 'alumni_approval', $alumni_email, $parameters);
-                }
-            } catch (Exception $e) {
-                error_log("Notification failed for user_id $user_id: " . $e->getMessage());
-            }
-        }
+        // Commit transaction
+        $conn->commit();
 
         // Redirect success
         header("Location: alumni_management.php?success=" . urlencode("Alumni profile " . strtolower($status) . " successfully"));
         exit();
-    } else {
-        header("Location: alumni_management.php?error=Error updating alumni status");
+        
+    } catch (Exception $e) {
+        // Rollback transaction on error
+        $conn->rollback();
+        error_log("Admin status update error: " . $e->getMessage());
+        header("Location: alumni_management.php?error=Error updating alumni status: " . $e->getMessage());
+        exit();
     }
+    
 } else {
     header("Location: alumni_management.php?error=Invalid parameters");
+    exit();
 }
 ?>
