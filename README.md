@@ -29,7 +29,7 @@
 🔴 Critical
 ____________________
 
-1. Submission clearing issue:
+1. **[FIXED]** Submission clearing issue:
 When a rejected profile is resubmitted, previously entered details appear in the form, but clicking submit clears all data and reopens the form incorrectly. The form should reset automatically and allow smooth resubmission.
 
 2. **[FIXED]** "Employed & Student" submission issue:
@@ -49,6 +49,9 @@ ______________________
 
 1. Alumni data display:
 After a successful submission, the Employment/Academic Details cards must be displayed on the dashboard using the same UI style as existing cards, positioned below the existing cards for consistency. Currently, these cards are displayed only in the Profile Management tab.
+
+2. Profile completion card display logic:
+If profile is rejected, completion card must display 0% instead of 100%. 
 
 🟢 Low Priority 
 ______________________
@@ -79,3 +82,5 @@ ______________________
 3. General UI Refinement.
 
 4. ang admin inig human approve/reject, dapat stay lng sa page & d mu redirect sa batch display page.
+
+5. if mag approve ang admin dapat naay "undo approve" instead of directly showing the "reject" button.  

@@ -2,7 +2,6 @@
 ob_start();
 session_start();
 include("../connect.php");
-include_once $_SERVER['DOCUMENT_ROOT'] . '/Alumni-Employment-Tracking-and-Reminder-System/api/notification/notification_helper.php';
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
@@ -38,6 +37,7 @@ $user_id = $_SESSION['user_id'];
         exit;
     }
 
+    /*
     // If profile was rejected, clean up old data before new submission
     if ($is_profile_rejected) {
         handle_rejection_cleanup($user_id, $conn);
@@ -47,6 +47,7 @@ $user_id = $_SESSION['user_id'];
         $last_name = '';
         $current_employment_status = '';
     }
+        */
 
     if ($is_profile_rejected && !isset($_SESSION['profile_rejected'])) {
         $_SESSION['profile_rejected'] = true;
@@ -129,6 +130,7 @@ $user_id = $_SESSION['user_id'];
         return false;
     }
 
+    /*
     // ---- 5. REJECTION HANDLER ---------------------------------------------
     function handle_rejection_cleanup($user_id, $conn) {
         // Delete all user data except users table
@@ -160,6 +162,7 @@ $user_id = $_SESSION['user_id'];
         $stmt->execute();
         $stmt->close();
     }
+        */
 
     // ---- 6. POST handling --------------------------------------------------------
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -263,15 +266,8 @@ $user_id = $_SESSION['user_id'];
     // ---- 6.3 Photo – REQUIRED IN ALL CASES (Requirement #1) ---------------
     $photo_path = $profile['photo_path'] ?? null;
 
-    // Check if this is a new submission or re-upload after rejection
-    if (empty($_FILES['profile_photo']['name'])) {
-        // Only require photo if this is a new profile or re-upload after rejection
-        if (empty($profile) || $is_profile_rejected || empty($photo_path)) {
-            throw new Exception("Profile photo is required.");
-        }
-        // Keep existing photo if no new one uploaded and we have an existing one
-        $new_photo = $photo_path;
-    } else {
+    // Check if photo is being uploaded
+    if (isset($_FILES['profile_photo']) && $_FILES['profile_photo']['error'] === UPLOAD_ERR_OK) {
         // Process new photo upload
         $new_photo = upload_file('profile_photo', '../uploads/photos/', $last, 'profile', ['image/jpeg','image/png']);
         if (!$new_photo) {
@@ -283,6 +279,13 @@ $user_id = $_SESSION['user_id'];
             unlink('../' . $photo_path);
         }
         $photo_path = $new_photo;
+    } else {
+        // No new photo uploaded - only require photo if no existing photo
+        if (empty($photo_path)) {
+            throw new Exception("Profile photo is required.");
+        }
+        // Keep existing photo
+        $new_photo = $photo_path;
     }
 
     // ---- 6.4 Address Handling ---------------------------------------------
@@ -374,12 +377,10 @@ $user_id = $_SESSION['user_id'];
         $stmt->execute();
         $stmt->close();
 
-        error_log("Processing employment for status: " . $status);
-        
-        // FIX: Use original status without htmlspecialchars for comparisons
         $original_status = trim($_POST['employment_status'] ?? '');
+        error_log("Processing employment for status: " . $original_status);
         
-        // Insert employment info for relevant statuses - FIXED
+        // Insert employment info ONLY for relevant statuses - FIXED
         if (in_array($original_status, ['Employed', 'Self-Employed', 'Employed & Student'])) {
             $job_title_id = null;
             
@@ -454,18 +455,34 @@ $user_id = $_SESSION['user_id'];
 
         $original_status = trim($_POST['employment_status'] ?? '');
         
+        // Insert education info ONLY for relevant statuses - FIXED
         if (in_array($original_status, ['Student', 'Employed & Student'])) {
+            // Validate that education fields are provided for student statuses
+            if (empty($school) || empty($degree) || empty($start_year) || empty($end_year)) {
+                throw new Exception("All education fields are required for student status.");
+            }
+            
             $stmt = $conn->prepare("INSERT INTO education_info 
                 (user_id, school_name, degree_pursued, start_year, end_year)
                 VALUES (?,?,?,?,?)");
             $stmt->bind_param("issss", $user_id, $school, $degree, $start_year, $end_year);
             $stmt->execute();
             $stmt->close();
+            error_log("Education info inserted for status: '{$original_status}'");
+        } else {
+            error_log("Skipping education insert for status: '{$original_status}'");
         }
     }
 
     // ---- 6.8 Documents – STATUS-BASED VALIDATION ----------------------------
     $original_status = trim($_POST['employment_status'] ?? '');
+
+    // CRITICAL FIX: Delete ALL existing documents first when status changes
+    // This ensures old documents from previous status don't persist
+    $stmt = $conn->prepare("DELETE FROM alumni_documents WHERE user_id = ?");
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $stmt->close();
 
     $required_docs = [];
     if (in_array($original_status, ['Employed', 'Employed & Student'])) {
@@ -509,6 +526,14 @@ $user_id = $_SESSION['user_id'];
     }
 
     $conn->commit();
+
+    // Clear any rejection session flags
+    if (isset($_SESSION['profile_rejected'])) {
+        unset($_SESSION['profile_rejected']);
+    }
+
+    // Set session flag to indicate successful submission
+    $_SESSION['form_submitted'] = true;
 
     // Redirect after successful submission
     header("Location: alumni_profile.php?success=Profile updated successfully!");
