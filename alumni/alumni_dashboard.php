@@ -68,26 +68,23 @@ if ($stmt_photo) {
     $stmt_photo->close();
     $has_photo = !empty($photo_data['photo_path']);
 }
+// --- UPDATED CODE: 8 EQUAL SECTIONS (7 fields + photo) ---
+$sections = [
+    !empty($profile_info['first_name']),
+    !empty($profile_info['last_name']),
+    !empty($profile_info['contact_number']),
+    !empty($profile_info['year_graduated']),
+    !empty($profile_info['employment_status']),
+    !empty($profile_info['address_id']),
+    $has_photo
+];
 
-// Count completed items (7 fields + 1 photo = 8 total)
-$completed_count = 0;
-$total_fields = 8;
-
-if (!empty($profile_info)) {
-    if (!empty($profile_info['first_name'])) $completed_count++;
-    if (!empty($profile_info['last_name'])) $completed_count++;
-    if (!empty($profile_info['contact_number'])) $completed_count++;
-    if (!empty($profile_info['year_graduated'])) $completed_count++;
-    if (!empty($profile_info['employment_status'])) $completed_count++;
-    if (!empty($profile_info['address_id'])) $completed_count++;
-}
-if ($has_photo) $completed_count++;
-
-// Calculate percentage
+$completed_count = count(array_filter($sections));
+$total_fields    = count($sections); // 8
 $completion_percentage = $total_fields > 0 ? round(($completed_count / $total_fields) * 100) : 0;
 
-// Profile is 100% only if all 7 fields + photo are filled
-$is_profile_complete = $fields_complete && $has_photo;
+// Profile is 100% only if all 8 sections are filled
+$is_profile_complete = $completed_count === $total_fields;
 
 // Final display status
 $profile_status = 'Incomplete';
