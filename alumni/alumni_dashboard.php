@@ -180,38 +180,60 @@ ob_start();
              ($profile_status === 'Pending Approval' ? 'border-amber-400 ring-2 ring-amber-100' : 'border-orange-500 ring-2 ring-orange-200');
     ?> overflow-hidden flex flex-col h-full hover:shadow-xl transition-all duration-400 group relative">
       
-        <!-- ALERT: Incomplete (Upper-right inside card) -->
+        <!-- ALERT: Incomplete (More noticeable animation) -->
         <?php if ($profile_status === 'Incomplete'): ?>
-            <div class="absolute top-3 right-3 w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg z-20 animate-ping">
-                <span class="absolute inset-0 rounded-full bg-orange-400 opacity-75 animate-ping"></span>
-                <i class="fas fa-exclamation relative z-10 text-sm"></i>
-            </div>
-        <?php endif; ?>
-
-        <!-- SUCCESS CHECKMARK (Upper-right inside card) -->
-        <?php if ($profile_status === 'Complete'): ?>
             <div class="absolute top-4 right-4 z-20 pointer-events-none">
                 <div class="relative">
-                    <div class="absolute inset-0 w-12 h-12 bg-emerald-100 rounded-full opacity-60 animate-ping"></div>
-                    <div class="absolute inset-0 w-12 h-12 bg-emerald-50 rounded-full opacity-40 animate-ping delay-300"></div>
-                    <div class="relative w-12 h-12 bg-emerald-600 rounded-full flex items-center justify-center shadow-lg animate-bounce">
-                        <i class="fas fa-check text-white text-lg font-bold"></i>
+                    <!-- Triple pulse rings -->
+                    <div class="absolute inset-0 w-12 h-12 bg-red-200 rounded-full opacity-80 animate-ping-slow"></div>
+                    <div class="absolute inset-0 w-12 h-12 bg-orange-200 rounded-full opacity-60 animate-ping-slow delay-300"></div>
+                    <div class="absolute inset-0 w-12 h-12 bg-orange-100 rounded-full opacity-40 animate-ping-slow delay-600"></div>
+                    <!-- Main icon with bounce and glow -->
+                    <div class="relative w-12 h-12 bg-gradient-to-br from-red-500 to-orange-600 rounded-full flex items-center justify-center shadow-lg ring-2 ring-red-300 animate-bounce-gentle">
+                        <i class="fas fa-exclamation text-white text-base font-bold drop-shadow-sm"></i>
                     </div>
+                    <!-- Floating dot -->
+                    <div class="absolute -top-1 -right-1 w-3 h-3 bg-white rounded-full animate-pulse-fast"></div>
                 </div>
             </div>
         <?php endif; ?>
 
-        <!-- PENDING APPROVAL: Animated Clock (Upper-right, perfectly aligned) -->
+        <!-- SUCCESS CHECKMARK (More celebratory animation) -->
+        <?php if ($profile_status === 'Complete'): ?>
+            <div class="absolute top-4 right-4 z-20 pointer-events-none">
+                <div class="relative">
+                    <!-- Enhanced pulse rings -->
+                    <div class="absolute inset-0 w-12 h-12 bg-emerald-200 rounded-full opacity-70 animate-ping-slow"></div>
+                    <div class="absolute inset-0 w-12 h-12 bg-emerald-100 rounded-full opacity-50 animate-ping-slow delay-400"></div>
+                    <div class="absolute inset-0 w-12 h-12 bg-emerald-50 rounded-full opacity-30 animate-ping-slow delay-800"></div>
+                    <!-- Bouncing checkmark with glow -->
+                    <div class="relative w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center shadow-lg ring-2 ring-emerald-300 animate-bounce-gentle">
+                        <i class="fas fa-check text-white text-lg font-bold drop-shadow-sm"></i>
+                    </div>
+                    <!-- Sparkle effects -->
+                    <div class="absolute -top-1 -left-1 w-2 h-2 bg-yellow-300 rounded-full animate-ping-fast"></div>
+                    <div class="absolute -bottom-1 -right-1 w-2 h-2 bg-yellow-200 rounded-full animate-ping-fast delay-300"></div>
+                </div>
+            </div>
+        <?php endif; ?>
+
+        <!-- PENDING APPROVAL: Enhanced clock animation -->
         <?php if ($profile_status === 'Pending Approval'): ?>
             <div class="absolute top-4 right-4 z-20 pointer-events-none">
                 <div class="relative">
-                    <!-- Pulsing rings -->
-                    <div class="absolute inset-0 w-12 h-12 bg-amber-100 rounded-full opacity-60 animate-ping"></div>
-                    <div class="absolute inset-0 w-12 h-12 bg-amber-50 rounded-full opacity-40 animate-ping delay-200"></div>
-                    <!-- Clock container -->
-                    <div class="relative w-12 h-12 bg-amber-600 rounded-full flex items-center justify-center shadow-lg">
-                        <i class="fas fa-clock text-white text-base animate-spin-slow"></i>
+                    <!-- Multi-layered pulse rings -->
+                    <div class="absolute inset-0 w-12 h-12 bg-amber-200 rounded-full opacity-70 animate-ping-slow"></div>
+                    <div class="absolute inset-0 w-12 h-12 bg-amber-150 rounded-full opacity-50 animate-ping-slow delay-200"></div>
+                    <div class="absolute inset-0 w-12 h-12 bg-amber-100 rounded-full opacity-30 animate-ping-slow delay-400"></div>
+                    <!-- Clock with enhanced spin and glow -->
+                    <div class="relative w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-500 rounded-full flex items-center justify-center shadow-lg ring-2 ring-amber-300 animate-spin-slow">
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <i class="fas fa-clock text-white text-base font-bold drop-shadow-sm"></i>
+                        </div>
                     </div>
+                    <!-- Moving dots around clock -->
+                    <div class="absolute -top-1 -right-1 w-2 h-2 bg-yellow-300 rounded-full animate-orbit-slow"></div>
+                    <div class="absolute -bottom-1 -left-1 w-2 h-2 bg-yellow-200 rounded-full animate-orbit-slow delay-500"></div>
                 </div>
             </div>
         <?php endif; ?>
@@ -294,14 +316,54 @@ ob_start();
     </div>
 </div>
 
-<!-- REQUIRED: Custom Animation (Add inside <head> or your CSS file) -->
+<!-- Enhanced Custom Animations -->
 <style>
 @keyframes spin-slow {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
 .animate-spin-slow {
-  animation: spin-slow 3s linear infinite;
+  animation: spin-slow 2.5s linear infinite;
+}
+
+@keyframes ping-slow {
+  0% { transform: scale(1); opacity: 0.7; }
+  75%, 100% { transform: scale(2); opacity: 0; }
+}
+.animate-ping-slow {
+  animation: ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes ping-fast {
+  0% { transform: scale(1); opacity: 1; }
+  50%, 100% { transform: scale(2); opacity: 0; }
+}
+.animate-ping-fast {
+  animation: ping-fast 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes bounce-gentle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+.animate-bounce-gentle {
+  animation: bounce-gentle 2s ease-in-out infinite;
+}
+
+@keyframes orbit-slow {
+  0% { transform: rotate(0deg) translateX(8px) rotate(0deg); }
+  100% { transform: rotate(360deg) translateX(8px) rotate(-360deg); }
+}
+.animate-orbit-slow {
+  animation: orbit-slow 3s linear infinite;
+}
+
+/* Enhanced glow effects */
+.ring-2 {
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+.drop-shadow-sm {
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3));
 }
 </style>
 <!-- CARD 2: Employment -->
