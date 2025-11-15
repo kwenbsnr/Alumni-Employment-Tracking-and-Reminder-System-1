@@ -568,7 +568,7 @@ ob_start();
             ?>">
                 <?php echo $document['document_count'] > 0
                     ? 'You have <strong>' . $document['document_count'] . '</strong> file' . ($document['document_count'] != 1 ? 's' : '') . ' ready.'
-                    : 'No files uploaded yet. Start now!'; ?>
+                    : 'No files uploaded yet. '; ?>
             </p>
 
             <div class="flex items-center justify-between pt-2 border-t border-gray-100">
