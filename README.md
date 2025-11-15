@@ -39,6 +39,9 @@ When a rejected profile is resubmitted, previously entered details appear in the
 =======
 2. "Employed & Student" submission issue:
 If a user selects "Employed & Student" in the employment status, the form submits successfully but does not store data in the employment_status column of the alumni_profile table and does not add a row in the alumni_documents table. Additionally, no data is displayed in the dashboard cards. [DONE]
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
 🟠 High Priority
