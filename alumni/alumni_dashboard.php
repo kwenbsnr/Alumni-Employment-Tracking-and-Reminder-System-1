@@ -316,56 +316,6 @@ ob_start();
     </div>
 </div>
 
-<!-- Enhanced Custom Animations -->
-<style>
-@keyframes spin-slow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-.animate-spin-slow {
-  animation: spin-slow 2.5s linear infinite;
-}
-
-@keyframes ping-slow {
-  0% { transform: scale(1); opacity: 0.7; }
-  75%, 100% { transform: scale(2); opacity: 0; }
-}
-.animate-ping-slow {
-  animation: ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite;
-}
-
-@keyframes ping-fast {
-  0% { transform: scale(1); opacity: 1; }
-  50%, 100% { transform: scale(2); opacity: 0; }
-}
-.animate-ping-fast {
-  animation: ping-fast 1s cubic-bezier(0, 0, 0.2, 1) infinite;
-}
-
-@keyframes bounce-gentle {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
-}
-.animate-bounce-gentle {
-  animation: bounce-gentle 2s ease-in-out infinite;
-}
-
-@keyframes orbit-slow {
-  0% { transform: rotate(0deg) translateX(8px) rotate(0deg); }
-  100% { transform: rotate(360deg) translateX(8px) rotate(-360deg); }
-}
-.animate-orbit-slow {
-  animation: orbit-slow 3s linear infinite;
-}
-
-/* Enhanced glow effects */
-.ring-2 {
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
-}
-.drop-shadow-sm {
-  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3));
-}
-</style>
 <!-- CARD 2: Employment -->
 <div class="h-full flex flex-col">
     <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border <?php
@@ -449,6 +399,7 @@ ob_start();
         </a>
     </div>
 </div>
+
 <!-- CARD 3: Document Review -->
 <div class="h-full flex flex-col">
     <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border <?php
@@ -561,6 +512,7 @@ ob_start();
         </a>
     </div>
 </div>
+
 <!-- CARD 4: Uploaded Documents -->
 <div class="h-full flex flex-col">
     <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border <?php
@@ -654,96 +606,109 @@ ob_start();
         </a>
     </div>
 </div>
+
+            </div>
+        </div>
+    </div>
+
     <!-- RIGHT: Quick Actions & Recent Activity (40%) -->
     <div class="space-y-5">
 
- <!-- Quick Actions Card -->
-<div class="bg-gray-50 rounded-xl shadow-sm border border-gray-200/50 p-5">
-    <h3 class="text-lg font-bold text-gray-800 mb-4">Quick Actions</h3>
-    <div class="space-y-0">
-        <!-- Action 1: Update Profile -->
-        <a href="alumni_profile.php" class="flex items-center p-4 bg-white hover:bg-green-50 rounded-t-xl transition-all duration-300 group border-b border-gray-200/70">
-            <div class="bg-green-100/70 p-3 rounded-xl mr-4 group-hover:bg-green-500 transition-colors duration-300">
-                <i class="fas fa-user-edit text-green-700 text-xl group-hover:text-white"></i>
-            </div>
-            <div class="flex-1">
-                <p class="font-bold text-gray-800">Update Profile</p>
-                <p class="text-xs text-gray-600">Keep your information current</p>
-            </div>
-            <i class="fas fa-chevron-right text-gray-400 text-sm group-hover:text-green-600 transition-colors"></i>
-        </a>
+        <!-- Quick Actions Card -->
+        <div class="bg-gray-50 rounded-xl shadow-sm border border-gray-200/50 p-5">
+            <h3 class="text-lg font-bold text-gray-800 mb-4">Quick Actions</h3>
+            <div class="space-y-0">
+                <!-- Action 1: Update Profile -->
+                <a href="alumni_profile.php" class="flex items-center p-4 bg-white hover:bg-green-50 rounded-t-xl transition-all duration-300 group border-b border-gray-200/70">
+                    <div class="bg-green-100/70 p-3 rounded-xl mr-4 group-hover:bg-green-500 transition-colors duration-300">
+                        <i class="fas fa-user-edit text-green-700 text-xl group-hover:text-white"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-bold text-gray-800">Update Profile</p>
+                        <p class="text-xs text-gray-600">Keep your information current</p>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-400 text-sm group-hover:text-green-600 transition-colors"></i>
+                </a>
 
-        <!-- Action 2: View Profile -->
-        <a href="alumni_profile.php" class="flex items-center p-4 bg-white hover:bg-purple-50 rounded-none transition-all duration-300 group border-b border-gray-200/70">
-            <div class="bg-purple-100/70 p-3 rounded-xl mr-4 group-hover:bg-purple-500 transition-colors duration-300">
-                <i class="fas fa-id-card text-purple-700 text-xl group-hover:text-white"></i>
-            </div>
-            <div class="flex-1">
-                <p class="font-bold text-gray-800">View Profile</p>
-                <p class="text-xs text-gray-600">See your full alumni details</p>
-            </div>
-            <i class="fas fa-chevron-right text-gray-400 text-sm group-hover:text-purple-600 transition-colors"></i>
-        </a>
+                <!-- Action 2: View Profile -->
+                <a href="alumni_profile.php" class="flex items-center p-4 bg-white hover:bg-purple-50 rounded-none transition-all duration-300 group border-b border-gray-200/70">
+                    <div class="bg-purple-100/70 p-3 rounded-xl mr-4 group-hover:bg-purple-500 transition-colors duration-300">
+                        <i class="fas fa-id-card text-purple-700 text-xl group-hover:text-white"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-bold text-gray-800">View Profile</p>
+                        <p class="text-xs text-gray-600">See your full alumni details</p>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-400 text-sm group-hover:text-purple-600 transition-colors"></i>
+                </a>
 
-        <!-- Action 3: Check Review Status -->
-        <a href="alumni_profile.php#documents" class="flex items-center p-4 bg-white hover:bg-amber-50 rounded-b-xl transition-all duration-300 group">
-            <div class="bg-amber-100/70 p-3 rounded-xl mr-4 group-hover:bg-amber-500 transition-colors duration-300">
-                <i class="fas fa-clipboard-list text-amber-700 text-xl group-hover:text-white"></i>
-            </div>
-            <div class="flex-1">
-                <p class="font-bold text-gray-800">Check Review Status</p>
-                <p class="text-xs text-gray-600">Track document approval</p>
-            </div>
-            <i class="fas fa-chevron-right text-gray-400 text-sm group-hover:text-amber-600 transition-colors"></i>
-        </a>
-    </div>
-</div>
- <!-- Recent Activity Card -->
-<div class="bg-white rounded-xl shadow-md border border-gray-100 p-5">
-    <h3 class="text-lg font-bold text-gray-800 mb-4">Recent Activity</h3>
-    <div class="space-y-2">
-        <!-- Item 1: Last Profile Update -->
-        <div class="flex items-start gap-3">
-            <div class="bg-amber-100 p-1.5 rounded-lg flex-shrink-0">
-                <i class="fas fa-clock text-amber-600 text-sm"></i>
-            </div>
-            <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium text-gray-800 truncate">Last Profile Update</p>
-                <p class="text-xs text-gray-600">
-                    <?php echo !empty($profile_info['last_profile_update'])
-                        ? date('M d, Y', strtotime($profile_info['last_profile_update']))
-                        : 'Never'; ?>
-                </p>
+                <!-- Action 3: Check Review Status -->
+                <a href="alumni_profile.php#documents" class="flex items-center p-4 bg-white hover:bg-amber-50 rounded-b-xl transition-all duration-300 group">
+                    <div class="bg-amber-100/70 p-3 rounded-xl mr-4 group-hover:bg-amber-500 transition-colors duration-300">
+                        <i class="fas fa-clipboard-list text-amber-700 text-xl group-hover:text-white"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-bold text-gray-800">Check Review Status</p>
+                        <p class="text-xs text-gray-600">Track document approval</p>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-400 text-sm group-hover:text-amber-600 transition-colors"></i>
+                </a>
             </div>
         </div>
 
-        <!-- Item 2: Document Status -->
-        <div class="flex items-start gap-3">
-            <div class="bg-blue-100 p-1.5 rounded-lg flex-shrink-0">
-                <i class="fas fa-file text-blue-600 text-sm"></i>
-            </div>
-            <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium text-gray-800 truncate">Documents Status</p>
-                <p class="text-xs text-gray-600"><?php echo htmlspecialchars($document['submission_status']); ?></p>
-            </div>
-        </div>
 
-        <!-- Item 3: Graduation Year -->
-        <div class="flex items-start gap-3">
-            <div class="bg-green-100 p-1.5 rounded-lg flex-shrink-0">
-                <i class="fas fa-graduation-cap text-green-600 text-sm"></i>
-            </div>
-            <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium text-gray-800 truncate">Graduation Year</p>
-                <p class="text-xs text-gray-600">
-                    <?php echo !empty($profile_info['year_graduated'])
-                        ? htmlspecialchars($profile_info['year_graduated'])
-                        : 'Not specified'; ?>
-                </p>
-            </div>
-        </div>
-    </div>
-</div>
+
+<!-- Enhanced Custom Animations -->
+<style>
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.animate-spin-slow {
+  animation: spin-slow 2.5s linear infinite;
+}
+
+@keyframes ping-slow {
+  0% { transform: scale(1); opacity: 0.7; }
+  75%, 100% { transform: scale(2); opacity: 0; }
+}
+.animate-ping-slow {
+  animation: ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes ping-fast {
+  0% { transform: scale(1); opacity: 1; }
+  50%, 100% { transform: scale(2); opacity: 0; }
+}
+.animate-ping-fast {
+  animation: ping-fast 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes bounce-gentle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+.animate-bounce-gentle {
+  animation: bounce-gentle 2s ease-in-out infinite;
+}
+
+@keyframes orbit-slow {
+  0% { transform: rotate(0deg) translateX(8px) rotate(0deg); }
+  100% { transform: rotate(360deg) translateX(8px) rotate(-360deg); }
+}
+.animate-orbit-slow {
+  animation: orbit-slow 3s linear infinite;
+}
+
+/* Enhanced glow effects */
+.ring-2 {
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+.drop-shadow-sm {
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3));
+}
+</style>
+
 <!-- Help & Support Modal -->
 <div id="helpModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
     <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300 scale-95 opacity-0">
@@ -802,6 +767,7 @@ ob_start();
         </a>
     </div>
 </div>
+
 </div>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
