@@ -214,18 +214,32 @@ $user_id = $_SESSION['user_id'];
             $start_year = htmlspecialchars(trim($_POST['start_year'] ?? ''));
             $end_year = htmlspecialchars(trim($_POST['end_year'] ?? ''));
 
-            // Validate year format - UPDATED FOR DYNAMIC RANGES
+            // Validate year format
             if ($can_update && in_array($status, ['Student', 'Employed & Student'])) {
                 $current_year = date('Y');
                 
-                // Start year: must be between graduation year and current year
-                if (!preg_match('/^\d{4}$/', $start_year) || $start_year < $year || $start_year > $current_year) {
-                    throw new Exception("Invalid start year. Must be between your graduation year ({$year}) and current year ({$current_year}).");
+                // Basic year format validation
+                if (!preg_match('/^\d{4}$/', $start_year) || $start_year < 2000) {
+                    throw new Exception("Invalid start year format.");
                 }
                 
-                // End year: must be between start_year+1 and current_year+5
-                if (!preg_match('/^\d{4}$/', $end_year) || $end_year <= $start_year || $end_year > ($current_year + 5)) {
-                    throw new Exception("Invalid end year. Must be between " . ($start_year + 1) . " and " . ($current_year + 5) . ".");
+                if (!preg_match('/^\d{4}$/', $end_year) || $end_year < 2000) {
+                    throw new Exception("Invalid end year format.");
+                }
+                
+                // Start year must be >= graduation year
+                if ($start_year < $year) {
+                    throw new Exception("Academic Start Year must be the same as or later than your Graduation Year ({$year}).");
+                }
+                
+                // End year must be > start year
+                if ($end_year <= $start_year) {
+                    throw new Exception("End Year (Expected Graduation) must be later than Start Year.");
+                }
+                
+                // End year should be reasonable (not too far in future)
+                if ($end_year > ($current_year + 10)) {
+                    throw new Exception("End Year seems too far in the future. Please verify your expected graduation year.");
                 }
             }
 
