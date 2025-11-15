@@ -1,4 +1,3 @@
-// login.js
 document.addEventListener("DOMContentLoaded", () => {
   console.log("JS Loaded");
 
@@ -8,12 +7,121 @@ document.addEventListener("DOMContentLoaded", () => {
   const loginForm     = document.getElementById("loginForm");
   const loginEmail    = document.getElementById("loginEmail");
   const loginPassword = document.getElementById("loginPassword");
+  const togglePassword = document.getElementById("togglePassword");
+  const emailError    = document.getElementById("emailError");
+  const passwordError = document.getElementById("passwordError");
   const body          = document.body;
 
-  if (!roleSelectors.length || !roleInput || !loginButton || !loginForm || !loginEmail || !loginPassword) {
+  if (!roleSelectors.length || !roleInput || !loginButton || !loginForm || !loginEmail || !loginPassword || !togglePassword) {
     console.error("Missing required DOM elements");
     return;
   }
+
+  // Check if we're returning from a failed login attempt
+  const hasPreviousAttempt = loginPassword.classList.contains('password-retry-field');
+  
+  // Validation functions
+  function validateEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }
+
+  function showError(element, message) {
+    element.textContent = message;
+    element.classList.remove('hidden');
+  }
+
+  function hideError(element) {
+    element.textContent = '';
+    element.classList.add('hidden');
+  }
+
+  function markInputError(input, hasError) {
+    if (hasError) {
+      input.classList.add('input-error');
+      if (input === loginPassword) {
+        input.classList.add('password-error-highlight');
+      }
+    } else {
+      input.classList.remove('input-error');
+      input.classList.remove('password-error-highlight');
+    }
+  }
+
+  // ---------- Email validation ----------
+  loginEmail.addEventListener('blur', () => {
+    const email = loginEmail.value.trim();
+    
+    if (email === '') {
+      showError(emailError, 'Email is required');
+      markInputError(loginEmail, true);
+    } else if (!validateEmail(email)) {
+      showError(emailError, 'Please enter a valid email address');
+      markInputError(loginEmail, true);
+    } else {
+      hideError(emailError);
+      markInputError(loginEmail, false);
+    }
+  });
+
+  // ---------- Password validation (MODIFIED: Removed length check) ----------
+  loginPassword.addEventListener('blur', () => {
+    const password = loginPassword.value;
+    
+    if (password === '') {
+      showError(passwordError, 'Password is required');
+      markInputError(loginPassword, true);
+    } else {
+      // REMOVED: Password length validation
+      hideError(passwordError);
+      markInputError(loginPassword, false);
+    }
+  });
+
+  // ---------- Enhanced password validation for retry attempts ----------
+  loginPassword.addEventListener('input', () => {
+    const password = loginPassword.value;
+    
+    if (hasPreviousAttempt && password.length > 0) {
+      // Clear any previous error styling when user starts typing
+      hideError(passwordError);
+      markInputError(loginPassword, false);
+      
+      // Remove the retry field styling as user is correcting
+      loginPassword.classList.remove('password-retry-field');
+    }
+    
+    if (password === '') {
+      showError(passwordError, 'Password is required');
+      markInputError(loginPassword, true);
+    } else {
+      hideError(passwordError);
+      markInputError(loginPassword, false);
+    }
+  });
+
+  // ---------- Password visibility toggle ----------
+  togglePassword.addEventListener("click", () => {
+    // Check if password field is empty
+    if (!loginPassword.value.trim()) {
+      showCustomAlert("Please enter a password");
+      return;
+    }
+    
+    // Toggle password visibility
+    const type = loginPassword.getAttribute("type") === "password" ? "text" : "password";
+    loginPassword.setAttribute("type", type);
+    
+    // Toggle eye icon
+    const icon = togglePassword.querySelector("i");
+    if (type === "text") {
+      icon.classList.remove("fa-eye");
+      icon.classList.add("fa-eye-slash");
+    } else {
+      icon.classList.remove("fa-eye-slash");
+      icon.classList.add("fa-eye");
+    }
+  });
 
   // ---------- Role selection ----------
   roleSelectors.forEach(selector => {
@@ -46,21 +154,91 @@ document.addEventListener("DOMContentLoaded", () => {
       // Add base enabled styles
       loginButton.classList.add("cursor-pointer", "text-white");
       
-      // Focus email field
-      loginEmail.focus();
+      // Focus password field if returning from failed attempt, otherwise email
+      if (hasPreviousAttempt) {
+        loginPassword.focus();
+      } else {
+        loginEmail.focus();
+      }
     });
   });
 
-  // Auto-select Alumni on load (UX)
-  const alumni = document.querySelector('[data-role="alumni"]');
-  if (alumni && !roleInput.value) alumni.click();
-
-  // ---------- Form submit validation ----------
-  loginForm.addEventListener("submit", e => {
-    if (!roleInput.value) {
-      e.preventDefault();
-      showCustomAlert("Please select a role before signing in.");
+  // Auto-select role if returning from failed attempt
+  if (roleInput.value) {
+    const selectedRole = document.querySelector(`[data-role="${roleInput.value}"]`);
+    if (selectedRole) {
+      selectedRole.click();
     }
+  } else {
+    // Auto-select Alumni on load (UX)
+    const alumni = document.querySelector('[data-role="alumni"]');
+    if (alumni) alumni.click();
+  }
+
+  // Focus password field if returning from failed attempt
+  if (hasPreviousAttempt) {
+    setTimeout(() => {
+      loginPassword.focus();
+      loginPassword.select(); // Select all text for easy re-entry
+    }, 100);
+  }
+
+  // ---------- Form submit validation (MODIFIED: Removed password length check) ----------
+  loginForm.addEventListener("submit", function(e) {
+    console.log("Form submission triggered");
+    
+    let hasErrors = false;
+
+    // Validate role
+    if (!roleInput.value) {
+      showCustomAlert("Please select a role before signing in.");
+      hasErrors = true;
+      e.preventDefault();
+      return;
+    }
+
+    // Validate email
+    const email = loginEmail.value.trim();
+    if (email === '') {
+      showError(emailError, 'Email is required');
+      markInputError(loginEmail, true);
+      hasErrors = true;
+    } else if (!validateEmail(email)) {
+      showError(emailError, 'Please enter a valid email address');
+      markInputError(loginEmail, true);
+      hasErrors = true;
+    }
+
+    // Validate password (MODIFIED: Only check if password is empty, not length)
+    const password = loginPassword.value;
+    if (password === '') {
+      showError(passwordError, 'Password is required');
+      markInputError(loginPassword, true);
+      hasErrors = true;
+    }
+
+    if (hasErrors) {
+      e.preventDefault();
+      showCustomAlert("Please fix the errors above before submitting.");
+      return;
+    }
+
+    // Show loading state for retry attempts
+    if (hasPreviousAttempt) {
+      const originalText = loginButton.innerHTML;
+      loginButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Verifying...';
+      loginButton.disabled = true;
+      
+      // Restore button text after 3 seconds if still on page
+      setTimeout(() => {
+        if (loginButton.innerHTML.includes('fa-spinner')) {
+          loginButton.innerHTML = originalText;
+          loginButton.disabled = false;
+        }
+      }, 3000);
+    }
+
+    console.log("Form validation passed, submitting to database...");
   });
 
   // ---------- Enter key on inputs ----------
@@ -68,8 +246,11 @@ document.addEventListener("DOMContentLoaded", () => {
     input.addEventListener("keydown", ev => {
       if (ev.key === "Enter") {
         ev.preventDefault();
-        if (!loginButton.disabled) loginButton.click();
-        else showCustomAlert("Please select a role first.");
+        if (!loginButton.disabled) {
+          loginForm.dispatchEvent(new Event('submit'));
+        } else {
+          showCustomAlert("Please select a role first.");
+        }
       }
     });
   });
@@ -103,7 +284,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }, 5000);
   }
-  
 
   // Make function globally available
   window.showCustomAlert = showCustomAlert;
