@@ -1,3 +1,4 @@
+/* login.css */
 html, body {
     height: 100%;
     margin: 0;
@@ -243,66 +244,6 @@ body.admin-selected .login-box input:focus {
     background: linear-gradient(to bottom, #ffffff, #f0f7ff);
 }
 
-/* Password field with visibility toggle - FIXED POSITIONING */
-.password-field-container {
-    position: relative;
-}
-
-.password-field-container input {
-    padding-right: 3rem !important; /* Ensure space for the icon */
-}
-
-
-#togglePassword {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    color: #6b7280;
-    transition: color 0.3s ease;
-    padding: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: auto;
-    height: auto;
-}
-
-#togglePassword:hover {
-    color: #374151;
-}
-
-/* Additional styles for password retry feature */
-.login-error-message {
-    animation: shake 0.5s ease-in-out;
-}
-
-.password-retry-field {
-    border-color: #f59e0b !important;
-    background: linear-gradient(to bottom, #fffbf0, #fef3c7) !important;
-}
-
-@keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-5px); }
-    75% { transform: translateX(5px); }
-}
-
-/* Enhanced error states for password fields */
-.password-error-highlight {
-    border-color: var(--error-red) !important;
-    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
-    background: linear-gradient(to bottom, #fef2f2, #fecaca) !important;
-}
-
-/* Ensure the password input container maintains proper positioning */
-.relative .relative {
-    position: relative;
-}
-
 /* Sign In Button */
 .login-box #loginButton {
     background: var(--primary-green);
@@ -331,12 +272,6 @@ body.admin-selected .login-box #loginButton:enabled:hover {
     background: linear-gradient(135deg, var(--primary-blue), var(--dark-blue));
     box-shadow: 0 6px 8px rgba(30, 64, 175, 0.4);
     transform: translateY(-1px);
-}
-
-/* Error states */
-.input-error {
-    border-color: var(--error-red) !important;
-    box-shadow: 0 0 5px rgba(220, 38, 38, 0.3) !important;
 }
 
 /* Responsive Design */
@@ -386,7 +321,6 @@ body.admin-selected .login-box #loginButton:enabled:hover {
     .top-links a {
         font-size: 0.8rem;
     }
-    
     .error-container {
         padding: 0.5rem 0.75rem;
         font-size: 0.8rem;
