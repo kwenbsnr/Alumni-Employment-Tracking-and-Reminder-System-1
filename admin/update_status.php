@@ -31,41 +31,9 @@ if ($user_id && in_array($status, ['Approved', 'Rejected'])) {
         $update_type = ($status === 'Approved') ? 'approve' : 'reject';
         $logQuery = "INSERT INTO update_log (updated_by, updated_id, update_type) VALUES (?, ?, ?)";
         $logStmt = $conn->prepare($logQuery);
-        $logStmt->bind_param('ii', $_SESSION['user_id'], $user_id);
+        $logStmt->bind_param('iis', $_SESSION['user_id'], $user_id, $update_type);
         $logStmt->execute();
         $logStmt->close();
-
-        // Send Notification
-        include_once $_SERVER['DOCUMENT_ROOT'] . '/Alumni-Employment-Tracking-and-Reminder-System/api/notification/notification_helper.php';
-        $notifHelper = new NotificationHelper($conn);
-
-        // Fetch alumni info using the helper
-        $alumniDetails = $notifHelper->getAlumniDetails($user_id);
-
-        if ($alumniDetails && !empty($alumniDetails['email'])) {
-            $alumni_email = $alumniDetails['email'];
-            $alumni_name = trim(($alumniDetails['first_name'] ?? '') . ' ' . ($alumniDetails['last_name'] ?? ''));
-
-            $parameters = [
-                "alumni_name" => $alumni_name,
-                "rejection_reason" => $reason,
-                "status" => $status,
-                "graduation_year" => $alumniDetails['year_graduated'] ?? 'N/A',
-                "current_position" => $alumniDetails['job_title'] ?? 'N/A',
-                "current_company" => $alumniDetails['company_name'] ?? 'N/A',
-                "employment_status" => $alumniDetails['employment_status'] ?? 'N/A'
-            ];
-
-            try {
-                if ($status === 'Rejected') {
-                    $notifHelper->sendNotification('template_rejected', 'alumni_rejection', $alumni_email, $parameters);
-                } else {
-                    $notifHelper->sendNotification('template_approved', 'alumni_approval', $alumni_email, $parameters);
-                }
-            } catch (Exception $e) {
-                error_log("Notification failed for user_id $user_id: " . $e->getMessage());
-            }
-        }
 
         // Redirect success
         header("Location: alumni_management.php?success=" . urlencode("Alumni profile " . strtolower($status) . " successfully"));
