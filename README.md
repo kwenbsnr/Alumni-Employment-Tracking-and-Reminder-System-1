@@ -32,7 +32,7 @@ ____________________
 1. Submission clearing issue:
 When a rejected profile is resubmitted, previously entered details appear in the form, but clicking submit clears all data and reopens the form incorrectly. The form should reset automatically and allow smooth resubmission.
 
-2. **[FIXED]**"Employed & Student" submission issue:
+2. **[FIXED]** "Employed & Student" submission issue:
 If a user selects "Employed & Student" in the employment status, the form submits successfully but does not store data in the employment_status column of the alumni_profile table and does not add a row in the alumni_documents table. Additionally, no data is displayed in the dashboard cards.
 
 🟠 High Priority
@@ -59,10 +59,10 @@ Successful submission must appear on the dashboard like the “Complete Your Pro
 2. Start & end year display:
 If "Student" or "Employed & Student" is selected, start & end year values must display correctly in the Employment/Academic Details card after successful submission. 
 
-3. **[FIXED]**Apostrophe handling:
+3. **[FIXED]** Apostrophe handling:
 Employment/Academic Details display cards after successful submission have issues with apostrophe rendering. 
 
-4. **[FIXED]**Header bar scroll issue: The header bar must remain fixed and not be scrollable. 
+4. **[FIXED]** Header bar scroll issue: The header bar must remain fixed and not be scrollable. 
 ______________________
 ______________________
 ______________________
