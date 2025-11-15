@@ -47,8 +47,9 @@ if (!empty($profile_info)) {
     }
 }
 
-// Determine profile completion
-$is_profile_complete = !empty($profile_info) &&
+// --- NEW CODE: CLEAR & CORRECT ---
+// Check 7 required fields
+$fields_complete = !empty($profile_info) &&
     !empty($profile_info['first_name']) &&
     !empty($profile_info['last_name']) &&
     !empty($profile_info['contact_number']) &&
@@ -56,39 +57,49 @@ $is_profile_complete = !empty($profile_info) &&
     !empty($profile_info['employment_status']) &&
     !empty($profile_info['address_id']);
 
-// Calculate dynamic completion percentage
-$completed_fields = 0;
-$total_fields = 7; // Total number of required profile fields
-
-if (!empty($profile_info)) {
-    if (!empty($profile_info['first_name'])) $completed_fields++;
-    if (!empty($profile_info['last_name'])) $completed_fields++;
-    if (!empty($profile_info['contact_number'])) $completed_fields++;
-    if (!empty($profile_info['year_graduated'])) $completed_fields++;
-    if (!empty($profile_info['employment_status'])) $completed_fields++;
-    if (!empty($profile_info['address_id'])) $completed_fields++;
-    
-    // Photo is also required
-    $stmt_photo = $conn->prepare("SELECT photo_path FROM alumni_profile WHERE user_id = ?");
+// Check photo
+$has_photo = false;
+$stmt_photo = $conn->prepare("SELECT photo_path FROM alumni_profile WHERE user_id = ?");
+if ($stmt_photo) {
     $stmt_photo->bind_param("i", $user_id);
     $stmt_photo->execute();
     $photo_result = $stmt_photo->get_result();
     $photo_data = $photo_result->fetch_assoc();
     $stmt_photo->close();
-    
-    if (!empty($photo_data['photo_path'])) {
-        $completed_fields++;
-    }
+    $has_photo = !empty($photo_data['photo_path']);
 }
 
-$completion_percentage = $total_fields > 0 ? round(($completed_fields / $total_fields) * 100) : 0;
-$is_profile_complete = ($completion_percentage === 100);
+// Count completed items (7 fields + 1 photo = 8 total)
+$completed_count = 0;
+$total_fields = 8;
+
+if (!empty($profile_info)) {
+    if (!empty($profile_info['first_name'])) $completed_count++;
+    if (!empty($profile_info['last_name'])) $completed_count++;
+    if (!empty($profile_info['contact_number'])) $completed_count++;
+    if (!empty($profile_info['year_graduated'])) $completed_count++;
+    if (!empty($profile_info['employment_status'])) $completed_count++;
+    if (!empty($profile_info['address_id'])) $completed_count++;
+}
+if ($has_photo) $completed_count++;
+
+// Calculate percentage
+$completion_percentage = $total_fields > 0 ? round(($completed_count / $total_fields) * 100) : 0;
+
+// Profile is 100% only if all 7 fields + photo are filled
+$is_profile_complete = $fields_complete && $has_photo;
+
+// Final display status
+$profile_status = 'Incomplete';
+if ($is_profile_complete) {
+    $submission_status = $profile_info['submission_status'] ?? 'Not Submitted';
+    $profile_status = ($submission_status === 'Pending') ? 'Pending Approval' : 'Complete';
+}
+
 // Annual update check
 $needs_annual_update = !empty($profile_info) &&
     ($profile_info['last_profile_update'] === null ||
      strtotime($profile_info['last_profile_update'] . ' +1 year') <= time());
-
-$needs_profile_update = empty($profile_info) || !$is_profile_complete || $needs_annual_update;
 
 $needs_profile_update = empty($profile_info) || !$is_profile_complete || $needs_annual_update;
 
@@ -124,7 +135,6 @@ if (!empty($profile_info)) {
     $document['submission_status'] = 'No Profile';
     $document['message'] = 'Complete your profile first';
 }
-
 ob_start();
 ?>
 
@@ -155,305 +165,522 @@ ob_start();
         </div>
         <?php unset($_SESSION['show_welcome']); ?>
     <?php endif; ?>
-
-   
-
-    <!-- TWO-COLUMN LAYOUT: Stats (60%) + Quick Actions (40%) -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
-        <!-- LEFT: Stats Cards (2 columns, ~60%) -->
-        <div class="lg:col-span-2 space-y-5">
-            
-            <!-- MODERN 2x2 DASHBOARD CARDS - Compact Size & No Scroll -->
-            <div class="max-w-6xl mx-auto">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 auto-rows-fr">
-                    
-                    <!-- CARD 1: Profile Completion -->
-                    <div class="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden flex flex-col h-full hover:shadow-lg transition-all duration-300">
-                        <div class="p-5 flex-1 flex flex-col">
-                            <div class="flex items-start justify-between mb-4">
-                                <div class="p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl text-white shadow-md">
-                                    <i class="fas fa-user-check text-xl"></i>
-                                </div>
-                                <span class="px-3 py-1 text-xs font-bold tracking-wider uppercase rounded-full <?php echo $is_profile_complete ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'; ?>">
-                                    <?php echo $is_profile_complete ? 'Complete' : 'Incomplete'; ?>
-                                </span>
+<!-- TWO-COLUMN LAYOUT: Stats (60%) + Quick Actions (40%) -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+    <!-- LEFT: 4 Cards (2x2 Grid, ~60%) -->
+    <div class="lg:col-span-2">
+        <!-- MODERN 2x2 DASHBOARD CARDS - EQUAL HEIGHT, FULLY RESPONSIVE -->
+        <div class="max-w-6xl mx-auto">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                
+                <!-- CARD 1: Profile Completion -->
+                <div class="h-full flex flex-col">
+                    <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border <?php 
+                        echo $profile_status === 'Complete' ? 'border-emerald-400 ring-2 ring-emerald-100' : 
+                             ($profile_status === 'Pending Approval' ? 'border-amber-400 ring-2 ring-amber-100' : 'border-orange-500 ring-2 ring-orange-200'); 
+                    ?> overflow-hidden flex flex-col h-full hover:shadow-xl transition-all duration-400 group relative">
+                        
+                        <!-- Alert Pulse for Incomplete -->
+                        <?php if ($profile_status === 'Incomplete'): ?>
+                            <div class="absolute -top-2 -right-2 w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center text-white font-bold shadow-xl animate-ping">
+                                <span class="absolute inline-flex w-full h-full rounded-full bg-orange-400 opacity-75 animate-ping"></span>
+                                <i class="fas fa-exclamation relative z-10 text-sm"></i>
                             </div>
-                            <h3 class="text-lg font-bold text-gray-800 mb-2">Profile Completion</h3>
-                            <p class="text-gray-600 text-xs leading-relaxed flex-1">
-                                <?php echo $is_profile_complete 
-                                    ? 'Amazing! Your profile is 100% complete and up to date.' 
-                                    : 'Finish filling out your details to unlock full portal access.'; ?>
-                            </p>
+                        <?php endif; ?>
 
-                            <!-- Completion Rate Display -->
-                            <div class="mt-4">
-                                <div class="flex justify-between text-xs text-gray-500 mb-1">
-                                    <span>Completion Rate</span>
-                                   <span class="font-bold"><?php echo $completion_percentage; ?>%</span>
+                        <!-- Main Content -->
+                        <div class="p-6 pb-4 space-y-4 flex flex-col flex-1">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <div class="p-3 <?php 
+                                        echo $profile_status === 'Complete' ? 'bg-emerald-600' : 
+                                             ($profile_status === 'Pending Approval' ? 'bg-amber-600' : 'bg-orange-600'); 
+                                    ?> rounded-xl text-white shadow-md transform group-hover:scale-110 transition-transform duration-300">
+                                        <i class="fas fa-user-check text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-lg font-extrabold <?php echo $profile_status === 'Complete' ? 'text-gray-900' : 'text-orange-900'; ?>">
+                                            Profile Completion
+                                        </h3>
+                                        <div class="mt-1.5">
+                                            <span class="inline-flex items-center px-3 py-1 text-xs font-bold tracking-wider rounded-full uppercase <?php 
+                                                echo $profile_status === 'Complete' ? 'bg-emerald-100 text-emerald-800' : 
+                                                     ($profile_status === 'Pending Approval' ? 'bg-amber-100 text-amber-800' : 'bg-orange-100 text-orange-800'); 
+                                            ?> shadow-sm">
+                                                <?php echo $profile_status; ?>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Body Text -->
+                            <div class="flex-1">
+                                <p class="text-sm <?php echo $profile_status === 'Complete' ? 'text-gray-600' : 'text-orange-700'; ?> leading-relaxed font-medium">
+                                    <?php 
+                                    if ($profile_status === 'Complete') {
+                                        echo 'Congratulations! Your profile is fully verified.';
+                                    } elseif ($profile_status === 'Pending Approval') {
+                                        echo 'Submitted! Admin review in progress...';
+                                    } else {
+                                        echo 'Action needed: Complete your profile to unlock all features.';
+                                    }
+                                    ?>
+                                </p>
+                            </div>
+
+                            <!-- Progress Section -->
+                            <div class="space-y-3">
+                                <div class="flex justify-between text-xs font-semibold <?php echo $profile_status === 'Complete' ? 'text-gray-500' : 'text-orange-700'; ?>">
+                                    <span>Completion Progress</span>
+                                    <span><?php echo $completion_percentage; ?>%</span>
                                 </div>
 
-                                <?php if ($is_profile_complete): ?>
-                                    <!-- 100% Complete → Show clean checkmark instead of progress bar -->
-                                    <div class="flex items-center justify-center py-3">
-                                        <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                                            <i class="fas fa-check text-2xl text-green-600 font-bold"></i>
+                                <?php if ($profile_status === 'Complete'): ?>
+                                    <!-- Confetti Checkmark -->
+                                    <div class="relative py-3 overflow-hidden">
+                                        <div class="absolute inset-0 flex items-center justify-center">
+                                            <div class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center animate-bounce">
+                                                <i class="fas fa-check text-2xl text-emerald-700"></i>
+                                            </div>
                                         </div>
-                                        <span class="ml-3 text-sm font-semibold text-green-700">Fully Completed</span>
+                                        <div class="absolute inset-0 flex justify-center">
+                                            <div class="w-20 h-20 bg-emerald-50 rounded-full opacity-50 animate-ping"></div>
+                                        </div>
                                     </div>
                                 <?php else: ?>
-                                    <!-- Incomplete → Keep progress bar -->
-                                    <div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
-                                        <div class="h-full rounded-full bg-gradient-to-r from-green-500 to-emerald-600 transition-all duration-1000"
-     style="width: <?php echo $completion_percentage; ?>%"></div>
+                                    <!-- Gradient Progress Bar -->
+                                    <div class="relative w-full h-3 bg-gray-200 rounded-full overflow-hidden shadow-inner">
+                                        <div class="absolute inset-0 bg-gradient-to-r <?php 
+                                            echo $completion_percentage >= 90 ? 'from-emerald-500 to-teal-500' : 
+                                                 ($completion_percentage >= 70 ? 'from-orange-500 to-yellow-500' : 'from-orange-600 to-red-500'); 
+                                        ?> h-full rounded-full transition-all duration-1000 ease-out transform origin-left"
+                                             style="width: <?php echo $completion_percentage; ?>%"></div>
+                                        <div class="absolute inset-0 bg-white/30 backdrop-blur-sm h-full rounded-full animate-pulse"></div>
                                     </div>
                                 <?php endif; ?>
                             </div>
                         </div>
 
-                        <a href="alumni_profile.php" class="block text-center py-3 px-5 text-white font-semibold text-base
-                            bg-gradient-to-r from-green-600 to-emerald-700 
-                            hover:from-green-700 hover:to-emerald-800 
-                            transition-all duration-300">
-                            <?php echo $is_profile_complete ? 'View Profile' : 'Complete Profile Now'; ?> →
+                        <!-- CTA Button -->
+                        <a href="alumni_profile.php" class="mt-auto block text-center py-3.5 px-6 text-white text-sm font-bold tracking-wide
+                            <?php 
+                            echo $profile_status === 'Complete' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700' : 
+                                 ($profile_status === 'Pending Approval' ? 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700' : 'bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700'); 
+                            ?> transition-all duration-300 rounded-b-2xl flex items-center justify-center space-x-1 group">
+                            <span>
+                                <?php 
+                                echo $profile_status === 'Complete' ? 'View Profile' : 
+                                     ($profile_status === 'Pending Approval' ? 'Track Submission' : 'Complete Now'); 
+                                ?>
+                            </span>
+                            <i class="fas fa-arrow-right text-sm transform group-hover:translate-x-1 transition-transform"></i>
                         </a>
                     </div>
+                </div>
 
-                    <!-- CARD 2: Employment Status -->
-                    <div class="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden flex flex-col h-full hover:shadow-lg transition-all duration-300">
-                        <div class="p-5 flex-1 flex flex-col">
-                            <div class="flex items-start justify-between mb-4">
-                                <div class="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl text-white shadow-md">
-                                    <i class="fas fa-briefcase text-xl"></i>
-                                </div>
-                                <span class="px-3 py-1 text-xs font-bold tracking-wider uppercase rounded-full bg-blue-100 text-blue-700">
-                                    Current Status
-                                </span>
+                <!-- CARD 2: Employment -->
+                <div class="h-full flex flex-col">
+                    <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border <?php 
+                        echo !empty($profile_info['employment_status']) && $profile_info['employment_status'] !== 'Not Set' 
+                            ? 'border-blue-400 ring-2 ring-blue-100' 
+                            : 'border-gray-300 ring-2 ring-gray-100'; 
+                    ?> overflow-hidden flex flex-col h-full hover:shadow-xl transition-all duration-400 group relative">
+
+                        <!-- Top-right status indicator -->
+                        <?php if (empty($profile_info['employment_status']) || $profile_info['employment_status'] === 'Not Set'): ?>
+                            <div class="absolute -top-2 -right-2 w-11 h-11 bg-gradient-to-br from-gray-500 to-gray-700 rounded-full flex items-center justify-center text-white font-bold shadow-xl animate-pulse">
+                                <i class="fas fa-question text-sm"></i>
                             </div>
-                            <h3 class="text-lg font-bold text-gray-800 mb-2">Employment</h3>
+                        <?php endif; ?>
+
+                        <!-- Main Content -->
+                        <div class="p-6 pb-4 flex-1 flex flex-col justify-between space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <div class="p-3 <?php 
+                                        echo !empty($profile_info['employment_status']) && $profile_info['employment_status'] !== 'Not Set' 
+                                            ? 'bg-gradient-to-br from-blue-600 to-cyan-600' 
+                                            : 'bg-gradient-to-br from-gray-500 to-gray-700'; 
+                                    ?> rounded-xl text-white shadow-md transform group-hover:scale-110 transition-all duration-300">
+                                        <i class="fas fa-briefcase text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-lg font-extrabold text-gray-900">Employment</h3>
+                                        <div class="mt-1.5">
+                                            <span class="inline-flex items-center px-3 py-1 text-xs font-bold tracking-wider rounded-full uppercase shadow-sm <?php 
+                                                echo !empty($profile_info['employment_status']) && $profile_info['employment_status'] !== 'Not Set' 
+                                                    ? 'bg-blue-100 text-blue-800' 
+                                                    : 'bg-gray-100 text-gray-700'; 
+                                            ?>">
+                                                <?php echo !empty($profile_info['employment_status']) && $profile_info['employment_status'] !== 'Not Set' 
+                                                    ? 'Current' : 'Not Set'; ?>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Employment Details -->
+                            <div class="space-y-1 flex-1">
+                                <p class="text-base font-bold text-gray-800 truncate <?php 
+                                    echo !empty($profile_info['employment_status']) && $profile_info['employment_status'] !== 'Not Set' 
+                                        ? '' : 'italic text-gray-400'; 
+                                ?>">
+                                    <?php echo !empty($profile_info['employment_status']) && $profile_info['employment_status'] !== 'Not Set'
+                                        ? htmlspecialchars($profile_info['employment_status'])
+                                        : 'No employment info'; ?>
+                                </p>
+                                <p class="text-xs <?php 
+                                    echo !empty($profile_info['last_profile_update']) 
+                                        ? 'text-gray-500' : 'text-gray-400 italic'; 
+                                ?>">
+                                    <?php echo !empty($profile_info['last_profile_update'])
+                                        ? 'Updated ' . date('M d, Y', strtotime($profile_info['last_profile_update']))
+                                        : 'Never updated'; ?>
+                                </p>
+                            </div>
+
+                            <!-- Optional: Mini progress -->
+                            <?php if (!empty($profile_info['employment_status']) && $profile_info['employment_status'] !== 'Not Set'): ?>
+                                <div class="flex items-center space-x-1 text-xs text-blue-600 font-medium">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Visible to network</span>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+
+                        <!-- CTA Button -->
+                        <a href="alumni_profile.php#employment" class="mt-auto block text-center py-3.5 px-6 text-white text-sm font-bold tracking-wide
+                            <?php 
+                            echo !empty($profile_info['employment_status']) && $profile_info['employment_status'] !== 'Not Set' 
+                                ? 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700' 
+                                : 'bg-gradient-to-r from-gray-500 to-gray-700 hover:from-gray-600 hover:to-gray-800'; 
+                            ?> transition-all duration-300 rounded-b-2xl flex items-center justify-center space-x-1 group">
+                            <span>
+                                <?php echo !empty($profile_info['employment_status']) && $profile_info['employment_status'] !== 'Not Set' 
+                                    ? 'Update' : 'Add Employment'; ?>
+                            </span>
+                            <i class="fas fa-arrow-right text-sm transform group-hover:translate-x-1 transition-transform"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- CARD 3: Document Review -->
+                <div class="h-full flex flex-col">
+                    <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border <?php 
+                        echo $document['submission_status'] === 'Approved' ? 'border-emerald-400 ring-2 ring-emerald-100' :
+                             ($document['submission_status'] === 'Rejected' ? 'border-red-500 ring-2 ring-red-200' :
+                             ($document['submission_status'] === 'Under Review' ? 'border-amber-400 ring-2 ring-amber-100' :
+                             'border-gray-300 ring-2 ring-gray-100'));
+                    ?> overflow-hidden flex flex-col h-full hover:shadow-xl transition-all duration-400 group relative">
+
+                        <!-- Status Alert Pulse (Rejected Only) -->
+                        <?php if ($document['submission_status'] === 'Rejected'): ?>
+                            <div class="absolute -top-2 -right-2 w-12 h-12 bg-gradient-to-br from-red-500 to-rose-600 rounded-full flex items-center justify-center text-white font-bold shadow-xl animate-ping">
+                                <span class="absolute inline-flex w-full h-full rounded-full bg-red-400 opacity-75 animate-ping"></span>
+                                <i class="fas fa-times relative z-10 text-sm"></i>
+                            </div>
+                        <?php endif; ?>
+
+                        <!-- Main Content -->
+                        <div class="p-6 pb-4 space-y-4 flex flex-col flex-1">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <div class="p-3 <?php
+                                        echo $document['submission_status'] === 'Approved' ? 'bg-gradient-to-br from-emerald-600 to-teal-600' :
+                                             ($document['submission_status'] === 'Rejected' ? 'bg-gradient-to-br from-red-600 to-rose-600' :
+                                             ($document['submission_status'] === 'Under Review' ? 'bg-gradient-to-br from-amber-600 to-orange-600' :
+                                             'bg-gradient-to-br from-gray-500 to-gray-700'));
+                                    ?> rounded-xl text-white shadow-md transform group-hover:scale-110 transition-all duration-300">
+                                        <i class="fas fa-clipboard-check text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-lg font-extrabold text-gray-900">Document Review</h3>
+                                        <div class="mt-1.5">
+                                            <span class="inline-flex items-center px-3 py-1 text-xs font-bold tracking-wider rounded-full uppercase shadow-sm <?php
+                                                echo $document['submission_status'] === 'Approved' ? 'bg-emerald-100 text-emerald-800' :
+                                                     ($document['submission_status'] === 'Rejected' ? 'bg-red-100 text-red-800' :
+                                                     ($document['submission_status'] === 'Under Review' ? 'bg-amber-100 text-amber-800' :
+                                                     'bg-gray-100 text-gray-700'));
+                                            ?>">
+                                                <?php echo htmlspecialchars($document['submission_status']); ?>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Message -->
                             <div class="flex-1">
-                                <p class="text-xl font-extrabold text-gray-900 mb-1">
-                                    <?php echo !empty($profile_info['employment_status']) && $profile_info['employment_status'] !== 'Not Set' 
-                                        ? htmlspecialchars($profile_info['employment_status']) 
-                                        : 'Not Specified'; ?>
+                                <p class="text-sm font-medium <?php
+                                    echo $document['submission_status'] === 'Approved' ? 'text-emerald-700' :
+                                         ($document['submission_status'] === 'Rejected' ? 'text-red-700' :
+                                         ($document['submission_status'] === 'Under Review' ? 'text-amber-700' : 'text-gray-600'));
+                                ?> leading-relaxed">
+                                    <?php echo htmlspecialchars($document['message']); ?>
                                 </p>
-                                <p class="text-xs text-gray-500 flex items-center">
-                                    <i class="fas fa-calendar-alt mr-1"></i>
-                                    <?php echo !empty($profile_info['last_profile_update']) 
-                                        ? 'Updated ' . date('M d, Y', strtotime($profile_info['last_profile_update'])) 
-                                        : 'No updates yet'; ?>
-                                </p>
+                            </div>
+
+                            <!-- File Count + Visual Indicator -->
+                            <div class="flex items-center justify-between pt-3 border-t border-gray-100">
+                                <div class="flex items-center space-x-1.5 text-xs font-semibold <?php
+                                    echo $document['submission_status'] === 'Approved' ? 'text-emerald-600' :
+                                         ($document['submission_status'] === 'Rejected' ? 'text-red-600' :
+                                         ($document['submission_status'] === 'Under Review' ? 'text-amber-600' : 'text-gray-500'));
+                                ?>">
+                                    <i class="fas fa-paperclip"></i>
+                                    <span>Files:</span>
+                                    <span class="font-bold"><?php echo $document['document_count']; ?></span>
+                                </div>
+
+                                <!-- Visual Status Indicator -->
+                                <div class="flex justify-center">
+                                    <?php if ($document['submission_status'] === 'Approved'): ?>
+                                        <div class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center animate-bounce">
+                                            <i class="fas fa-check text-lg text-emerald-700"></i>
+                                        </div>
+                                    <?php elseif ($document['submission_status'] === 'Under Review'): ?>
+                                        <div class="relative w-10 h-10">
+                                            <svg class="w-10 h-10 transform -rotate-90">
+                                                <circle cx="20" cy="20" r="16" stroke="currentColor" stroke-width="3" fill="none" class="text-gray-200"/>
+                                                <circle cx="20" cy="20" r="16" stroke="currentColor" stroke-width="3" fill="none" 
+                                                        class="text-amber-500 transition-all duration-1000"
+                                                        stroke-dasharray="100" 
+                                                        stroke-dashoffset="<?php echo 100 - ($document['document_count'] > 0 ? 75 : 100); ?>"
+                                                        stroke-linecap="round"/>
+                                            </svg>
+                                            <div class="absolute inset-0 flex items-center justify-center">
+                                                <i class="fas fa-hourglass-half text-xs text-amber-600"></i>
+                                            </div>
+                                        </div>
+                                    <?php elseif ($document['submission_status'] === 'Rejected'): ?>
+                                        <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                                            <i class="fas fa-times text-lg text-red-700"></i>
+                                        </div>
+                                    <?php else: ?>
+                                        <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                                            <i class="fas fa-question text-sm text-gray-500"></i>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
                             </div>
                         </div>
-                        <a href="alumni_profile.php#employment" class="block text-center py-3 px-5 text-white font-semibold text-base
-                            bg-gradient-to-r from-blue-600 to-indigo-700 
-                            hover:from-blue-700 hover:to-indigo-800 
-                            transition-all duration-300">
-                            <?php echo !empty($profile_info['employment_status']) && $profile_info['employment_status'] !== 'Not Set' ? 'Update Employment' : 'Add Employment'; ?> →
+
+                        <!-- Action Button -->
+                        <a href="alumni_profile.php#documents" class="mt-auto block text-center py-3.5 px-6 text-white text-sm font-bold tracking-wide
+                            <?php 
+                            $status = $document['submission_status'];
+                            echo $status === 'Approved' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700' :
+                                 ($status === 'Rejected' ? 'bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700' :
+                                 ($status === 'Under Review' ? 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700' :
+                                 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700'));
+                            ?> transition-all duration-300 rounded-b-2xl flex items-center justify-center space-x-1 group">
+                            <span>
+                                <?php echo $document['submission_status'] === 'Approved' ? 'View Status' : 'Take Action'; ?>
+                            </span>
+                            <i class="fas fa-arrow-right text-sm transform group-hover:translate-x-1 transition-transform"></i>
                         </a>
                     </div>
+                </div>
 
-                 <!-- CARD 3: Document Review - Status Focused -->
-<div class="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden flex flex-col h-full hover:shadow-lg transition-all duration-300">
-    <div class="p-5 flex-1 flex flex-col">
-        <div class="flex items-start justify-between mb-4">
-            <div class="p-3 rounded-xl text-white shadow-md <?php 
-                echo match($document['submission_status']) {
-                    'Approved' => 'bg-gradient-to-br from-green-500 to-emerald-600',
-                    'Rejected' => 'bg-gradient-to-br from-red-500 to-rose-600',
-                    'Under Review' => 'bg-gradient-to-br from-amber-500 to-orange-600',
-                    'Draft' => 'bg-gradient-to-br from-blue-500 to-indigo-600',
-                    default => 'bg-gradient-to-br from-gray-500 to-gray-600'
-                };
-            ?>">
-                <i class="fas fa-clipboard-check text-xl"></i>
-            </div>
-            <span class="px-3 py-1 text-xs font-bold tracking-wider uppercase rounded-full 
-                <?php echo $document['submission_status'] === 'Approved' ? 'bg-green-100 text-green-700' :
-                       ($document['submission_status'] === 'Rejected' ? 'bg-red-100 text-red-700' :
-                       ($document['submission_status'] === 'Under Review' ? 'bg-amber-100 text-amber-700' :
-                       ($document['submission_status'] === 'Draft' ? 'bg-blue-100 text-blue-700' :
-                       'bg-gray-100 text-gray-600'))); ?>">
-                <?php echo htmlspecialchars($document['submission_status']); ?>
-            </span>
-        </div>
-        <h3 class="text-lg font-bold text-gray-800 mb-2">Document Review</h3>
-        <p class="text-gray-600 text-xs leading-relaxed mb-4">
-            <?php echo htmlspecialchars($document['message']); ?>
-        </p>
-        
-        <!-- Review Details -->
-        <div class="space-y-2 mt-auto">
-            <div class="flex justify-between text-xs">
-                <span class="text-gray-500">Reviewer Status:</span>
-                <span class="font-medium text-gray-700">
-                    <?php echo $document['submission_status'] === 'Draft' ? 'Not Submitted' : htmlspecialchars($document['submission_status']); ?>
-                </span>
-            </div>
-            <div class="flex justify-between text-xs">
-                <span class="text-gray-500">Last Updated:</span>
-                <span class="font-medium text-gray-700">
-                    <?php echo !empty($profile_info['last_profile_update']) 
-                        ? date('M d, Y', strtotime($profile_info['last_profile_update']))
-                        : 'Never'; ?>
-                </span>
-            </div>
-            <div class="flex justify-between text-xs">
-                <span class="text-gray-500">Documents in Review:</span>
-                <span class="font-medium text-gray-700">
-                    <?php echo $document['document_count']; ?> file<?php echo $document['document_count'] != 1 ? 's' : ''; ?>
-                </span>
+                <!-- CARD 4: Uploaded Documents -->
+                <div class="h-full flex flex-col">
+                    <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border <?php 
+                        echo $document['document_count'] > 0 
+                            ? 'border-blue-400 ring-2 ring-blue-100' 
+                            : 'border-gray-300 ring-2 ring-gray-100'; 
+                    ?> overflow-hidden flex flex-col h-full hover:shadow-xl transition-all duration-400 group relative">
+
+                        <!-- Pulsing Alert (No Files) -->
+                        <?php if ($document['document_count'] == 0): ?>
+                            <div class="absolute -top-2 -right-2 w-12 h-12 bg-gradient-to-br from-gray-500 to-gray-700 rounded-full flex items-center justify-center text-white font-bold shadow-xl animate-ping">
+                                <span class="absolute inset-0 rounded-full bg-gray-400 opacity-75 animate-ping"></span>
+                                <i class="fas fa-cloud-upload-alt relative z-10 text-sm"></i>
+                            </div>
+                        <?php endif; ?>
+
+                        <!-- Main Content -->
+                        <div class="p-6 flex flex-col flex-1 space-y-5">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <div class="p-3 <?php 
+                                        echo $document['document_count'] > 0 
+                                            ? 'bg-gradient-to-br from-blue-600 to-cyan-600' 
+                                            : 'bg-gradient-to-br from-gray-500 to-gray-700'; 
+                                    ?> rounded-xl text-white shadow-md transform group-hover:scale-110 transition-all duration-300 relative overflow-hidden">
+                                        <i class="fas fa-cloud-upload-alt text-xl <?php echo $document['document_count'] > 0 ? 'animate-bounce' : ''; ?>"></i>
+                                        <?php if ($document['document_count'] > 0): ?>
+                                            <div class="absolute inset-0 flex items-center justify-center">
+                                                <div class="w-5 h-5 bg-white/30 rounded-sm transform rotate-12 translate-x-1 translate-y-1"></div>
+                                                <div class="w-5 h-5 bg-white/20 rounded-sm transform -rotate-6 -translate-x-1 -translate-y-1"></div>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-lg font-extrabold text-gray-900">Uploaded Documents</h3>
+                                        <span class="inline-flex items-center px-3 py-1 text-xs font-bold tracking-wider rounded-full uppercase shadow-sm <?php 
+                                            echo $document['document_count'] > 0 
+                                                ? 'bg-blue-100 text-blue-800' 
+                                                : 'bg-gray-100 text-gray-700'; 
+                                        ?>">
+                                            <?php echo $document['document_count'] > 0 ? 'Active' : 'Empty'; ?>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="text-right">
+                                    <div class="text-3xl font-extrabold <?php echo $document['document_count'] > 0 ? 'text-blue-600' : 'text-gray-400'; ?>">
+                                        <?php echo $document['document_count']; ?>
+                                    </div>
+                                    <div class="text-xs <?php echo $document['document_count'] > 0 ? 'text-blue-500' : 'text-gray-400'; ?> uppercase tracking-wider font-medium">
+                                        File<?php echo $document['document_count'] != 1 ? 's' : ''; ?>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <p class="text-sm font-medium <?php 
+                                echo $document['document_count'] > 0 
+                                    ? 'text-blue-700' 
+                                    : 'text-gray-500 italic'; 
+                            ?>">
+                                <?php echo $document['document_count'] > 0
+                                    ? 'You have <strong>' . $document['document_count'] . '</strong> file' . ($document['document_count'] != 1 ? 's' : '') . ' ready.'
+                                    : 'No files uploaded yet. Start now!'; ?>
+                            </p>
+
+                            <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                                <div class="flex items-center space-x-1.5 text-xs font-semibold <?php 
+                                    echo $document['document_count'] > 0 ? 'text-emerald-600' : 'text-gray-500'; 
+                                ?>">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Ready:</span>
+                                    <span class="font-bold"><?php echo $document['document_count'] > 0 ? 'Yes' : 'No'; ?></span>
+                                </div>
+
+                                <div class="relative w-11 h-11">
+                                    <svg class="w-11 h-11 transform -rotate-90">
+                                        <circle cx="22" cy="22" r="18" stroke="currentColor" stroke-width="3" fill="none" class="text-gray-200"/>
+                                        <circle cx="22" cy="22" r="18" stroke="currentColor" stroke-width="3" fill="none" 
+                                                class="<?php echo $document['document_count'] > 0 ? 'text-emerald-500' : 'text-gray-400'; ?> transition-all duration-1000"
+                                                stroke-dasharray="113" 
+                                                stroke-dashoffset="<?php echo $document['document_count'] > 0 ? '0' : '113'; ?>"
+                                                stroke-linecap="round"/>
+                                    </svg>
+                                    <div class="absolute inset-0 flex items-center justify-center">
+                                        <i class="fas <?php echo $document['document_count'] > 0 ? 'fa-check text-xs text-emerald-600' : 'fa-times text-xs text-gray-400'; ?>"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CTA Button -->
+                        <a href="alumni_profile.php#documents" class="mt-auto block text-center py-3.5 text-white text-sm font-bold tracking-wide
+                            <?php 
+                            echo $document['document_count'] > 0 
+                                ? 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700' 
+                                : 'bg-gradient-to-r from-gray-500 to-gray-700 hover:from-gray-600 hover:to-gray-800'; 
+                            ?> transition-all duration-300 rounded-b-2xl flex items-center justify-center space-x-1 group">
+                            <span><?php echo $document['document_count'] > 0 ? 'Manage Files' : 'Start Upload'; ?></span>
+                            <i class="fas fa-arrow-right text-sm transform group-hover:translate-x-1 transition-transform"></i>
+                        </a>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
-    <a href="alumni_profile.php#documents" class="block text-center py-3 px-5 text-white font-semibold text-base
-        <?php echo match($document['submission_status']) {
-            'Approved' => 'bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-700 hover:to-emerald-800',
-            'Rejected' => 'bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-700 hover:to-rose-800',
-            'Under Review' => 'bg-gradient-to-r from-amber-600 to-orange-700 hover:from-amber-700 hover:to-orange-800',
-            default => 'bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800'
-        }; ?> transition-all duration-300">
-        <?php echo $document['submission_status'] === 'Approved' ? 'View Documents' : 'Manage Documents'; ?> →
-    </a>
-</div>
 
-<!-- CARD 4: Uploaded Documents - File Count Focused -->
-<div class="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden flex flex-col h-full hover:shadow-lg transition-all duration-300">
-    <div class="p-5 flex-1 flex flex-col">
-        <div class="flex items-start justify-between mb-4">
-            <div class="p-3 <?php echo $document['document_count'] > 0
-                ? 'bg-gradient-to-br from-teal-500 to-cyan-600'
-                : 'bg-gradient-to-br from-gray-400 to-gray-600'; ?> rounded-xl text-white shadow-md">
-                <i class="fas fa-cloud-upload-alt text-xl"></i>
-            </div>
-            <div class="text-right">
-                <div class="text-3xl font-extrabold text-gray-800">
-                    <?php echo $document['document_count']; ?>
-                </div>
-                <div class="text-xs text-gray-500 uppercase tracking-wider">
-                    Total Files
-                </div>
-            </div>
-        </div>
-        <h3 class="text-lg font-bold text-gray-800 mb-2">Uploaded Documents</h3>
-        <p class="text-gray-600 text-xs leading-relaxed mb-4">
-            <?php echo $document['document_count'] > 0
-                ? 'You have uploaded <strong>' . $document['document_count'] . '</strong> document' . ($document['document_count'] != 1 ? 's' : '') . ' for review.'
-                : 'No documents uploaded yet. Start adding your diploma, TOR, resume, etc.'; ?>
-        </p>
+    <!-- RIGHT: Quick Actions & Recent Activity (40%) -->
+    <div class="space-y-5">
 
-        <!-- File Details -->
-       <div class="space-y-2 mt-auto">
-    <div class="flex justify-between text-xs">
-        <span class="text-gray-500">Total Files Uploaded:</span>
-        <span class="font-medium text-gray-700">
-            <?php echo $document['document_count']; ?> file<?php echo $document['document_count'] != 1 ? 's' : ''; ?>
-        </span>
-    </div>
-            <div class="flex justify-between text-xs">
-                <span class="text-gray-500">Upload Status:</span>
-                <span class="font-medium text-xs px-2 py-1 rounded-full 
-                    <?php echo $document['submission_status'] === 'Approved' ? 'bg-green-100 text-green-700' :
-                           ($document['submission_status'] === 'Rejected' ? 'bg-red-100 text-red-700' :
-                           ($document['submission_status'] === 'Under Review' ? 'bg-amber-100 text-amber-700' :
-                           ($document['submission_status'] === 'Draft' ? 'bg-blue-100 text-blue-700' :
-                           'bg-gray-100 text-gray-600'))); ?>">
-                    <?php echo htmlspecialchars($document['submission_status']); ?>
-                </span>
-            </div>
-            <div class="flex justify-between text-xs">
-                <span class="text-gray-500">Ready for Submission:</span>
-                <span class="font-medium <?php echo $document['document_count'] > 0 ? 'text-green-600' : 'text-gray-600'; ?>">
-                    <?php echo $document['document_count'] > 0 ? 'Yes' : 'No'; ?>
-                </span>
-            </div>
-        </div>
-    </div>
-    <a href="alumni_profile.php#documents" class="block text-center py-3 px-5 text-white font-semibold text-base
-        <?php echo $document['document_count'] > 0
-            ? 'bg-gradient-to-r from-teal-600 to-cyan-700 hover:from-teal-700 hover:to-cyan-800'
-            : 'bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800'; ?>
-        transition-all duration-300">
-        <?php echo $document['document_count'] > 0 ? 'View All Files' : 'Upload Documents'; ?> →
-    </a>
-</div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- RIGHT: Quick Actions Column -->
-        <div class="space-y-5">
-            
-           <!-- Quick Actions Card -->
-<div class="bg-white rounded-xl shadow-md border border-gray-100 p-5">
+ <!-- Quick Actions Card -->
+<div class="bg-gray-50 rounded-xl shadow-sm border border-gray-200/50 p-5">
     <h3 class="text-lg font-bold text-gray-800 mb-4">Quick Actions</h3>
-    <div class="space-y-2">
-        <a href="alumni_profile.php" class="flex items-center p-4 bg-gray-100/50 hover:bg-green-100 rounded-xl transition-all duration-300 group">
+    <div class="space-y-0">
+        <!-- Action 1: Update Profile -->
+        <a href="alumni_profile.php" class="flex items-center p-4 bg-white hover:bg-green-50 rounded-t-xl transition-all duration-300 group border-b border-gray-200/70">
             <div class="bg-green-100/70 p-3 rounded-xl mr-4 group-hover:bg-green-500 transition-colors duration-300">
                 <i class="fas fa-user-edit text-green-700 text-xl group-hover:text-white"></i>
             </div>
-            <div>
+            <div class="flex-1">
                 <p class="font-bold text-gray-800">Update Profile</p>
                 <p class="text-xs text-gray-600">Keep your information current</p>
             </div>
+            <i class="fas fa-chevron-right text-gray-400 text-sm group-hover:text-green-600 transition-colors"></i>
         </a>
-        <a href="alumni_profile.php#documents" class="flex items-center p-4 bg-gray-100/50 hover:bg-blue-100 rounded-xl transition-all duration-300 group">
-            <div class="bg-blue-100/70 p-3 rounded-xl mr-4 group-hover:bg-blue-500 transition-colors duration-300">
-                <i class="fas fa-upload text-blue-700 text-xl group-hover:text-white"></i>
+
+        <!-- Action 2: View Profile -->
+        <a href="alumni_profile.php" class="flex items-center p-4 bg-white hover:bg-purple-50 rounded-none transition-all duration-300 group border-b border-gray-200/70">
+            <div class="bg-purple-100/70 p-3 rounded-xl mr-4 group-hover:bg-purple-500 transition-colors duration-300">
+                <i class="fas fa-id-card text-purple-700 text-xl group-hover:text-white"></i>
             </div>
-            <div>
-                <p class="font-bold text-gray-800">Upload Documents</p>
-                <p class="text-xs text-gray-600">Submit required files</p>
+            <div class="flex-1">
+                <p class="font-bold text-gray-800">View Profile</p>
+                <p class="text-xs text-gray-600">See your full alumni details</p>
             </div>
+            <i class="fas fa-chevron-right text-gray-400 text-sm group-hover:text-purple-600 transition-colors"></i>
+        </a>
+
+        <!-- Action 3: Check Review Status -->
+        <a href="alumni_profile.php#documents" class="flex items-center p-4 bg-white hover:bg-amber-50 rounded-b-xl transition-all duration-300 group">
+            <div class="bg-amber-100/70 p-3 rounded-xl mr-4 group-hover:bg-amber-500 transition-colors duration-300">
+                <i class="fas fa-clipboard-list text-amber-700 text-xl group-hover:text-white"></i>
+            </div>
+            <div class="flex-1">
+                <p class="font-bold text-gray-800">Check Review Status</p>
+                <p class="text-xs text-gray-600">Track document approval</p>
+            </div>
+            <i class="fas fa-chevron-right text-gray-400 text-sm group-hover:text-amber-600 transition-colors"></i>
         </a>
     </div>
 </div>
-
-            <!-- Recent Activity Card -->
-            <div class="bg-white rounded-xl shadow-md border border-gray-100 p-5">
-                <h3 class="text-lg font-bold text-gray-800 mb-4">Recent Activity</h3>
-                <div class="space-y-3">
-                    <div class="flex items-start">
-                        <div class="bg-amber-100 p-2 rounded-lg mr-3 mt-1">
-                            <i class="fas fa-clock text-amber-600 text-sm"></i>
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-800">Last Profile Update</p>
-                            <p class="text-xs text-gray-600">
-                                <?php echo !empty($profile_info['last_profile_update']) 
-                                    ? date('M d, Y', strtotime($profile_info['last_profile_update']))
-                                    : 'Never'; ?>
-                            </p>
-                        </div>
-                    </div>
-                    <div class="flex items-start">
-                        <div class="bg-blue-100 p-2 rounded-lg mr-3 mt-1">
-                            <i class="fas fa-file text-blue-600 text-sm"></i>
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-800">Documents Status</p>
-                            <p class="text-xs text-gray-600"><?php echo htmlspecialchars($document['submission_status']); ?></p>
-                        </div>
-                    </div>
-                    <div class="flex items-start">
-                        <div class="bg-green-100 p-2 rounded-lg mr-3 mt-1">
-                            <i class="fas fa-graduation-cap text-green-600 text-sm"></i>
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-800">Graduation Year</p>
-                            <p class="text-xs text-gray-600">
-                                <?php echo !empty($profile_info['year_graduated']) 
-                                    ? htmlspecialchars($profile_info['year_graduated'])
-                                    : 'Not specified'; ?>
-                            </p>
-                        </div>
-                    </div>
-                </div>
+ <!-- Recent Activity Card -->
+<div class="bg-white rounded-xl shadow-md border border-gray-100 p-5">
+    <h3 class="text-lg font-bold text-gray-800 mb-4">Recent Activity</h3>
+    <div class="space-y-2">
+        <!-- Item 1: Last Profile Update -->
+        <div class="flex items-start gap-3">
+            <div class="bg-amber-100 p-1.5 rounded-lg flex-shrink-0">
+                <i class="fas fa-clock text-amber-600 text-sm"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-gray-800 truncate">Last Profile Update</p>
+                <p class="text-xs text-gray-600">
+                    <?php echo !empty($profile_info['last_profile_update'])
+                        ? date('M d, Y', strtotime($profile_info['last_profile_update']))
+                        : 'Never'; ?>
+                </p>
             </div>
         </div>
-        
+
+        <!-- Item 2: Document Status -->
+        <div class="flex items-start gap-3">
+            <div class="bg-blue-100 p-1.5 rounded-lg flex-shrink-0">
+                <i class="fas fa-file text-blue-600 text-sm"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-gray-800 truncate">Documents Status</p>
+                <p class="text-xs text-gray-600"><?php echo htmlspecialchars($document['submission_status']); ?></p>
+            </div>
+        </div>
+
+        <!-- Item 3: Graduation Year -->
+        <div class="flex items-start gap-3">
+            <div class="bg-green-100 p-1.5 rounded-lg flex-shrink-0">
+                <i class="fas fa-graduation-cap text-green-600 text-sm"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-gray-800 truncate">Graduation Year</p>
+                <p class="text-xs text-gray-600">
+                    <?php echo !empty($profile_info['year_graduated'])
+                        ? htmlspecialchars($profile_info['year_graduated'])
+                        : 'Not specified'; ?>
+                </p>
+            </div>
+        </div>
     </div>
 </div>
-
 <!-- Help & Support Modal -->
 <div id="helpModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
     <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300 scale-95 opacity-0">
