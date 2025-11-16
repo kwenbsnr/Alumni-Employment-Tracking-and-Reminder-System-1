@@ -12,7 +12,7 @@ If a user selects "Employed & Student" in the employment status, the form submit
 🟠 High Priority
 ______________________
 
-1. Start year vs. graduation year logic:
+1. **[FIXED]** Start year vs. graduation year logic:
 If a user is a "Student" or “Employed & Student,” check that start year is later than graduation year. Additionally, the graduation year must be later than the start year.
  
 2. Yellow rejection card display:
@@ -25,7 +25,10 @@ ______________________
 After a successful submission, the Employment/Academic Details cards must be displayed on the dashboard using the same UI style as existing cards, positioned below the existing cards for consistency. Currently, these cards are displayed only in the Profile Management tab.
 
 2. Profile completion card display logic:
-If profile is rejected, completion card must display 0% instead of 100%. 
+If a submission is rejected, the completion card should display 0% instead of 100%.
+
+3. Submission display cards behavior:
+Better if no empty display cards appear before the alumnus submits their information. The cards should only be shown after a submission has been made.
 
 🟢 Low Priority 
 ______________________
@@ -36,7 +39,10 @@ Successful submission must appear on the dashboard like the “Complete Your Pro
 2. Start & end year display:
 If "Student" or "Employed & Student" is selected, start & end year values must display correctly in the Employment/Academic Details card after successful submission. 
 
-3. **[FIXED]** Apostrophe handling:
+3. Profile completion card status:
+The profile completion card stat must display “Complete” when the form has been submitted successfully. Currently "Incomplete" ghapon ang display bsag submission done.
+
+**[FIXED]** Apostrophe handling:
 Employment/Academic Details display cards after successful submission have issues with apostrophe rendering. 
 
 4. **[FIXED]** Header bar scroll issue: The header bar must remain fixed and not be scrollable. 
@@ -57,4 +63,4 @@ ______________________
 
 4. ang admin inig human approve/reject, dapat stay lng sa page & d mu redirect sa batch display page.
 
-5. if mag approve ang admin dapat naay "undo approve" instead of directly showing the "reject" button.  
+5. if mag approve ang admin dapat naay "undo approve" instead of directly showing the "reject" button. 

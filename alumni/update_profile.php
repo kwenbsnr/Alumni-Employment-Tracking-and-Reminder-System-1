@@ -216,11 +216,30 @@ $user_id = $_SESSION['user_id'];
 
             // Validate year format
             if ($can_update && in_array($status, ['Student', 'Employed & Student'])) {
-                if (!preg_match('/^\d{4}$/', $start_year) || $start_year < 2000 || $start_year > date('Y')) {
+                $current_year = date('Y');
+                
+                // Basic year format validation
+                if (!preg_match('/^\d{4}$/', $start_year) || $start_year < 2000) {
                     throw new Exception("Invalid start year format.");
                 }
-                if (!preg_match('/^\d{4}$/', $end_year) || $end_year < $start_year || $end_year > (date('Y') + 5)) {
+                
+                if (!preg_match('/^\d{4}$/', $end_year) || $end_year < 2000) {
                     throw new Exception("Invalid end year format.");
+                }
+                
+                // Start year must be >= graduation year
+                if ($start_year < $year) {
+                    throw new Exception("Academic Start Year must be the same as or later than your Graduation Year ({$year}).");
+                }
+                
+                // End year must be > start year
+                if ($end_year <= $start_year) {
+                    throw new Exception("End Year (Expected Graduation) must be later than Start Year.");
+                }
+                
+                // End year should be reasonable (not too far in future)
+                if ($end_year > ($current_year + 10)) {
+                    throw new Exception("End Year seems too far in the future. Please verify your expected graduation year.");
                 }
             }
 
@@ -254,12 +273,22 @@ $user_id = $_SESSION['user_id'];
             $company_address = '';
         }
 
-        // Education validation
+        // Education validation with year comparison
         if (in_array($original_status, ['Student', 'Employed & Student'])) {
             if (!$school) throw new Exception("School name is required.");
             if (!$degree) throw new Exception("Degree pursued is required.");
             if (!$start_year) throw new Exception("Start year is required.");
             if (!$end_year) throw new Exception("End year is required.");
+            
+            // Check that end year > start year
+            if ($end_year <= $start_year) {
+                throw new Exception("End Year (Expected Graduation) must be later than Start Year.");
+            }
+            
+            // NEW VALIDATION: Start year must be >= alumni graduation year
+            if ($start_year < $year) {
+                throw new Exception("Academic Start Year must be the same as or later than your Graduation Year ({$year}).");
+            }
         }
     }
 

@@ -934,6 +934,78 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+        // NEW: Dynamic filtering for years based on graduation year and current year
+    function updateStudentYearOptions() {
+        const graduationYearSelect = document.querySelector('[name="year_graduated"]');
+        const startYearSelect = document.querySelector('[name="start_year"]');
+        const endYearSelect = document.querySelector('[name="end_year"]');
+        const status = employmentStatusSelect ? employmentStatusSelect.value : '';
+        
+        if (graduationYearSelect && startYearSelect && endYearSelect && ['Student', 'Employed & Student'].includes(status)) {
+            const graduationYear = parseInt(graduationYearSelect.value);
+            const currentYear = new Date().getFullYear();
+            
+            if (graduationYear) {
+                // Store current selections
+                const currentStartYear = startYearSelect.value;
+                const currentEndYear = endYearSelect.value;
+                
+                // Update Start Year dropdown: graduation year to current year
+                startYearSelect.innerHTML = '<option value="">Select Start Year</option>';
+                for (let y = graduationYear; y <= currentYear; y++) {
+                    const option = document.createElement('option');
+                    option.value = y;
+                    option.textContent = y;
+                    if (currentStartYear && y === parseInt(currentStartYear)) {
+                        option.selected = true;
+                    }
+                    startYearSelect.appendChild(option);
+                }
+                
+                // Update End Year dropdown based on selected start year
+                updateEndYearOptions();
+            }
+        }
+    }
+
+    function updateEndYearOptions() {
+        const startYearSelect = document.querySelector('[name="start_year"]');
+        const endYearSelect = document.querySelector('[name="end_year"]');
+        const currentYear = new Date().getFullYear();
+        
+        if (startYearSelect && endYearSelect && startYearSelect.value) {
+            const startYear = parseInt(startYearSelect.value);
+            const currentEndYear = endYearSelect.value;
+            
+            // End Year: start year + 1 to current year + 5 (max 5 years in future)
+            endYearSelect.innerHTML = '<option value="">Select End Year</option>';
+            for (let y = startYear + 1; y <= currentYear + 5; y++) {
+                const option = document.createElement('option');
+                option.value = y;
+                option.textContent = y;
+                if (currentEndYear && y === parseInt(currentEndYear)) {
+                    option.selected = true;
+                }
+                endYearSelect.appendChild(option);
+            }
+        }
+    }
+
+    // Event listeners for dynamic year filtering
+    if (employmentStatusSelect) {
+        employmentStatusSelect.addEventListener('change', updateStudentYearOptions);
+    }
+
+    const graduationYearSelect = document.querySelector('[name="year_graduated"]');
+    if (graduationYearSelect) {
+        graduationYearSelect.addEventListener('change', updateStudentYearOptions);
+    }
+
+    const startYearSelect = document.querySelector('[name="start_year"]');
+    if (startYearSelect) {
+        startYearSelect.addEventListener('change', updateEndYearOptions);
+    }
+
     // Address dropdown population 
     let regionsData;
     async function loadAddressData() {
@@ -1072,7 +1144,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 event.preventDefault();
                 return;
             }
-
+           
+            // Check student years (end year > start year)
+            if (!validateStudentYears()) {
+                event.preventDefault();
+                return;
+            }
+            
             /* // Basic permission check
             <?php if (!$can_update): ?>
             alert('You are not allowed to update your profile at this time. You can only update once per year unless your submission was rejected.');
@@ -1248,6 +1326,41 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Student year validation function - ENHANCED
+    function validateStudentYears() {
+        const status = employmentStatusSelect ? employmentStatusSelect.value : '';
+        
+        // Only validate for student statuses
+        if (['Student', 'Employed & Student'].includes(status)) {
+            const startYear = document.querySelector('[name="start_year"]');
+            const endYear = document.querySelector('[name="end_year"]');
+            const graduationYear = document.querySelector('[name="year_graduated"]');
+            
+            // Validate end year > start year
+            if (startYear && endYear && startYear.value && endYear.value) {
+                const start = parseInt(startYear.value);
+                const end = parseInt(endYear.value);
+                
+                if (end <= start) {
+                    alert('End Year (Expected Graduation) must be later than Start Year.');
+                    return false;
+                }
+            }
+            
+            // NEW VALIDATION: Start year must be >= graduation year
+            if (graduationYear && startYear && graduationYear.value && startYear.value) {
+                const graduation = parseInt(graduationYear.value);
+                const start = parseInt(startYear.value);
+                
+                if (start < graduation) {
+                    alert('Academic Start Year must be the same as or later than your Graduation Year (' + graduation + ').');
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     // Call this when modal opens
     if (updateProfileBtn) {
         const canUpdate = <?php echo $can_update ? 'true' : 'false'; ?>;
@@ -1259,6 +1372,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     updateProfileModal.classList.add('show', 'flex');
                     loadAddressData();
                     initializeFormState(); // Initialize form state
+                    // NEW: Initialize student year options if needed
+                    setTimeout(updateStudentYearOptions, 100);
                 }
             });
         }
