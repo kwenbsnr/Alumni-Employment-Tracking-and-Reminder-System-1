@@ -10,7 +10,7 @@ $page_title = "Dashboard";
 $active_page = "dashboard";
 $user_id = $_SESSION["user_id"];
 
-// Fetch comprehensive alumni profile data
+// ---- 1. UPDATE THE SQL QUERY (only the fields that really exist) ----
 $stmt = $conn->prepare("
     SELECT
         ap.first_name,
@@ -75,14 +75,33 @@ if (!empty($profile_info)) {
     $photo_result = $stmt_photo->get_result();
     $photo_data = $photo_result->fetch_assoc();
     $stmt_photo->close();
-    
-    if (!empty($photo_data['photo_path'])) {
-        $completed_fields++;
-    }
+    $has_photo = !empty($photo_data['photo_path']);
+}
+// --- UPDATED CODE: 8 EQUAL SECTIONS (7 fields + photo) ---
+$sections = [
+    !empty($profile_info['first_name']),
+    !empty($profile_info['last_name']),
+    !empty($profile_info['contact_number']),
+    !empty($profile_info['year_graduated']),
+    !empty($profile_info['employment_status']),
+    !empty($profile_info['address_id']),
+    $has_photo
+];
+
+$completed_count = count(array_filter($sections));
+$total_fields    = count($sections); // 8
+$completion_percentage = $total_fields > 0 ? round(($completed_count / $total_fields) * 100) : 0;
+
+// Profile is 100% only if all 8 sections are filled
+$is_profile_complete = $completed_count === $total_fields;
+
+// Final display status
+$profile_status = 'Incomplete';
+if ($is_profile_complete) {
+    $submission_status = $profile_info['submission_status'] ?? 'Not Submitted';
+    $profile_status = ($submission_status === 'Pending') ? 'Pending Approval' : 'Complete';
 }
 
-$completion_percentage = $total_fields > 0 ? round(($completed_fields / $total_fields) * 100) : 0;
-$is_profile_complete = ($completion_percentage === 100);
 // Annual update check
 $needs_annual_update = !empty($profile_info) &&
     ($profile_info['last_profile_update'] === null ||
@@ -210,47 +229,113 @@ ob_start();
                             </div>
                         </div>
 
-                        <a href="alumni_profile.php" class="block text-center py-3 px-5 text-white font-semibold text-base
-                            bg-gradient-to-r from-green-600 to-emerald-700 
-                            hover:from-green-700 hover:to-emerald-800 
-                            transition-all duration-300">
-                            <?php echo $is_profile_complete ? 'View Profile' : 'Complete Profile Now'; ?> →
-                        </a>
-                    </div>
+        <a href="alumni_profile.php" class="mt-auto block text-center py-3.5 px-6 text-white text-sm font-bold tracking-wide
+            <?php
+            echo $profile_status === 'Complete' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700' :
+                 ($profile_status === 'Pending Approval' ? 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700' : 'bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700');
+            ?> transition-all duration-300 rounded-b-2xl flex items-center justify-center space-x-1 group">
+            <span>
+                <?php
+                echo $profile_status === 'Complete' ? 'View Profile' :
+                     ($profile_status === 'Pending Approval' ? 'Track Submission' : 'Complete Now');
+                ?>
+            </span>
+            <i class="fas fa-arrow-right text-sm transform group-hover:translate-x-1 transition-transform"></i>
+        </a>
+    </div>
+</div><!-- CARD 2: Employment -->
+<div class="h-full flex flex-col">
+    <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border <?php
+        echo !empty($profile_info['employment_status']) && $profile_info['employment_status'] !== 'Not Set'
+            ? 'border-blue-400 ring-2 ring-blue-100'
+            : 'border-gray-300 ring-2 ring-gray-100';
+    ?> overflow-hidden flex flex-col h-full hover:shadow-xl transition-all duration-400 group relative">
 
-                    <!-- CARD 2: Employment Status -->
-                    <div class="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden flex flex-col h-full hover:shadow-lg transition-all duration-300">
-                        <div class="p-5 flex-1 flex flex-col">
-                            <div class="flex items-start justify-between mb-4">
-                                <div class="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl text-white shadow-md">
-                                    <i class="fas fa-briefcase text-xl"></i>
-                                </div>
-                                <span class="px-3 py-1 text-xs font-bold tracking-wider uppercase rounded-full bg-blue-100 text-blue-700">
-                                    Current Status
-                                </span>
-                            </div>
-                            <h3 class="text-lg font-bold text-gray-800 mb-2">Employment</h3>
-                            <div class="flex-1">
-                                <p class="text-xl font-extrabold text-gray-900 mb-1">
-                                    <?php echo !empty($profile_info['employment_status']) && $profile_info['employment_status'] !== 'Not Set' 
-                                        ? htmlspecialchars($profile_info['employment_status']) 
-                                        : 'Not Specified'; ?>
-                                </p>
-                                <p class="text-xs text-gray-500 flex items-center">
-                                    <i class="fas fa-calendar-alt mr-1"></i>
-                                    <?php echo !empty($profile_info['last_profile_update']) 
-                                        ? 'Updated ' . date('M d, Y', strtotime($profile_info['last_profile_update'])) 
-                                        : 'No updates yet'; ?>
-                                </p>
-                            </div>
-                        </div>
-                        <a href="alumni_profile.php#employment" class="block text-center py-3 px-5 text-white font-semibold text-base
-                            bg-gradient-to-r from-blue-600 to-indigo-700 
-                            hover:from-blue-700 hover:to-indigo-800 
-                            transition-all duration-300">
-                            <?php echo !empty($profile_info['employment_status']) && $profile_info['employment_status'] !== 'Not Set' ? 'Update Employment' : 'Add Employment'; ?> →
-                        </a>
+        <?php if (empty($profile_info['employment_status']) || $profile_info['employment_status'] === 'Not Set'): ?>
+            <div class="absolute top-3 right-3 w-9 h-9 bg-gradient-to-br from-gray-500 to-gray-700 rounded-full flex items-center justify-center text-white shadow-lg z-20">
+                <i class="fas fa-question text-sm"></i>
+            </div>
+        <?php endif; ?>
+
+        <div class="p-6 pb-4 flex-1 flex flex-col justify-between space-y-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="p-3 <?php
+                        echo !empty($profile_info['employment_status']) && $profile_info['employment_status'] !== 'Not Set'
+                            ? 'bg-gradient-to-br from-blue-600 to-cyan-600'
+                            : 'bg-gradient-to-br from-gray-500 to-gray-700';
+                    ?> rounded-xl text-white shadow-md transform group-hover:scale-110 transition-all duration-300">
+                        <i class="fas fa-briefcase text-xl"></i>
                     </div>
+                    <div>
+                        <h3 class="text-lg font-extrabold text-gray-900">Employment</h3>
+                        <div class="mt-1.5">
+                            <span class="inline-flex items-center px-3 py-1 text-xs font-bold tracking-wider rounded-full uppercase shadow-sm <?php
+                                echo !empty($profile_info['employment_status']) && $profile_info['employment_status'] !== 'Not Set'
+                                    ? 'bg-blue-100 text-blue-800'
+                                    : 'bg-gray-100 text-gray-700';
+                            ?>">
+                                <?php echo !empty($profile_info['employment_status']) && $profile_info['employment_status'] !== 'Not Set'
+                                    ? 'Current' : 'Not Set'; ?>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-1 flex-1">
+                <p class="text-base font-bold text-gray-800 truncate <?php
+                    echo !empty($profile_info['employment_status']) && $profile_info['employment_status'] !== 'Not Set'
+                        ? '' : 'italic text-gray-400';
+                ?>">
+                    <?php echo !empty($profile_info['employment_status']) && $profile_info['employment_status'] !== 'Not Set'
+                        ? htmlspecialchars($profile_info['employment_status'])
+                        : 'No employment info'; ?>
+                </p>
+                <p class="text-xs <?php
+                    echo !empty($profile_info['last_profile_update'])
+                        ? 'text-gray-500' : 'text-gray-400 italic';
+                ?>">
+                    <?php echo !empty($profile_info['last_profile_update'])
+                        ? 'Updated ' . date('M d, Y', strtotime($profile_info['last_profile_update']))
+                        : 'Never updated'; ?>
+                </p>
+            </div>
+
+            <?php
+            // ---- DYNAMIC “Visible on Network” MESSAGE (WITH REAL NAMES) ----
+            $msg = '';
+            $status = $profile_info['employment_status'] ?? 'Not Set';
+            $company = trim($profile_info['company_name'] ?? '');
+            $school  = trim($profile_info['school_name'] ?? '');
+
+            if ($status === 'Unemployed') {
+                $msg = 'No documents required — you are currently unemployed.';
+            }
+            elseif ($status === 'Employed' && $company !== '') {
+                $msg = "Works at <strong>" . htmlspecialchars($company) . "</strong>.";
+            }
+            elseif ($status === 'Student' && $school !== '') {
+                $msg = "Studies at <strong>" . htmlspecialchars($school) . "</strong>.";
+            }
+            elseif ($status === 'Employed,Student' && $company !== '' && $school !== '') {
+                $msg = "Works at <strong>" . htmlspecialchars($company) . "</strong> and studies at <strong>" . htmlspecialchars($school) . "</strong>.";
+            }
+            elseif ($status === 'Employed' && $company === '') {
+                $msg = 'Employed — no company name provided.';
+            }
+            elseif ($status === 'Student' && $school === '') {
+                $msg = 'Student — no school name provided.';
+            }
+
+            if ($msg !== '' && $status !== 'Not Set'):
+            ?>
+                <div class="flex items-center space-x-1 text-xs text-blue-600 font-medium">
+                    <i class="fas fa-check-circle"></i>
+                    <span><?php echo $msg; ?></span>
+                </div>
+            <?php endif; ?>
+        </div>
 
                  <!-- CARD 3: Document Review - Status Focused -->
 <div class="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden flex flex-col h-full hover:shadow-lg transition-all duration-300">
